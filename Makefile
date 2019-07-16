@@ -11,7 +11,7 @@ endif
 
 SRCDIR=src
 
-NAME=vkmixbot
+NAME=vkbot
 
 VERMAIN = 0.0.1-beta
 
@@ -61,9 +61,9 @@ OBJDIR=$(BUILD_TYPE).$(OS).$(ARCH)
 
 CFLAGS = $(BUILD_TYPE_CFLAGS) $(BASE_CFLAGS) $(OPT_CFLAGS) $(ARCH_CFLAGS)
 
-INCLUDE=-I. -I$(SRCDIR)
+INCLUDE=-I. -I$(SRCDIR) -I./cjson/
 
-LDFLAGS=-L. -lpthread -lcurl
+LDFLAGS=-L. -lpthread -lcurl -lcjson -L./cjson/
 
 DO_CC=$(CC) $(CFLAGS) $(INCLUDE) -o $@ -c $<
 
@@ -77,7 +77,7 @@ SRC = $(wildcard src/*.c)
 OBJ := $(SRC:$(SRCDIR)/%.c=$(OBJDIR)/%.o)
 
 $(NAME)_$(ARCH)$(PROGRAMEXT) : neat depend $(OBJ)
-	$(CXX) $(CFLAGS) $(OBJ) $(LDFLAGS) -o $(OBJDIR)/$@
+	$(CC) $(CFLAGS) $(OBJ) $(LDFLAGS) -o $(OBJDIR)/$@
 
 neat:
 	@mkdir -p $(OBJDIR)
