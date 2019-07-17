@@ -4,29 +4,41 @@
 
 #include "va_utils.h"
 #include "vkapi.h"
-#include "strings.h"
+#include "vk_strings.h"
 
 #define VK_URL_METHOD "https://api.vk.com/method/"
 
-size_t writefunc(void *ptr, size_t size, size_t nmemb, void *s)
+size_t writefunc(void *ptr, size_t size, size_t nmemb, void *data)
 {
+  struct string *s = (struct string *)data;
 
   if(ptr == NULL)
     return 0;
 
-  strncat_to_string( (struct string *)s, ptr, size*nmemb );
+  size_t new_len = s->len + size*nmemb;
+  s->ptr = realloc(s->ptr, new_len+1);
+  if (s->ptr == NULL) {
+      fprintf(stderr, "realloc() failed\n");
+      exit(EXIT_FAILURE);
+    }
+
+  if(s->ptr == NULL)
+    fprintf(stderr, "");
+
+  strncpy(s->ptr+s->len, (char*)ptr, size*nmemb);
+  s->ptr[new_len] = '\0';
+  s->len = new_len;
 
   return size*nmemb;
 }
 
-struct string *vk_api_call_method(vkapi_object *object, const char *method, const char *args)
+struct string *vk_api_call_method(vkapi_object *object, const char *method, const char *args, vkapi_bool need_result)
 {
-  struct string *s = NULL; //, *s2 = NULL;
+  struct string *s = NULL;
 
   s = init_string();
-  //s2 = init_string();
 
-  if(!s) // || !s2)
+  if(!s)
     return NULL;
 
   curl_easy_setopt(object->curl_handle, CURLOPT_URL, va("%s/%s", VK_URL_METHOD, method));
@@ -36,22 +48,25 @@ struct string *vk_api_call_method(vkapi_object *object, const char *method, cons
   curl_easy_setopt(object->curl_handle, CURLOPT_POSTFIELDS, args);
   curl_easy_setopt(object->curl_handle, CURLOPT_WRITEFUNCTION, writefunc);
   curl_easy_setopt(object->curl_handle, CURLOPT_WRITEDATA, s);
-  //curl_easy_setopt(object->curl_handle, CURLOPT_HEADERDATA, s2);
 
   CURLcode error_code = curl_easy_perform(object->curl_handle);
 
+#ifdef DEBUG
   printf("\n%s\n", s->ptr);
-  //printf("\n%s\n", s2->ptr);
+#endif
 
   if(error_code != CURLE_OK)
     {
-      printf("vk_api: libcurl error %s \n", curl_easy_strerror(error_code));
+      printf("vk_api: libcurl error: %s \n", curl_easy_strerror(error_code));
       destroy_string(s);
-      //destroy_string(s2);
       return NULL;
     }
 
-  //destroy_string(s2);
+  if(!need_result)
+    {
+      destroy_string(s);
+      return NULL;
+    }
 
   return s;
 }
@@ -75,7 +90,9 @@ struct string *vkapi_get_longpool_data(vkapi_object *object)
 
   CURLcode error_code = curl_easy_perform(object->curl_handle);
 
-  printf("\n%s\n", s->ptr);
+#ifdef DEBUG
+  //printf("\n%s\n", s->ptr);
+#endif
 
   if(error_code != CURLE_OK)
     {
@@ -102,9 +119,10 @@ struct string *vkapi_get_longpool_data(vkapi_object *object)
   return s;
 }
 
-bool vkapi_is_error(cJSON *json)
+struct string *vkapi_send_message(vkapi_object *object, int peer_id, const char *msg, const char *args)
 {
-
+  vk_api_call_method(object, "messages.send", va("group_id=%s&access_token=%s&message=%s&random_id=0&peer_id=%i&v=5.101", object->group_id, object->vk_token, msg, peer_id ), false);
+  return NULL;
 }
 
 vkapi_object *vk_api_init(const char *token, const char *group_id)
@@ -119,7 +137,7 @@ vkapi_object *vk_api_init(const char *token, const char *group_id)
   strncpy(result->vk_token, token, sizeof(result->vk_token));
   strncpy(result->group_id, group_id, sizeof(result->group_id));
 
-  struct string *method_result = vk_api_call_method(result, "groups.getLongPollServer", va("group_id=%s&access_token=%s&v=5.101", result->group_id, result->vk_token ));
+  struct string *method_result = vk_api_call_method(result, "groups.getLongPollServer", va("group_id=%s&access_token=%s&v=5.101", result->group_id, result->vk_token), true);
 
   if(!method_result)
     {

@@ -19,10 +19,18 @@ typedef enum
 {
   false,
   true
-} bool;
+} vkapi_bool;
+
+typedef enum
+{
+  none,
+  message_new
+} vkapi_long_pool_type;
 
 struct string *vkapi_get_longpool_data(vkapi_object *object);
 
-struct string *vk_api_call_method(vkapi_object *object, const char *method, const char *args);
+struct string *vk_api_call_method(vkapi_object *object, const char *method, const char *args, vkapi_bool result_need);
+
+struct string *vkapi_send_message(vkapi_object *object, int peer_id, const char *msg, const char *args);
 
 vkapi_object *vk_api_init(const char *token, const char *group_id);

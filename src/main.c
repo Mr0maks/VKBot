@@ -7,7 +7,7 @@ int main(int argc, char *argv[])
   (void)argc;
   (void)argv;
 
-  worker_main_thread( "nice", "null", 0 );
+  worker_main_thread( "nice", "null", 4 );
 
   return 0;
 }

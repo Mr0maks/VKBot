@@ -1,7 +1,9 @@
-#include "strings.h"
+#include "vk_strings.h"
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
+
+#include <assert.h>
 
 struct string *init_string() {
   struct string *s = (struct string*)malloc(sizeof(struct string));
@@ -66,6 +68,8 @@ void strncat_to_string( struct string *s, const char *string, size_t size )
 {
   //size_t slen = strlen( string );
 
+  assert(s != NULL);
+
   size_t new_len = s->len + size;
 
   s->ptr = realloc(s->ptr, new_len+1);
@@ -74,9 +78,6 @@ void strncat_to_string( struct string *s, const char *string, size_t size )
   fprintf(stderr, "realloc() failed\n");
   exit(EXIT_FAILURE);
   }
-
-  if(s->ptr == NULL)
-  fprintf(stderr, "");
 
   strncpy(s->ptr+s->len, string, size);
   s->ptr[new_len] = '\0';
