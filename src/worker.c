@@ -11,7 +11,7 @@
 #include <unistd.h>
 
 #define VK_GROUP_ID "180928573"
-#define VK_GROUP_TOKEN "123456"
+#define VK_GROUP_TOKEN "90128137076d3602a1d1dfda4da4cfb904ac15203a34e267c3457d26bd85e41790340221d65ab1a93cc7e"
 
 #include <pthread.h>
 
