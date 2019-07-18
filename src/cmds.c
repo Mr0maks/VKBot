@@ -109,11 +109,12 @@ cmds_hashs_t *cmd_get_command(const char *command_name)
 void cmd_handle(vkapi_object *object, vkapi_message_new_object *message)
 {
   char *saveptr = NULL;
-
   char *argv[256] = { NULL };
-
   char *token = NULL;
   struct string *s = dublicate_string(message->text);
+
+  if(message->text->len == 0)
+    return;
 
    token = strtok_r(s->ptr, " ", &saveptr);
 
@@ -133,7 +134,7 @@ void cmd_handle(vkapi_object *object, vkapi_message_new_object *message)
      }
 
    if(!argv[0])
-     goto end;
+     goto dada;
 
    printf("Try to call cmd %s\n", argv[0]);
    cmds_hashs_t *cmd = cmd_get_command(argv[0]);
@@ -147,6 +148,11 @@ void cmd_handle(vkapi_object *object, vkapi_message_new_object *message)
 
   end:
   destroy_string(s);
+  return;
+
+  dada:
+    vkapi_send_message(object, message->peer_id, "Да-да?\n Для того чтобы узнать команды используй помощь.");
+
 }
 
 void cmd_calculate_cmd_hashes()
