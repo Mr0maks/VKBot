@@ -107,44 +107,42 @@ struct string *vkapi_get_longpool_data(vkapi_object *object)
     {
       printf("Error while getting long pool data: json parser return NULL\n");
       cJSON_Delete(json);
+      destroy_string( s );
       return NULL;
     }
 
   cJSON *ts = cJSON_GetObjectItem(json, "ts");
 
-  object->longpool_timestamp = atoi(cJSON_GetStringValue(ts));
+  if(ts)
+    object->longpool_timestamp = atoi(cJSON_GetStringValue(ts));
+  else
+    {
+      printf("Error while getting long pool data: json ts == NULL\n");
+      cJSON_Delete(json);
+      destroy_string( s );
+      return NULL;
+    }
 
   cJSON_Delete(json);
 
   return s;
 }
 
-struct string *vkapi_send_message(vkapi_object *object, int peer_id, const char *msg, const char *args)
+void vkapi_send_message(vkapi_object *object, int peer_id, const char *msg)
 {
-  vk_api_call_method(object, "messages.send", va("group_id=%s&access_token=%s&message=%s&random_id=0&peer_id=%i&v=5.101", object->group_id, object->vk_token, msg, peer_id ), false);
-  return NULL;
+  vk_api_call_method(object, "messages.send", va("group_id=%i&access_token=%s&message=%s&random_id=0&peer_id=%i&v=5.101", object->group_id, object->vk_token, msg, peer_id ), false);
 }
 
-vkapi_object *vk_api_init(const char *token, const char *group_id)
+vkapi_bool vkapi_get_long_poll_server(vkapi_object *object)
 {
-  vkapi_object *result = (vkapi_object*)calloc(1, sizeof(vkapi_object));
 
-  if(!result)
-    return NULL;
-
-  result->curl_handle = curl_easy_init();
-
-  strncpy(result->vk_token, token, sizeof(result->vk_token));
-  strncpy(result->group_id, group_id, sizeof(result->group_id));
-
-  struct string *method_result = vk_api_call_method(result, "groups.getLongPollServer", va("group_id=%s&access_token=%s&v=5.101", result->group_id, result->vk_token), true);
+  struct string *method_result = vk_api_call_method(object, "groups.getLongPollServer", va("group_id=%i&access_token=%s&v=5.101", object->group_id, object->vk_token), true);
 
   if(!method_result)
     {
       printf("Error while initing vk api: vk_api_call_method return NULL\n");
-      curl_easy_cleanup(result->curl_handle);
-      free(result);
-	return NULL;
+      curl_easy_cleanup(object->curl_handle);
+      return false;
     }
 
   const char *json_return;
@@ -156,9 +154,8 @@ vkapi_object *vk_api_init(const char *token, const char *group_id)
       printf("Error while initing vk api: json parser return NULL\n");
       printf("Error before: %s\n", json_return);
       cJSON_Delete(json);
-      curl_easy_cleanup(result->curl_handle);
-      free(result);
-      return NULL;
+      curl_easy_cleanup(object->curl_handle);
+      return false;
     }
 
   const cJSON *response = NULL;
@@ -169,13 +166,34 @@ vkapi_object *vk_api_init(const char *token, const char *group_id)
   cJSON *server = cJSON_GetObjectItem(response, "server");
   cJSON *timestamp = cJSON_GetObjectItem(response, "ts");
 
-  strncpy(result->longpool_key, cJSON_GetStringValue(key), sizeof(result->longpool_key));
-  strncpy(result->longpool_server_url, cJSON_GetStringValue(server), sizeof(result->longpool_server_url));
-  result->longpool_timestamp = atoi(cJSON_GetStringValue(timestamp));
+  strncpy(object->longpool_key, cJSON_GetStringValue(key), sizeof(object->longpool_key));
+  strncpy(object->longpool_server_url, cJSON_GetStringValue(server), sizeof(object->longpool_server_url));
+  object->longpool_timestamp = atoi(cJSON_GetStringValue(timestamp));
 
-  printf("key is %s\nserver is %s\nts is %i\n", result->longpool_key, result->longpool_server_url, result->longpool_timestamp);
+  printf("key is %s\nserver is %s\nts is %i\n", object->longpool_key, object->longpool_server_url, object->longpool_timestamp);
 
   cJSON_Delete(json);
+
+  return true;
+}
+
+#include <pthread.h>
+
+pthread_mutex_t mutex;
+
+vkapi_object *vk_api_init(const char *token, const char *group_id)
+{
+  vkapi_object *result = (vkapi_object*)calloc(1, sizeof(vkapi_object));
+
+  if(!result)
+    return NULL;
+
+  result->curl_handle = curl_easy_init();
+
+  strncpy(result->vk_token, token, sizeof(result->vk_token));
+  result->group_id = atoi(group_id);
+
+  printf("%s : %i\n", result->vk_token, result->group_id);
 
   return result;
 }

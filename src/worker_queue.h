@@ -1,8 +1,8 @@
 #pragma once
 
-#include <cJSON.h>
+#include "vkapi.h"
 
 int queue_is_empty();
 void add_queue(cJSON *x);
 void queue_init();
-cJSON *get_queue();
+vkapi_message_new_object *get_queue();

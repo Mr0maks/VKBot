@@ -11,6 +11,10 @@ struct string {
 
 struct string *init_string();
 
+struct string *dublicate_string(struct string *s);
+
+void string_format( struct string *s, const char *fmt, ...);
+
 void strncat_to_string( struct string *s, const char *string, size_t size );
 
 void push_to_string( struct string *s, const char *string );

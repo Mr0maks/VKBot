@@ -18,6 +18,8 @@
 pthread_mutex_t mutex_lock;
 pthread_cond_t cond_var;
 
+void cmd_handle(vkapi_object *object, vkapi_message_new_object *message);
+
 void long_poll_worker(void *data)
 {
 
@@ -34,35 +36,44 @@ void long_poll_worker(void *data)
 	pthread_cond_wait(&cond_var, &mutex_lock);
 	}
 
-      cJSON *main_obj = get_queue();
+      vkapi_message_new_object *message = get_queue();
 
       pthread_mutex_unlock(&mutex_lock);
 
-      if(main_obj == NULL)
+      if(message == NULL)
 	goto start;
 
       printf("LONGPOLL!\n");
 
-      cJSON *object = cJSON_GetObjectItem(main_obj, "object");
-      cJSON *text = cJSON_GetObjectItem(object, "text");
-      cJSON *peer_id = cJSON_GetObjectItem(object, "peer_id");
-      cJSON *id = cJSON_GetObjectItem(object, "from_id");
-
-	 if(atoi(vkapi_object->group_id) == (id->valueint * -1))
+	 if(vkapi_object->group_id == (message->from_id * -1))
 	    continue;
 
-      printf("Message from %i ot %i : %s\n", peer_id->valueint, id->valueint, cJSON_GetStringValue(text));
+      printf("Message from %i ot %i : %s\n", message->peer_id, message->from_id, message->text->ptr);
 
-      vkapi_send_message(vkapi_object, peer_id->valueint, va("Ты написал %s", cJSON_GetStringValue(text)), "Remove This");
+      if(message->text->len < 256)
+	{
+	//vkapi_send_message(vkapi_object, message->peer_id, va("Ты написал %s", message->text->ptr));
+	cmd_handle(vkapi_object, message);
+	}
+      else
+	//vkapi_send_message(vkapi_object, message->peer_id, va("Ваше сообщение было проигнорировано из за большой длины (%lu). Допустимое колличество символов : 256.", message->text->len));
 
-      cJSON_Delete(main_obj);
+      if(message->attachmens)
+	cJSON_Delete(message->attachmens);
+
+      destroy_string(message->text);
+
+      free(message);
     }
 }
+
+void cmd_handler_init(const char *name);
 
 void worker_main_thread( const char *token, const char *group_id, int num_workers )
 {
 
   queue_init();
+  cmd_handler_init("Максбот");
 
   pthread_mutex_init(&mutex_lock, NULL);
   pthread_cond_init(&cond_var, NULL);
@@ -76,9 +87,21 @@ void worker_main_thread( const char *token, const char *group_id, int num_worker
 
   vkapi_object *object = vk_api_init(VK_GROUP_TOKEN, VK_GROUP_ID);
 
-  while (1) {
+  try_again:
+    if(!vkapi_get_long_poll_server(object))
+      {
+	printf("Error while getting long poll server. I try again.\n");
+	goto try_again;
+      }
 
-      struct string *long_poll_string = vkapi_get_longpool_data(object);
+  while (1) {
+      struct string *long_poll_string = NULL;
+
+  get_string:
+      long_poll_string = vkapi_get_longpool_data(object);
+
+      if( long_poll_string == NULL)
+	goto get_string;
 
       cJSON *main_obj = cJSON_ParseWithOpts(long_poll_string->ptr, NULL, false);
 
@@ -100,6 +123,7 @@ void worker_main_thread( const char *token, const char *group_id, int num_worker
       {
 
 	cJSON *copy = cJSON_Duplicate(update_block, true);
+
 	if(!copy)
 	  break;
 
