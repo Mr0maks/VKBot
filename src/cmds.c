@@ -1,26 +1,25 @@
-#include "cmds.h"
-
-#include <strings.h>
-#include <memory.h>
-
-#include "crc32_hash.h"
-
-#include "vkapi.h"
-
 #include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <memory.h>
+#include <pthread.h>
+
+#include "cmds.h"
+#include "crc32_hash.h"
+#include "vkapi.h"
 
 #include <cJSON.h>
 
 typedef struct
 {
   const char	*string;
-  void	(*function)(vkapi_object *object, vkapi_message_new_object *message, char **argv);
+  void	(*function)(vkapi_object *object, vkapi_message_new_object *message, int argc, char **argv);
 } cmds_t;
 
 typedef struct
 {
   unsigned int hash;
-  void	(*function)(vkapi_object *object, vkapi_message_new_object *message, char **argv);
+  void	(*function)(vkapi_object *object, vkapi_message_new_object *message, int argc, char **argv);
 } cmds_hashs_t;
 
 typedef struct
@@ -39,12 +38,12 @@ cmds_name_hashs_t *cached_names = NULL;
 
 #define ARRAY_LENGHT(x) (sizeof(x)/sizeof(x[0])) - 1
 
-void cmd_help(vkapi_object *object, vkapi_message_new_object *message, char **argv)
+void cmd_help(vkapi_object *object, vkapi_message_new_object *message, int argc, char **argv)
 {
-  
+  vkapi_send_message(object, message->peer_id, "Обычно тут пишут помощь. Кто бы мне помог ААААААААААААААААААААААААААААААААА");
 }
 
-void cmd_ping(vkapi_object *object, vkapi_message_new_object *message, char **argv)
+void cmd_ping(vkapi_object *object, vkapi_message_new_object *message, int argc, char **argv)
 {
   vkapi_send_message(object, message->peer_id, "Pong");
 }
@@ -78,40 +77,77 @@ vkapi_bool cmd_is_bot_name(const char *name)
 
   for(size_t i = 0; i < static_names; i++) {
       if(cached_names[i].hash == name_hash)
+	{
   	return true;
+	}
     }
 
   return false;
 }
 
-void cmd_handle(vkapi_object *object, vkapi_message_new_object *message)
+cmds_hashs_t *cmd_get_command(const char *command_name)
 {
-  //struct string *s = dublicate_string(message->text);
+  size_t name_len = strlen(command_name);
 
-  //char *str = NULL; //todo make argv
-  //char **argv;
+  if(name_len > 32)
+    return NULL;
 
-  if(cmd_is_bot_name(message->text->ptr))
-    {
-      vkapi_send_message(object, message->peer_id, "Да да ?");
-      //destroy_string(s);
-      printf("BOT CALL DETECTED!\n");
-      return;
+  unsigned int name_hash = crc32_calc((const unsigned char*)command_name, name_len);
+
+  printf("%s : %X\n", command_name, name_hash);
+
+  for(size_t i = 0; i < static_names; i++) {
+      if(cached_cmds[i].hash == name_hash)
+	{
+	  return &cached_cmds[i];
+	}
     }
 
-  //destroy_string(s);
+  return NULL;
 }
 
-//  char str [24]=” test1/test2/test3/test4”;
-//  char sep [10]=”/”;
-//  char *istr;
+void cmd_handle(vkapi_object *object, vkapi_message_new_object *message)
+{
+  char *saveptr = NULL;
 
-//  istr = strtok (str,"/");
+  char *argv[256] = { NULL };
 
-//  while (istr != NULL)
-//    {
-//      istr = strtok (NULL,sep);
-//    }
+  char *token = NULL;
+  struct string *s = dublicate_string(message->text);
+
+   token = strtok_r(s->ptr, " ", &saveptr);
+
+   if(!token)
+     goto end;
+
+   if(!cmd_is_bot_name(token))
+    {
+      goto end;
+    }
+
+   int i = 0;
+   while (token != NULL) {
+       token = strtok_r(NULL, " ", &saveptr);
+        if(token)
+	  argv[i++] = token;
+     }
+
+   if(!argv[0])
+     goto end;
+
+   printf("Try to call cmd %s\n", argv[0]);
+   cmds_hashs_t *cmd = cmd_get_command(argv[0]);
+
+   if(cmd)
+     {
+       printf("Try to call cmd\n");
+       if(cmd->function)
+	 cmd->function(object, message, i - 1, argv);
+     }
+
+  end:
+  destroy_string(s);
+}
 
 void cmd_calculate_cmd_hashes()
 {
@@ -130,9 +166,7 @@ void cmd_calculate_cmd_hashes()
       if(commands[i].string == NULL)
 	break;
 
-      //int out_size = snprintf(buff, sizeof(buff), commands[i].string, name );
-
-      cached_cmds[i].hash = crc32_calc((unsigned char*)&commands[i].string, strlen(commands[i].string) + 1);
+      cached_cmds[i].hash = crc32_calc((const unsigned char*)commands[i].string, strlen(commands[i].string));
       cached_cmds[i].function = commands[i].function;
 
       printf("%s : hash %X\n", commands[i].string, cached_cmds[i].hash);
