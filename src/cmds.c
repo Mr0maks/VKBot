@@ -3,6 +3,7 @@
 #include <string.h>
 #include <memory.h>
 #include <pthread.h>
+#include <base64_decoder.h>
 
 #include "cmds.h"
 #include "crc32_hash.h"
@@ -48,9 +49,21 @@ void cmd_ping(vkapi_object *object, vkapi_message_new_object *message, int argc,
   vkapi_send_message(object, message->peer_id, "Pong");
 }
 
+void cmd_base64(vkapi_object *object, vkapi_message_new_object *message, int argc, char **argv)
+{
+  if(argc < 3){
+  	vkapi_send_message(object, message->peer_id, "Максимбот base64 <decode/encode> <строка>");
+  }else{
+	char[] buffer;
+	argv[1] == "decode" ? base64_decode(argv[2], &buffer, strlen(argv[2])) : base64_encode(argv[2], &buffer, strlen(argv[2]), 1);
+	vkapi_send_message(object, message->peer_id, buffer);
+  }
+}
+
 static cmds_t commands[] = {
   { "помощь", cmd_help },
   { "ping", cmd_ping },
+  { "base64", cmd_base64 },
   { NULL, NULL }
 };
 
