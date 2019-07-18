@@ -141,9 +141,10 @@ void cmd_handle(vkapi_object *object, vkapi_message_new_object *message)
 
    if(cmd)
      {
-       printf("Try to call cmd\n");
        if(cmd->function)
 	 cmd->function(object, message, i - 1, argv);
+     } else {
+       goto not_found;
      }
 
   end:
@@ -151,8 +152,12 @@ void cmd_handle(vkapi_object *object, vkapi_message_new_object *message)
   return;
 
   dada:
-    vkapi_send_message(object, message->peer_id, "Да-да?\n Для того чтобы узнать команды используй помощь.");
+    vkapi_send_message(object, message->peer_id, "Да-да?\n Для того чтобы узнать команды используйте помощь.");
+    return;
 
+ not_found:
+   vkapi_send_message(object, message->peer_id, "Команда не найдена\n Для того чтобы узнать команды используйте помощь.");
+   return;
 }
 
 void cmd_calculate_cmd_hashes()
