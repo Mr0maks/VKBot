@@ -29,7 +29,7 @@ typedef struct
 } cmds_names_t;
 
 typedef struct
-{
+{ 
   unsigned int hash;
 } cmds_name_hashs_t;
 
