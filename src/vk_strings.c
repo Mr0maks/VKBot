@@ -10,7 +10,7 @@
 struct string *init_string() {
   struct string *s = (struct string*)malloc(sizeof(struct string));
   
-  s->ptr = (char*)malloc(8192 * 2);
+  s->ptr = (char*)calloc(2, 8192);
   if (s->ptr == NULL) {
       printf("malloc() failed\n");
       exit(EXIT_FAILURE);

@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <strings.h>
 #include <memory.h>
 #include <pthread.h>
 #include <base64_decoder.h>
@@ -8,19 +9,22 @@
 #include "cmds.h"
 #include "crc32_hash.h"
 #include "vkapi.h"
+#include "va_utils.h"
 
 #include <cJSON.h>
+
+#include "base64_decoder.h"
 
 typedef struct
 {
   const char	*string;
-  void	(*function)(vkapi_object *object, vkapi_message_new_object *message, int argc, char **argv);
+  void	(*function)(vkapi_object *object, vkapi_message_new_object *message, int argc, char **argv, const char *args);
 } cmds_t;
 
 typedef struct
 {
   unsigned int hash;
-  void	(*function)(vkapi_object *object, vkapi_message_new_object *message, int argc, char **argv);
+  void	(*function)(vkapi_object *object, vkapi_message_new_object *message, int argc, char **argv, const char *args);
 } cmds_hashs_t;
 
 typedef struct
@@ -39,31 +43,53 @@ cmds_name_hashs_t *cached_names = NULL;
 
 #define ARRAY_LENGHT(x) (sizeof(x)/sizeof(x[0])) - 1
 
-void cmd_help(vkapi_object *object, vkapi_message_new_object *message, int argc, char **argv)
+void cmd_help(vkapi_object *object, vkapi_message_new_object *message, int argc, char **argv, const char *args)
 {
   vkapi_send_message(object, message->peer_id, "Обычно тут пишут помощь. Кто бы мне помог ААААААААААААААААААААААААААААААААА");
 }
 
-void cmd_ping(vkapi_object *object, vkapi_message_new_object *message, int argc, char **argv)
+void cmd_ping(vkapi_object *object, vkapi_message_new_object *message, int argc, char **argv, const char *args)
 {
   vkapi_send_message(object, message->peer_id, "Pong");
 }
 
-void cmd_base64(vkapi_object *object, vkapi_message_new_object *message, int argc, char **argv)
+void cmd_base64_encode(vkapi_object *object, vkapi_message_new_object *message, int argc, char **argv, const char *args)
 {
-  if(argc < 3){
-  	vkapi_send_message(object, message->peer_id, "Максимбот base64 <decode/encode> <строка>");
-  }else{
-	char[] buffer;
-	argv[1] == "decode" ? base64_decode(argv[2], &buffer, strlen(argv[2])) : base64_encode(argv[2], &buffer, strlen(argv[2]), 1);
-	vkapi_send_message(object, message->peer_id, buffer);
-  }
+  struct string *s = NULL;
+
+  if(argc < 1)
+    {
+      vkapi_send_message(object, message->peer_id, "Использование: b64e <строка>");
+      return;
+    }
+
+  s = init_string();
+  base64_encode((const unsigned char *)args, (unsigned char *)s->ptr, strlen(args), 1);
+  vkapi_send_message(object, message->peer_id, va("Закодированная строка: %s", s->ptr));
+  destroy_string(s);
+}
+
+void cmd_base64_decode(vkapi_object *object, vkapi_message_new_object *message, int argc, char **argv, const char *args)
+{
+  struct string *s = NULL;
+
+  if(argc < 1)
+      {
+  	vkapi_send_message(object, message->peer_id, "Использование: b64d <строка>");
+	return;
+      }
+
+  s = init_string();
+  base64_decode((const unsigned char *)args, (unsigned char *)s->ptr, strlen(args));
+  vkapi_send_message(object, message->peer_id, va("Декодированная строка: %s", s->ptr));
+  destroy_string(s);
 }
 
 static cmds_t commands[] = {
   { "помощь", cmd_help },
   { "ping", cmd_ping },
-  { "base64", cmd_base64 },
+  { "b64e", cmd_base64_encode },
+  { "b64d", cmd_base64_decode },
   { NULL, NULL }
 };
 
@@ -125,6 +151,7 @@ void cmd_handle(vkapi_object *object, vkapi_message_new_object *message)
   char *argv[256] = { NULL };
   char *token = NULL;
   struct string *s = dublicate_string(message->text);
+  struct string *args_s = init_string();
 
   if(message->text->len == 0)
     return;
@@ -147,7 +174,22 @@ void cmd_handle(vkapi_object *object, vkapi_message_new_object *message)
      }
 
    if(!argv[0])
+     {
      goto dada;
+     } else {
+       for(int c = 1; c < i; c++ )
+	 {
+	   if(c == 1)
+	   strncat_to_string(args_s, argv[c], strlen(argv[c]));
+	   else
+	     {
+	       char *token_space = va(" %s", argv[c]);
+	       strncat_to_string(args_s, token_space, strlen(token_space));
+	     }
+
+	   s->ptr[s->len] = '\0';
+	 }
+     }
 
    printf("Try to call cmd %s\n", argv[0]);
    cmds_hashs_t *cmd = cmd_get_command(argv[0]);
@@ -155,21 +197,28 @@ void cmd_handle(vkapi_object *object, vkapi_message_new_object *message)
    if(cmd)
      {
        if(cmd->function)
-	 cmd->function(object, message, i - 1, argv);
+	 cmd->function(object, message, i - 1, argv, args_s->ptr);
+       goto end;
      } else {
        goto not_found;
      }
 
-  end:
-  destroy_string(s);
-  return;
-
-  dada:
+dada:
     vkapi_send_message(object, message->peer_id, "Да-да?\n Для того чтобы узнать команды используйте помощь.");
+    destroy_string(s);
+    destroy_string(args_s);
     return;
 
- not_found:
+
+not_found:
    vkapi_send_message(object, message->peer_id, "Команда не найдена\n Для того чтобы узнать команды используйте помощь.");
+   destroy_string(s);
+   destroy_string(args_s);
+   return;
+
+end:
+   destroy_string(s);
+   destroy_string(args_s);
    return;
 }
 

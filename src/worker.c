@@ -5,9 +5,9 @@
 #include "vkapi_json_wrap.h"
 #include "worker_queue.h"
 #include "va_utils.h"
+#include "cmds.h"
 
 #include <cJSON.h>
-#include "vk_strings.h"
 #include <unistd.h>
 
 #define VK_GROUP_ID "180928573"
@@ -67,13 +67,11 @@ void long_poll_worker(void *data)
     }
 }
 
-void cmd_handler_init(const char *name);
-
 void worker_main_thread( const char *token, const char *group_id, int num_workers )
 {
 
   queue_init();
-  cmd_handler_init("Максбот");
+  cmd_handler_init();
 
   pthread_mutex_init(&mutex_lock, NULL);
   pthread_cond_init(&cond_var, NULL);

@@ -1,5 +1,5 @@
 #include <stdlib.h>
-#include "base64.h"
+#include "base64_decoder.h"
 
 #define NEWLINE_INVL 76
 

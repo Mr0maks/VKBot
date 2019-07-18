@@ -1,4 +1,3 @@
-#ifndef CMDS_H
-#define CMDS_H
+#pragma once
 
-#endif // CMDS_H
+void cmd_handler_init();
