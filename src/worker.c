@@ -5,7 +5,7 @@
 #include "vkapi_json_wrap.h"
 #include "worker_queue.h"
 #include "va_utils.h"
-#include "cmds.h"
+#include "cmd_handler.h"
 
 #include <cJSON.h>
 #include <unistd.h>
@@ -15,10 +15,11 @@
 
 #include <pthread.h>
 
-pthread_mutex_t mutex_lock;
-pthread_cond_t cond_var;
+static pthread_mutex_t mutex_lock;
+static pthread_mutex_t mutex_lock_2;
+static pthread_cond_t cond_var;
 
-void cmd_handle(vkapi_object *object, vkapi_message_new_object *message);
+static threadpool worker_pool = NULL;
 
 void long_poll_worker(void *data)
 {
@@ -52,11 +53,10 @@ void long_poll_worker(void *data)
 
       if(message->text->len < 256)
 	{
-	//vkapi_send_message(vkapi_object, message->peer_id, va("Ты написал %s", message->text->ptr));
 	cmd_handle(vkapi_object, message);
 	}
       else
-	//vkapi_send_message(vkapi_object, message->peer_id, va("Ваше сообщение было проигнорировано из за большой длины (%lu). Допустимое колличество символов : 256.", message->text->len));
+	//vkapi_send_message(vkapi_object, message->peer_id, va("Ваше сообщение было проигнорировано из за большой длины (%lu). Допустимое количество символов : 256.", message->text->len));
 
       if(message->attachmens)
 	cJSON_Delete(message->attachmens);
@@ -67,6 +67,11 @@ void long_poll_worker(void *data)
     }
 }
 
+int worker_get_workers_count()
+{
+  return thpool_num_threads_working(worker_pool);
+}
+
 void worker_main_thread( const char *token, const char *group_id, int num_workers )
 {
 
@@ -74,9 +79,10 @@ void worker_main_thread( const char *token, const char *group_id, int num_worker
   cmd_handler_init();
 
   pthread_mutex_init(&mutex_lock, NULL);
+  pthread_mutex_init(&mutex_lock_2, NULL);
   pthread_cond_init(&cond_var, NULL);
 
-  threadpool worker_pool = thpool_init(num_workers);
+  worker_pool = thpool_init(num_workers);
 
   for(int i = 0; i < num_workers; i++ )
     {
@@ -93,7 +99,7 @@ void worker_main_thread( const char *token, const char *group_id, int num_worker
       }
 
   while (1) {
-      struct string *long_poll_string = NULL;
+      string_t long_poll_string = NULL;
 
   get_string:
       long_poll_string = vkapi_get_longpool_data(object);

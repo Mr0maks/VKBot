@@ -10,33 +10,21 @@
 
 size_t writefunc(void *ptr, size_t size, size_t nmemb, void *data)
 {
-  struct string *s = (struct string *)data;
+  string_t s = (string_t)data;
 
   if(ptr == NULL)
     return 0;
 
-  size_t new_len = s->len + size*nmemb;
-  s->ptr = realloc(s->ptr, new_len+1);
-  if (s->ptr == NULL) {
-      fprintf(stderr, "realloc() failed\n");
-      exit(EXIT_FAILURE);
-    }
-
-  if(s->ptr == NULL)
-    fprintf(stderr, "");
-
-  strncpy(s->ptr+s->len, (char*)ptr, size*nmemb);
-  s->ptr[new_len] = '\0';
-  s->len = new_len;
+  string_strncat(s, (const char*)ptr, size*nmemb);
 
   return size*nmemb;
 }
 
-struct string *vk_api_call_method(vkapi_object *object, const char *method, const char *args, vkapi_bool need_result)
+string_t vk_api_call_method(vkapi_object *object, const char *method, const char *args, vkapi_bool result_need)
 {
-  struct string *s = NULL;
+  string_t s = NULL;
 
-  s = init_string();
+  s = string_init();
 
   if(!s)
     return NULL;
@@ -52,7 +40,7 @@ struct string *vk_api_call_method(vkapi_object *object, const char *method, cons
   CURLcode error_code = curl_easy_perform(object->curl_handle);
 
 #ifdef DEBUG
-  printf("\n%s\n", s->ptr);
+  //printf("\n%s\n", s->ptr);
 #endif
 
   if(error_code != CURLE_OK)
@@ -71,11 +59,11 @@ struct string *vk_api_call_method(vkapi_object *object, const char *method, cons
   return s;
 }
 
-struct string *vkapi_get_longpool_data(vkapi_object *object)
+string_t vkapi_get_longpool_data(vkapi_object *object)
 {
-  struct string *s = NULL;
+  string_t s = NULL;
 
-  s = init_string();
+  s = string_init();
 
   if( !s )
     return NULL;
@@ -130,17 +118,19 @@ struct string *vkapi_get_longpool_data(vkapi_object *object)
 
 void vkapi_send_message(vkapi_object *object, int peer_id, const char *msg)
 {
-  vk_api_call_method(object, "messages.send", va("group_id=%i&access_token=%s&message=%s&random_id=0&peer_id=%i&v=5.101", object->group_id, object->vk_token, msg, peer_id ), false);
+  string_t s = string_init();
+  string_format(s, "group_id=%i&access_token=%s&message=%s&random_id=0&peer_id=%i&v=5.101", object->group_id, object->vk_token, msg, peer_id);
+  vk_api_call_method(object, "messages.send", s->ptr, false);
+  destroy_string(s);
 }
 
 vkapi_bool vkapi_get_long_poll_server(vkapi_object *object)
 {
-
-  struct string *method_result = vk_api_call_method(object, "groups.getLongPollServer", va("group_id=%i&access_token=%s&v=5.101", object->group_id, object->vk_token), true);
+  string_t method_result = vk_api_call_method(object, "groups.getLongPollServer", va("group_id=%i&access_token=%s&v=5.101", object->group_id, object->vk_token), true);
 
   if(!method_result)
     {
-      printf("Error while initing vk api: vk_api_call_method return NULL\n");
+      printf("Error while getting long poll data: vk_api_call_method return NULL\n");
       curl_easy_cleanup(object->curl_handle);
       return false;
     }
@@ -151,10 +141,9 @@ vkapi_bool vkapi_get_long_poll_server(vkapi_object *object)
 
   if(!json)
     {
-      printf("Error while initing vk api: json parser return NULL\n");
+      printf("Error while getting long poll data: json parser return NULL\n");
       printf("Error before: %s\n", json_return);
       cJSON_Delete(json);
-      curl_easy_cleanup(object->curl_handle);
       return false;
     }
 
@@ -170,16 +159,12 @@ vkapi_bool vkapi_get_long_poll_server(vkapi_object *object)
   strncpy(object->longpool_server_url, cJSON_GetStringValue(server), sizeof(object->longpool_server_url));
   object->longpool_timestamp = atoi(cJSON_GetStringValue(timestamp));
 
-  printf("key is %s\nserver is %s\nts is %i\n", object->longpool_key, object->longpool_server_url, object->longpool_timestamp);
+  //printf("key is %s\nserver is %s\nts is %i\n", object->longpool_key, object->longpool_server_url, object->longpool_timestamp);
 
   cJSON_Delete(json);
 
   return true;
 }
-
-#include <pthread.h>
-
-pthread_mutex_t mutex;
 
 vkapi_object *vk_api_init(const char *token, const char *group_id)
 {
@@ -202,5 +187,6 @@ void vk_api_destroy(vkapi_object *ptr)
 {
   assert(ptr == NULL);
 
+  curl_easy_cleanup(ptr->curl_handle);
   free(ptr);
 }

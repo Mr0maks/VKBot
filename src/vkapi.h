@@ -18,7 +18,7 @@ typedef struct vkapi_object_s
 
 typedef struct
 {
-  struct string *text;
+  string_t text;
   int peer_id;
   int from_id;
   cJSON *attachmens;
@@ -30,15 +30,9 @@ typedef enum
   true
 } vkapi_bool;
 
-typedef enum
-{
-  none,
-  message_new
-} vkapi_long_pool_type;
+string_t vkapi_get_longpool_data(vkapi_object *object);
 
-struct string *vkapi_get_longpool_data(vkapi_object *object);
-
-struct string *vk_api_call_method(vkapi_object *object, const char *method, const char *args, vkapi_bool result_need);
+string_t vk_api_call_method(vkapi_object *object, const char *method, const char *args, vkapi_bool result_need);
 
 void vkapi_send_message(vkapi_object *object, int peer_id, const char *msg);
 

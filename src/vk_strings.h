@@ -4,21 +4,24 @@
 #include <stdint.h>
 #include <stdlib.h>
 
-struct string {
+typedef struct{
   char *ptr;
   size_t len;
-};
+  size_t size;
+} string_struct;
 
-struct string *init_string();
+typedef string_struct * string_t;
 
-struct string *dublicate_string(struct string *s);
+string_t string_init(void);
 
-void string_format( struct string *s, const char *fmt, ...);
+string_t string_dublicate(string_t s);
 
-void strncat_to_string( struct string *s, const char *string, size_t size );
+void string_format( string_t s, const char *fmt, ...);
 
-void push_to_string( struct string *s, const char *string );
+void string_strncat( string_t s, const char *string, size_t size );
 
-void destroy_string( struct string *s );
+void string_copy( string_t s, const char *string );
+
+void destroy_string( string_t s );
 
 #endif // STRING_H
