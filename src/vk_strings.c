@@ -8,12 +8,12 @@
 #include <assert.h>
 
 string_t string_init() {
-  string_t s = (string_t)malloc(sizeof(string_struct));
+  string_t s = (string_t)calloc( 1, sizeof(string_struct) );
   
-  s->ptr = (char*)calloc(2, 8192);
-  if (s->ptr == NULL) {
-      printf("malloc() failed\n");
-      exit(EXIT_FAILURE);
+  s->ptr = (char *)calloc( 2, 8192 );
+  if ( s->ptr == NULL ) {
+      printf( "сalloc() failed\n" );
+      exit( EXIT_FAILURE );
     }
   
   s->ptr[0] = '\0';
@@ -26,9 +26,9 @@ string_t string_dublicate(string_t s)
 {
   string_t s_duble = string_init();
 
-  s_duble->ptr = realloc(s_duble->ptr, s->len);
+  s_duble->ptr = realloc( s_duble->ptr, s->len );
 
-  memcpy(s_duble->ptr, s->ptr, s->len);
+  memcpy( s_duble->ptr, s->ptr, s->len );
 
   return s_duble;
 }
@@ -43,9 +43,9 @@ void resize_string_if_need( string_t s, size_t size_need )
 
   s->ptr = realloc( s->ptr, size_need + 1 );
 
-  if (s->ptr == NULL) {
-      printf("realloc() failed\n");
-      exit(EXIT_FAILURE);
+  if ( s->ptr == NULL ) {
+      printf( "realloc() failed\n" );
+      exit( EXIT_FAILURE );
     }
   
   s->ptr[size_need] = '\0';
@@ -68,9 +68,9 @@ void string_format( string_t s, const char *fmt, ...)
 
   //s->ptr = realloc(s->ptr, size+2);
 
-  if (s->ptr == NULL) {
-      fprintf(stderr, "realloc() failed\n");
-      exit(EXIT_FAILURE);
+  if ( s->ptr == NULL ) {
+      fprintf( stderr, "realloc() failed\n" );
+      exit( EXIT_FAILURE );
     }
 
   va_start( ap, fmt );
@@ -84,18 +84,19 @@ void string_format( string_t s, const char *fmt, ...)
 
 void string_strncat( string_t s, const char *string, size_t size )
 {
-  assert(s != NULL);
+  assert( s != NULL );
 
   size_t new_len = s->len + size;
 
-  s->ptr = realloc(s->ptr, new_len+1);
+  if( (s->size - s->len) < size )
+     s->ptr = realloc(s->ptr, new_len+1);
 
-  if (s->ptr == NULL) {
-  fprintf(stderr, "realloc() failed\n");
-  exit(EXIT_FAILURE);
+  if ( s->ptr == NULL ) {
+  fprintf( stderr, "realloc() failed\n" );
+  exit( EXIT_FAILURE );
   }
 
-  strncpy(s->ptr+s->len, string, size);
+  strncpy( s->ptr+s->len, string, size );
   s->ptr[new_len] = '\0';
   s->len = new_len;
 }
@@ -112,7 +113,7 @@ void string_copy( string_t s, const char *string )
   s->len = slen;
 }
 
-void destroy_string( string_t s )
+void string_destroy( string_t s )
 {
   if( !s )
     return;

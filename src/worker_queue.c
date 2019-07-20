@@ -2,6 +2,7 @@
 #include <memory.h>
 
 #include "vkapi.h"
+#include "vk_setting.h"
 
 #define MAX(a,b) ((a) > (b) ? (a) : (b))
 
@@ -15,16 +16,16 @@ struct queue {
 };
 
 struct queue *queue_pool = NULL;
-static size_t maxium_tasks_in_quequ;
-static size_t quequ_tasks_in_quequ;
+static size_t maxium_tasks_in_queue;
+static size_t queue_tasks_in_queue;
 
 int queue_is_empty() {
   return (queue_pool->head == NULL && queue_pool->tail == NULL);
 }
 
-size_t quequ_maxium_tasks_in_quequ()
+size_t queue_maxium_tasks_in_queue()
 {
-  return maxium_tasks_in_quequ;
+  return maxium_tasks_in_queue;
 }
 
 void add_queue(cJSON *update_block) {
@@ -32,15 +33,26 @@ void add_queue(cJSON *update_block) {
   vkapi_message_new_object *x = malloc(sizeof(vkapi_message_new_object));
   x->text = string_init();
 
-  quequ_tasks_in_quequ++;
+  queue_tasks_in_queue++;
 
-  maxium_tasks_in_quequ = MAX(quequ_tasks_in_quequ, maxium_tasks_in_quequ);
+  maxium_tasks_in_queue = MAX(queue_tasks_in_queue, maxium_tasks_in_queue);
 
   cJSON *object = cJSON_GetObjectItem(update_block, "object");
   cJSON *peer_id = cJSON_GetObjectItem(object, "peer_id");
-  cJSON *from_id = cJSON_GetObjectItem(object, "from_id");
 
   x->peer_id = peer_id->valueint;
+
+  if(VK_GROUP_ID == x->peer_id * -1)
+    {
+      printf("skip group message\n");
+      free(x);
+      free(element);
+      cJSON_Delete(update_block);
+      return;
+    }
+
+  cJSON *from_id = cJSON_GetObjectItem(object, "from_id");
+
   x->from_id = from_id->valueint;
 
   cJSON *text_string = cJSON_GetObjectItem(object, "text");
@@ -54,6 +66,8 @@ void add_queue(cJSON *update_block) {
 
   if(cJSON_GetArraySize(attachments) > 0)
     x->attachmens = cJSON_Duplicate(attachments, true);
+
+  cJSON_Delete(update_block);
 
   element->object = x;
   element->next = NULL;
@@ -74,6 +88,8 @@ vkapi_message_new_object *get_queue() {
   if(head == NULL)
     return NULL;
 
+  queue_tasks_in_queue--;
+
   queue_pool->head = head->next;
   vkapi_message_new_object *value = head->object;
 
@@ -84,8 +100,8 @@ vkapi_message_new_object *get_queue() {
 void queue_init()
 {
   queue_pool = malloc(sizeof(struct queue));
-  quequ_tasks_in_quequ = 0;
-  maxium_tasks_in_quequ = 0;
+  queue_tasks_in_queue = 0;
+  maxium_tasks_in_queue = 0;
   queue_pool->head = NULL;
   queue_pool->tail = NULL;
 }

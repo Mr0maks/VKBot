@@ -27,5 +27,5 @@ typedef struct
   unsigned int hash;
 } cmds_name_hashs_t;
 
-void cmd_handle(vkapi_object *object, vkapi_message_new_object *message);
+vkapi_bool cmd_handle(vkapi_object *object, vkapi_message_new_object *message);
 void cmd_handler_init(void);
