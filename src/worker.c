@@ -88,7 +88,7 @@ int worker_get_workers_count()
   return thpool_num_threads_working(worker_pool);
 }
 
-void worker_main_thread( const char *token, const char *group_id, int num_workers )
+void worker_main_thread( const char *token, int group_id, int num_workers )
 {
   queue_init();
   cmd_handler_init();

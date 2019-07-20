@@ -158,9 +158,17 @@ vkapi_bool vkapi_get_long_poll_server(vkapi_object *object)
   cJSON *server = cJSON_GetObjectItem(response, "server");
   cJSON *timestamp = cJSON_GetObjectItem(response, "ts");
 
+  if(key && server && timestamp)
+    {
   strncpy(object->longpoll_key, cJSON_GetStringValue(key), sizeof(object->longpoll_key));
   strncpy(object->longpoll_server_url, cJSON_GetStringValue(server), sizeof(object->longpoll_server_url));
   object->longpoll_timestamp = atoi(cJSON_GetStringValue(timestamp));
+    } else {
+      printf("Error while getting long poll data: json parser return null json objects. Seems its error %s\n", method_result->ptr);
+      cJSON_Delete(json);
+      string_destroy(method_result);
+      return false;
+    }
 
   cJSON_Delete(json);
   string_destroy(method_result);
