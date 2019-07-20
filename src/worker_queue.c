@@ -31,16 +31,18 @@ size_t queue_maxium_tasks_in_queue()
 void add_queue(cJSON *update_block) {
   list_t *element = malloc(sizeof(list_t));
   vkapi_message_new_object *x = malloc(sizeof(vkapi_message_new_object));
-  x->text = string_init();
-
-  queue_tasks_in_queue++;
-
-  maxium_tasks_in_queue = MAX(queue_tasks_in_queue, maxium_tasks_in_queue);
 
   cJSON *object = cJSON_GetObjectItem(update_block, "object");
   cJSON *peer_id = cJSON_GetObjectItem(object, "peer_id");
 
+  if(peer_id)
   x->peer_id = peer_id->valueint;
+  else {
+      cJSON_Delete(update_block);
+      free(element);
+      free(x);
+      return;
+    }
 
   if(VK_GROUP_ID == x->peer_id * -1)
     {
@@ -55,6 +57,8 @@ void add_queue(cJSON *update_block) {
 
   x->from_id = from_id->valueint;
 
+  x->text = string_init();
+
   cJSON *text_string = cJSON_GetObjectItem(object, "text");
 
   if(text_string)
@@ -68,6 +72,10 @@ void add_queue(cJSON *update_block) {
     x->attachmens = cJSON_Duplicate(attachments, true);
 
   cJSON_Delete(update_block);
+
+  queue_tasks_in_queue++;
+
+  maxium_tasks_in_queue = MAX(queue_tasks_in_queue, maxium_tasks_in_queue);
 
   element->object = x;
   element->next = NULL;
