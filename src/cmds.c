@@ -84,7 +84,10 @@ void cmd_stat(vkapi_object *object, vkapi_message_new_object *message, int argc,
 
 int64_t random_int64(int64_t min, int64_t max)
 {
+  if(min != LLONG_MIN || max != LLONG_MAX)
   return min + rand() % ( max + 1 - min);
+  else
+  return 0;
 }
 
 time_t random_time(time_t min, time_t max)

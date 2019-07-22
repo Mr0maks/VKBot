@@ -72,7 +72,7 @@ vkapi_bool cmd_is_bot_name(const char *name)
   return false;
 }
 
-cmds_hashs_t *cmd_call_command_if_exits(const char *command)
+cmds_hashs_t *cmd_get_command(const char *command)
 {
   if(!command)
     return NULL;
@@ -144,7 +144,7 @@ vkapi_bool cmd_handle(vkapi_object *object, vkapi_message_new_object *message)
 
    printf( "Try to call cmd %s\n", argv[0] );
 
-   cmds_hashs_t *cmd = cmd_call_command_if_exits(argv[0]);
+   cmds_hashs_t *cmd = cmd_get_command(argv[0]);
 
    if(cmd)
      {
