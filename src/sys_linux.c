@@ -3,11 +3,10 @@
 
 #include "vk_strings.h"
 
-int get_param_of_path(const char *filenpath, const char *what)
+long get_param_of_path(const char *filenpath, const char *what)
 {
   string_t s = string_init();
-
-  char buffer[32];
+  char *endptr = NULL;
 
   FILE *f = fopen(filenpath, "r");
 
@@ -18,17 +17,16 @@ int get_param_of_path(const char *filenpath, const char *what)
 
   fclose( f );
 
-  char *what_value = strstr( s->ptr, what );
+  const char *what_value = strstr( s->ptr, what );
 
   while( *what_value < '0' || *what_value > '9'  )
-    *what_value++;
-
+    what_value++;
 
   if( what_value )
     {
-    strncpy(buffer, what_value, 32);
+    long value = strtol(what_value, &endptr, 0);
     string_destroy( s );
-    return atoi( buffer );
+    return value;
     }
 
   string_destroy( s );

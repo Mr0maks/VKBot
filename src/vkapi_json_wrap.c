@@ -1,11 +1,5 @@
 #include <cJSON.h>
-
 #include "vkapi.h"
-
-vkapi_bool json_vkapi_is_error( cJSON *main )
-{
-
-}
 
 vkapi_bool json_vkapi_long_poll_have_updates( cJSON *main )
 {

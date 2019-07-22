@@ -12,6 +12,8 @@
 #include "va_utils.h"
 
 #define MAX(a,b) ((a) > (b) ? (a) : (b))
+#define MIN(a,b) ((a) < (b) ? (a) : (b))
+
 #define ARRAY_LENGHT(x) (sizeof(x)/sizeof(x[0])) - 1
 
 cmds_hashs_t *cached_cmds = NULL;
@@ -50,12 +52,15 @@ static size_t max_name_len = 0;
 
 vkapi_bool cmd_is_bot_name(const char *name)
 {
+  if(!name)
+    return false;
+
   size_t name_len = strlen( name );
 
   if( name_len > max_name_len )
     return false;
 
-  unsigned int name_hash = crc32_calc( (const unsigned char*)name, name_len );
+  unsigned int name_hash = crc32_calc( (const unsigned char *)name, name_len );
 
   for( size_t i = 0; i < static_names; i++ ) {
       if( cached_names[i].hash == name_hash )
@@ -67,8 +72,11 @@ vkapi_bool cmd_is_bot_name(const char *name)
   return false;
 }
 
-cmds_hashs_t *cmd_get_command(const char *command)
+cmds_hashs_t *cmd_call_command_if_exits(const char *command)
 {
+  if(!command)
+    return NULL;
+
   size_t command_len = strlen( command );
 
   if( command_len > max_command_len )
@@ -89,15 +97,17 @@ cmds_hashs_t *cmd_get_command(const char *command)
 vkapi_bool cmd_handle(vkapi_object *object, vkapi_message_new_object *message)
 {
   char *saveptr = NULL;
-  char *argv[256] = { NULL };
+  char *argv[64] = { NULL };
   char *token = NULL;
   string_t s = string_dublicate( message->text );
   string_t args_s = string_init();
 
   //TODO: Refactor this shit
 
-  if( message->text->len == 0 )
-    return false;
+  if( message->text->len == 0 || !message->text->ptr )
+    {
+    goto end;
+    }
 
    token = strtok_r( s->ptr, " ", &saveptr );
 
@@ -113,7 +123,7 @@ vkapi_bool cmd_handle(vkapi_object *object, vkapi_message_new_object *message)
    while ( token != NULL ) {
        token = strtok_r( NULL, " ", &saveptr );
         if( token )
-	  argv[i++] = token;
+	    argv[i++] = token;
      }
 
    if( !argv[0] )
@@ -122,26 +132,27 @@ vkapi_bool cmd_handle(vkapi_object *object, vkapi_message_new_object *message)
      } else {
        for( int c = 1; c < i; c++ )
 	 {
+	  if( !argv[c] )
+	     break;
+
 	   if(c > 1)
 	       string_strncat( args_s, " ", 1 );
 
 	   string_strncat( args_s, argv[c], strlen(argv[c]) );
-
-	   args_s->ptr[args_s->len] = '\0';
 	 }
      }
 
    printf( "Try to call cmd %s\n", argv[0] );
-   cmds_hashs_t *cmd = cmd_get_command( argv[0] );
+
+   cmds_hashs_t *cmd = cmd_call_command_if_exits(argv[0]);
 
    if(cmd)
      {
-       if( cmd->function )
-	 cmd->function( object, message, i - 1, argv, args_s->ptr );
+       if(cmd->function)
+	 cmd->function(object, message, i - 1, argv, args_s->ptr);
        goto end_true;
-     } else {
+     } else
        goto not_found;
-     }
 
 dada:
     vkapi_send_message( object, message->peer_id, "Да-да?\n Для того чтобы узнать команды используйте помощь." );

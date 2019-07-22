@@ -2,7 +2,7 @@
 
 #include "vkapi.h"
 
-typedef  void	(*cmd_function)(vkapi_object *object, vkapi_message_new_object *message, int argc, char **argv, const char *args);
+typedef  void	(*cmd_function)(vkapi_object *object, vkapi_message_new_object *message, int argc, char *argv[], const char *args);
 
 typedef struct
 {

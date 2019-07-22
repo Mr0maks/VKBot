@@ -194,7 +194,7 @@ vkapi_object *vk_api_init(const char *token, int group_id)
 
 void vk_api_destroy(vkapi_object *ptr)
 {
-  assert(ptr == NULL);
+  assert(ptr != NULL);
 
   curl_easy_cleanup(ptr->curl_handle);
   free(ptr);

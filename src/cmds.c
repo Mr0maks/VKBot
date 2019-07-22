@@ -22,6 +22,7 @@ void cmd_help(vkapi_object *object, vkapi_message_new_object *message, int argc,
       string_strncat( s, str, strlen( str ) );
     }
   vkapi_send_message( object, message->peer_id, s->ptr );
+  string_destroy( s );
 }
 
 void cmd_ping(vkapi_object *object, vkapi_message_new_object *message, int argc, char **argv, const char *args)
@@ -45,6 +46,8 @@ void cmd_base64_encode(vkapi_object *object, vkapi_message_new_object *message, 
   string_destroy( s );
 }
 
+int base64_string(const char *base64_str);
+
 void cmd_base64_decode(vkapi_object *object, vkapi_message_new_object *message, int argc, char **argv, const char *args)
 {
   string_t s = NULL;
@@ -52,6 +55,12 @@ void cmd_base64_decode(vkapi_object *object, vkapi_message_new_object *message, 
   if( argc < 1 )
     {
       vkapi_send_message( object, message->peer_id, "Использование: b64d <строка>" );
+      return;
+    }
+
+  if( !base64_string(args) )
+    {
+      vkapi_send_message( object, message->peer_id, "Строка имеет недопустимые символы для base64" );
       return;
     }
 
@@ -63,12 +72,12 @@ void cmd_base64_decode(vkapi_object *object, vkapi_message_new_object *message, 
 
 int worker_get_workers_count(void);
 
-int get_param_of_path(const char *filenpath, const char *what);
+long get_param_of_path(const char *filenpath, const char *what);
 
 void cmd_stat(vkapi_object *object, vkapi_message_new_object *message, int argc, char **argv, const char *args)
 {
   string_t s = string_init();
-  string_format( s, "Статистика бота\nКоличество работающих воркеров: %i\nПик очереди: %lu\nПамяти сожрано мной: %i kB\nВерсия: %s\n", worker_get_workers_count(), queue_maxium_tasks_in_queue(), get_param_of_path( "/proc/self/status", "VmRSS" ), VERSION );
+  string_format( s, "Статистика бота\nКоличество работающих воркеров: %i\nПик очереди: %lu\nПамяти сожрано мной: %ld кб\nВерсия: %s\n", worker_get_workers_count(), queue_maxium_tasks_in_queue(), get_param_of_path( "/proc/self/status", "VmRSS" ), VERSION );
   vkapi_send_message( object, message->peer_id, s->ptr );
   string_destroy( s );
 }
@@ -85,10 +94,10 @@ time_t random_time(time_t min, time_t max)
 
 void cmd_rand(vkapi_object *object, vkapi_message_new_object *message, int argc, char **argv, const char *args)
 {
-  if( argc < 1 || argc > 3 )
+  if( argc < 1 || argc > 2 )
     {
       usage:
-      vkapi_send_message( object, message->peer_id, "Использование: ранд максимальное число\nранд минимальное число максимальное число\n)" );
+      vkapi_send_message( object, message->peer_id, "Использование: ранд максимальное число\nранд минимальное число максимальное число\n" );
       return;
     }
 
@@ -102,7 +111,7 @@ void cmd_rand(vkapi_object *object, vkapi_message_new_object *message, int argc,
       goto usage;
     }
 
-  if( argc > 3 )
+  if( argc == 2 )
     {
       vkapi_send_message( object, message->peer_id, va("Случайное число: %lli", random_int64( atoll( argv[1] ), atoll( argv[2] ) ) ) );
     }
@@ -115,18 +124,21 @@ void cmd_rand(vkapi_object *object, vkapi_message_new_object *message, int argc,
 void cmd_rand_date(vkapi_object *object, vkapi_message_new_object *message, int argc, char **argv, const char *args)
 {
   unsigned int seed = UINT_MAX;
+  string_t s = string_init();
   time_t date = 0;
 
   if(argv[1])
     {
     seed = crc32_calc( (const unsigned char *)args, strlen(args) );
-    date = time(NULL) + seed;
+    date = random_time( time(NULL), seed );
     } else {
      date = random_time( time(NULL), seed );
     }
 
-  vkapi_send_message( object, message->peer_id, va( "Это произойдёт %s", asctime(localtime( &date ) ) ) );
+  strftime(s->ptr, s->size, "Это произойдёт %e %B %Y", localtime( &date ));
 
+  vkapi_send_message( object, message->peer_id, s->ptr );
+  string_destroy(s);
 }
 
 void cmd_flip(vkapi_object *object, vkapi_message_new_object *message, int argc, char **argv, const char *args)

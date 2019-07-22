@@ -17,6 +17,7 @@
 #include <pthread.h>
 
 static pthread_mutex_t mutex_lock;
+static pthread_mutex_t command_handler_mutex;
 static pthread_cond_t cond_var;
 
 static threadpool worker_pool = NULL;
@@ -59,9 +60,11 @@ void long_poll_worker( void *data )
 
 	 struct timeval tv;
 	 gettimeofday( &tv, NULL );
-	 long long int ms = tv.tv_sec*1000LL + tv.tv_usec/1000;
+	 long long int ns = ((tv.tv_sec*1000LL) + tv.tv_usec);
 
       printf( "Message from %i ot %i : %s\n", message->peer_id, message->from_id, message->text->ptr );
+
+      pthread_mutex_lock(&command_handler_mutex);
 
       if( message->text->len < 256 )
 	{
@@ -69,10 +72,13 @@ void long_poll_worker( void *data )
 	    {
 	      struct timeval tv2;
 	      gettimeofday( &tv2, NULL );
-	      long long int ms2 = tv2.tv_sec*1000LL + tv2.tv_usec/1000;
-	      vkapi_send_message( vkapi_object , message->peer_id, va("Сообщение обработано за %lli мс", ms2 - ms ));
+	      long long int ns2 = ((tv2.tv_sec*1000LL) + tv2.tv_usec);
+	      double time = (double)((ns2 - ns) / 1000LL);
+	      vkapi_send_message( vkapi_object , message->peer_id, va("Сообщение обработано за %f мс", time ));
 	    }
 	}
+
+      pthread_mutex_unlock(&command_handler_mutex);
 
       if( message->attachmens )
 	cJSON_Delete( message->attachmens );
@@ -93,8 +99,9 @@ void worker_main_thread( const char *token, int group_id, int num_workers )
   queue_init();
   cmd_handler_init();
 
-  pthread_mutex_init( &mutex_lock, NULL);
-  pthread_cond_init( &cond_var, NULL);
+  pthread_mutex_init( &mutex_lock, NULL );
+  pthread_mutex_init( &command_handler_mutex, NULL );
+  pthread_cond_init( &cond_var, NULL );
 
   worker_pool = thpool_init( num_workers );
 
@@ -149,6 +156,7 @@ void worker_main_thread( const char *token, int group_id, int num_workers )
       }
 
       pthread_mutex_unlock( &mutex_lock );
+      pthread_mutex_unlock( &command_handler_mutex );
       pthread_cond_broadcast( &cond_var );
 
       cJSON_Delete( main_obj );
