@@ -9,6 +9,11 @@ OS=windows
 PROGRAMEXT=.exe
 endif
 
+ifeq ($(OS_UNAME), FreeBSD)
+OS=freebsd
+PROGRAMEXT=
+endif
+
 SRCDIR=src
 
 NAME=vkbot
