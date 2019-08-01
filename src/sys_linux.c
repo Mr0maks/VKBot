@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <string.h>
 
-#include "vk_strings.h"
+#include "dynamic_strings.h"
 
 long get_param_of_path(const char *filenpath, const char *what)
 {

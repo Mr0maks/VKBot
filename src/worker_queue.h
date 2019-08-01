@@ -2,8 +2,9 @@
 
 #include "vkapi.h"
 
-int queue_is_empty(void);
-size_t queue_maxium_tasks_in_queue(void);
-void add_queue(cJSON *x);
+int queue_empty(void);
+size_t queue_maxium_tasks(void);
+void queue_push(cJSON *x);
+vkapi_message_object *queue_pop(void);
+void queue_deinit(void);
 void queue_init(void);
-vkapi_message_new_object *get_queue(void);

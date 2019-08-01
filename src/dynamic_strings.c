@@ -1,4 +1,4 @@
-#include "vk_strings.h"
+#include "dynamic_strings.h"
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
@@ -8,7 +8,7 @@
 #include <assert.h>
 
 string_t string_init() {
-  string_t s = (string_t)calloc( 1, sizeof(string_struct) );
+  string_t s = (string_t)calloc( 1, sizeof(struct string) );
   
   s->ptr = (char *)calloc( 2, 2048 );
   if ( s->ptr == NULL ) {
@@ -30,7 +30,7 @@ string_t string_dublicate(string_t s)
 
   if(s->len > 0)
     {
-      s_duble->ptr = realloc( s_duble->ptr, s->len );
+      s_duble->ptr = realloc( s_duble->ptr, s->size );
       memcpy( s_duble->ptr, s->ptr, s->len );
     }
 
@@ -74,13 +74,12 @@ void string_format( string_t s, const char *fmt, ...)
   if( size < 0 || size == 0 )
     return;
 
-  //s->ptr = realloc(s->ptr, size+2);
+  s->ptr = realloc( s->ptr, size + 1 );
 
   if ( s->ptr == NULL ) {
-      fprintf( stderr, "realloc() failed\n" );
+      printf( "realloc() failed\n" );
       exit( EXIT_FAILURE );
     }
-
   va_start( ap, fmt );
   size = vsnprintf( s->ptr, s->size, fmt, ap );
   va_end( ap );
@@ -98,17 +97,17 @@ void string_strncat( string_t s, const char *string, size_t size )
 
   size_t new_len = s->len + size;
 
-  if( (s->size - s->len) < size )
-     s->ptr = realloc(s->ptr, new_len+1);
+  s->ptr = realloc( s->ptr, new_len + 1 );
 
   if ( s->ptr == NULL ) {
-  fprintf( stderr, "realloc() failed\n" );
-  exit( EXIT_FAILURE );
-  }
+      printf( "realloc() failed\n" );
+      exit( EXIT_FAILURE );
+    }
 
   strncpy( s->ptr+s->len, string, size );
   s->ptr[new_len] = '\0';
   s->len = new_len;
+  s->size = new_len + 1;
 }
 
 void string_copy( string_t s, const char *string )

@@ -1,5 +1,15 @@
 #include <stdlib.h>
 
+/*
+  Name  : CRC-32
+  Poly  : 0x04C11DB7
+  Init  : 0xFFFFFFFF
+  Revert: true
+  XorOut: 0xFFFFFFFF
+  Check : 0xCBF43926 ("123456789")
+  MaxLen: 268 435 455 bytes
+*/
+
 static const unsigned int crc32_table[256] = {
   0x00000000L, 0x77073096L, 0xee0e612cL, 0x990951baL, 0x076dc419L,
   0x706af48fL, 0xe963a535L, 0x9e6495a3L, 0x0edb8832L, 0x79dcb8a4L,
@@ -55,14 +65,14 @@ static const unsigned int crc32_table[256] = {
   0x2d02ef8dL
 };
 
-#define CRC32_INIT 0xffffffff
+#define CRC32_INIT 0xFFFFFFFF
 
 unsigned int crc32_calc (const unsigned char *buf, size_t len)
 {
   unsigned int crc = CRC32_INIT;
   while (len--)
     {
-      crc = (crc << 8) ^ crc32_table[((crc >> 24) ^ *buf) & 255];
+      crc = (crc >> 8) ^ crc32_table[((unsigned char)crc ^ *buf)];
       buf++;
     }
   return (crc ^ CRC32_INIT);

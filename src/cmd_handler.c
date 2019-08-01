@@ -16,20 +16,26 @@
 
 #define ARRAY_LENGHT(x) (sizeof(x)/sizeof(x[0])) - 1
 
+cmds_modules_pools_t *modules_cmds_poll = NULL;
+
 cmds_hashs_t *cached_cmds = NULL;
 
 cmds_name_hashs_t *cached_names = NULL;
 
 const cmds_t commands[] = {
   { "помощь", "команда для показа этого сообщения", cmd_help },
+  { "оботе", "о боте", cmd_about_bot },
   { "ping", "команда для проверки бота на отзывчевость", cmd_ping },
   { "b64e", "кодирует строку в формате base64", cmd_base64_encode },
   { "b64d", "декодирует строку в формате base64", cmd_base64_decode },
   { "стат", "показывает разную статистику бота", cmd_stat },
   { "ранд", "рандомное число", cmd_rand },
   { "когда", "узнать дату события", cmd_rand_date },
+//  { "кто", "выберает рандомного человека из беседы (нужны права администратора)", cmd_who },
   { "инфа", "узнать вероятность чего-либо", cmd_info },
   { "флип", "подбросить монетку", cmd_flip },
+  { "погода", "показывает погоду сейчас", cmd_weather },
+  { "crc32", "подсчитывает crc32 хеш строки или файла", cmd_crc32 },
 #ifdef DEBUG
   { "debug", "бот собран с отладочными функциями", cmd_debug },
 #endif
@@ -43,6 +49,7 @@ const cmds_names_t names[] = {
   { "максимбот" },
   { "Максимушка" },
   { "максимушка" },
+  { "/" },
   { NULL }
 };
 
@@ -74,7 +81,7 @@ vkapi_bool cmd_is_bot_name(const char *name)
   return false;
 }
 
-cmds_hashs_t *cmd_get_command(const char *command)
+cmd_function_callback cmd_get_command(const char *command)
 {
   if(!command)
     return NULL;
@@ -84,32 +91,42 @@ cmds_hashs_t *cmd_get_command(const char *command)
   if( command_len > max_command_len )
     return NULL;
 
-  unsigned int name_hash = crc32_calc( (const unsigned char *)command, command_len );
+  unsigned int cmd_hash = crc32_calc( (const unsigned char *)command, command_len );
 
   for( size_t i = 0; i < static_commands; i++ ) {
-      if( cached_cmds[i].hash == name_hash )
+      if( cached_cmds[i].hash == cmd_hash )
 	{
-	  return &cached_cmds[i];
+	  return cached_cmds[i].function;
 	}
+    }
+
+  cmds_modules_pools_t *ptr = modules_cmds_poll;
+
+  while (ptr) {
+
+      if(ptr->hash == cmd_hash)
+	{
+	  return ptr->function;
+	}
+      ptr = ptr->next;
     }
 
   return NULL;
 }
 
-vkapi_bool cmd_handle(vkapi_object *object, vkapi_message_new_object *message)
+vkapi_bool cmd_handle(vkapi_handle *object, vkapi_message_object *message)
 {
   char *saveptr = NULL;
   char *argv[64] = { NULL };
   char *token = NULL;
-  string_t s = string_dublicate( message->text );
-  string_t args_s = string_init();
-
-  //TODO: Refactor this shit
 
   if( message->text->len == 0 || !message->text->ptr )
     {
-    goto end;
+      return false;
     }
+
+  string_t s = string_dublicate( message->text );
+  string_t args_s = string_init();
 
    token = strtok_r( s->ptr, " ", &saveptr );
 
@@ -146,13 +163,15 @@ vkapi_bool cmd_handle(vkapi_object *object, vkapi_message_new_object *message)
 
    printf( "Try to call cmd %s\n", argv[0] );
 
-   cmds_hashs_t *cmd = cmd_get_command(argv[0]);
+   cmd_function_callback cmd = cmd_get_command(argv[0]);
 
    if(cmd)
      {
-       if(cmd->function)
-	 cmd->function(object, message, i - 1, argv, args_s->ptr);
-       goto end_true;
+       cmd(object, message, i - 1, argv, args_s->ptr);
+
+       string_destroy( s );
+       string_destroy( args_s );
+       return true;
      } else
        goto not_found;
 
@@ -167,11 +186,6 @@ not_found:
     string_destroy( s );
     string_destroy( args_s );
     return false;
-
-end_true:
-    string_destroy( s );
-    string_destroy( args_s );
-    return true;
 
 end:
     string_destroy( s );
@@ -235,10 +249,71 @@ void cmd_calculate_name_hashes()
     }
 }
 
+void cmd_handler_register_module_cmd(int module_id, const char *cmd_name, const char *description, cmd_function_callback callback)
+{
+  cmds_modules_pools_t *ptr = NULL;
+
+  if(cmd_name == NULL || description == NULL || callback == NULL)
+    return;
+
+  ptr = malloc(sizeof(cmds_modules_pools_t));
+
+  if(!ptr)
+    {
+      return;
+    }
+
+  ptr->hash = crc32_calc((const unsigned char*)cmd_name, strlen(cmd_name));
+
+  ptr->string = cmd_name;
+  ptr->description = description;
+  ptr->module_id = module_id;
+  ptr->function = callback;
+
+  ptr->next = modules_cmds_poll;
+  modules_cmds_poll = ptr;
+
+  printf("Cmd from module: \"%s\" - \"%s\" hash: %X \n", cmd_name, description, ptr->hash);
+
+  max_command_len = MAX(max_command_len, strlen(cmd_name));
+
+}
+
+void cmd_handler_unregister_module_cmd(int module_id)
+{
+    cmds_modules_pools_t *ptr = modules_cmds_poll, *ptr_t1 = NULL;
+    if(ptr->module_id == module_id)
+      {
+	modules_cmds_poll = ptr->next;
+	return;
+      }
+
+    ptr_t1 = ptr->next;
+
+    while(ptr_t1)
+      {
+
+	if( ptr_t1->module_id == module_id )
+	  {
+	    ptr->next = ptr_t1->next;
+	    return;
+	  }
+
+	ptr = ptr_t1;
+	ptr_t1 = ptr_t1->next;
+      }
+}
+
 void cmd_calculate_hashes()
 {
   cmd_calculate_cmd_hashes();
   cmd_calculate_name_hashes();
+}
+
+void cmd_handler_deinit()
+{
+  free(cached_cmds);
+  free(cached_names);
 }
 
 void cmd_handler_init()

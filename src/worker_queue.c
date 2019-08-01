@@ -7,7 +7,7 @@
 #define MAX(a,b) ((a) > (b) ? (a) : (b))
 
 typedef struct list_s {
-  vkapi_message_new_object *object;
+  vkapi_message_object *object;
   struct list_s *next;
 } list_t;
 
@@ -16,21 +16,21 @@ struct queue {
 };
 
 struct queue *queue_pool = NULL;
-static size_t maxium_tasks_in_queue;
-static size_t queue_tasks_in_queue;
+static volatile size_t maxium_tasks_in_queue;
+static volatile size_t queue_tasks_in_queue;
 
-int queue_is_empty() {
+int queue_empty() {
   return (queue_pool->head == NULL && queue_pool->tail == NULL);
 }
 
-size_t queue_maxium_tasks_in_queue()
+size_t queue_maxium_tasks()
 {
   return maxium_tasks_in_queue;
 }
 
-void add_queue(cJSON *update_block) {
+void queue_push(cJSON *update_block) {
   list_t *element = malloc(sizeof(list_t));
-  vkapi_message_new_object *x = malloc(sizeof(vkapi_message_new_object));
+  vkapi_message_object *x = malloc(sizeof(vkapi_message_object));
 
   cJSON *object = cJSON_GetObjectItem(update_block, "object");
   cJSON *peer_id = cJSON_GetObjectItem(object, "peer_id");
@@ -90,7 +90,7 @@ void add_queue(cJSON *update_block) {
     }
 }
 
-vkapi_message_new_object *get_queue() {
+vkapi_message_object *queue_pop() {
   list_t *head = queue_pool->head;
 
   if(head == NULL)
@@ -99,7 +99,7 @@ vkapi_message_new_object *get_queue() {
   queue_tasks_in_queue--;
 
   queue_pool->head = head->next;
-  vkapi_message_new_object *value = head->object;
+  vkapi_message_object *value = head->object;
 
   free(head);
   return(value);
@@ -112,4 +112,9 @@ void queue_init()
   maxium_tasks_in_queue = 0;
   queue_pool->head = NULL;
   queue_pool->tail = NULL;
+}
+
+void queue_deinit()
+{
+  free(queue_pool);
 }

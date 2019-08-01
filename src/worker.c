@@ -22,32 +22,44 @@ static pthread_cond_t cond_var;
 
 static threadpool worker_pool = NULL;
 
+static volatile size_t command_processed;
+static volatile size_t message_processed;
+
+static volatile vkapi_bool main_thread_loop = false;
+
+typedef struct
+{
+  int worker_id;
+  vkapi_bool loop;
+  vkapi_handle *vkapi_object;
+} worker_data_t;
+
 void long_poll_worker( void *data )
 {
-  (void)data;
+  worker_data_t *worker_data = (worker_data_t*)data;
 
-  vkapi_object *vkapi_object = vk_api_init( VK_GROUP_TOKEN, VK_GROUP_ID );
+  printf("[Worker %i] OK!\n", worker_data->worker_id);
 
-  while (1) {
+  while (worker_data->loop) {
       start:
 
 	sleep( 1 );
 
       pthread_mutex_lock( &mutex_lock );
 
-      while( queue_is_empty() )
+      while( queue_empty() )
 	{
 	pthread_cond_wait( &cond_var, &mutex_lock );
 	}
 
-      vkapi_message_new_object *message = get_queue();
+      vkapi_message_object *message = queue_pop();
 
       pthread_mutex_unlock( &mutex_lock );
 
       if( message == NULL )
 	goto start;
 
-	 if( vkapi_object->group_id == (message->from_id * -1) )
+	 if( worker_data->vkapi_object->group_id == (message->from_id * -1) )
 	   {
 	     if( message->attachmens )
 	       cJSON_Delete( message->attachmens );
@@ -58,25 +70,27 @@ void long_poll_worker( void *data )
 	    continue;
 	   }
 
-	 struct timeval tv;
-	 gettimeofday( &tv, NULL );
-	 long long int ns = ((tv.tv_sec*1000LL) + tv.tv_usec);
-
-      printf( "Message from %i ot %i : %s\n", message->peer_id, message->from_id, message->text->ptr );
-
       pthread_mutex_lock(&command_handler_mutex);
+      struct timeval tv1;
+      gettimeofday( &tv1, NULL );
+      long long int ns1 = ((tv1.tv_sec*1000LL) + tv1.tv_usec);
 
-      if( message->text->len < 256 )
+      if( message->text->len < 1024 || message->from_id < 0 )
 	{
-	  if(cmd_handle( vkapi_object, message ))
+	  printf( "[Worker %i] Message peer_id: %i from_id: %i message: %s\n", worker_data->worker_id, message->peer_id, message->from_id, message->text->ptr );
+
+	  if(cmd_handle( worker_data->vkapi_object, message ))
 	    {
 	      struct timeval tv2;
 	      gettimeofday( &tv2, NULL );
 	      long long int ns2 = ((tv2.tv_sec*1000LL) + tv2.tv_usec);
-	      double time = (double)((ns2 - ns) / 1000LL);
-	      vkapi_send_message( vkapi_object , message->peer_id, va("Сообщение обработано за %f мс", time ));
+	      double time = (double)((ns2 - ns1) / 1000);
+	      command_processed++;
+	      vkapi_send_message( worker_data->vkapi_object, message->peer_id, va("Сообщение обработано за %f с", time / 1000 ));
 	    }
 	}
+
+      message_processed++;
 
       pthread_mutex_unlock(&command_handler_mutex);
 
@@ -94,30 +108,70 @@ int worker_get_workers_count()
   return thpool_num_threads_working(worker_pool);
 }
 
+size_t worker_commands_processed()
+{
+  return command_processed;
+}
+
+size_t worker_message_processed()
+{
+  return message_processed;
+}
+
+void worker_exit()
+{
+  main_thread_loop = 0;
+}
+
+void load_modules();
+
+void queue_deinit();
+
+void worker_messages(void *data)
+{
+
+}
+
 void worker_main_thread( const char *token, int group_id, int num_workers )
 {
   queue_init();
+  load_modules();
   cmd_handler_init();
+
+  command_processed = 0;
+  message_processed = 0;
+
+  main_thread_loop = true;
 
   pthread_mutex_init( &mutex_lock, NULL );
   pthread_mutex_init( &command_handler_mutex, NULL );
   pthread_cond_init( &cond_var, NULL );
 
+  worker_data_t *work_data = calloc(sizeof(worker_data_t), num_workers + 1);
+
   worker_pool = thpool_init( num_workers );
+
+  for( int i = 0; i < num_workers + 1; i++ )
+    {
+      work_data[i].worker_id = i;
+      work_data[i].loop = true;
+      work_data[i].vkapi_object = vkapi_init( VK_GROUP_TOKEN, VK_GROUP_ID );
+    }
 
   for( int i = 0; i < num_workers; i++ )
     {
-      thpool_add_work( worker_pool, (void *)long_poll_worker, NULL );
+      thpool_add_work( worker_pool, long_poll_worker, &work_data[i] );
     }
 
-  vkapi_object *object = vk_api_init(VK_GROUP_TOKEN, VK_GROUP_ID);
+  vkapi_handle *object = vkapi_init(VK_GROUP_TOKEN, VK_GROUP_ID);
 
-  try_again:
-    if(!vkapi_get_long_poll_server(object))
-      {
-	printf("Error while getting long poll server. I try again.\n");
-	goto try_again;
-      }
+try_again:
+  if(!vkapi_get_long_poll_server(object))
+    {
+      printf("Error while getting long poll server. I try again.\n");
+      sleep(10);
+      goto try_again;
+    }
 
   while (1) {
       string_t long_poll_string = NULL;
@@ -131,7 +185,7 @@ void worker_main_thread( const char *token, int group_id, int num_workers )
 
       printf( "%s\n", long_poll_string->ptr );
 
-      if( !json_vkapi_long_poll_have_updates( main_obj ) )
+      if( !vkapi_json_long_poll_have_updates( main_obj ) )
 	{
 	  cJSON_Delete( main_obj );
 	  string_destroy( long_poll_string );
@@ -145,23 +199,33 @@ void worker_main_thread( const char *token, int group_id, int num_workers )
 
       cJSON_ArrayForEach( update_block, updates )
       {
-
 	cJSON *copy = cJSON_Duplicate( update_block, true );
 
 	if( !copy )
 	  break;
 
-	add_queue( copy );
-
+	queue_push( copy );
       }
 
       pthread_mutex_unlock( &mutex_lock );
-      pthread_mutex_unlock( &command_handler_mutex );
       pthread_cond_broadcast( &cond_var );
 
       cJSON_Delete( main_obj );
       string_destroy( long_poll_string );
     }
 
+  vkapi_destroy(object);
+
   thpool_wait( worker_pool );
+  thpool_pause( worker_pool );
+  thpool_destroy( worker_pool );
+  queue_deinit();
+  cmd_handler_deinit();
+
+  for( int i = 0; i < num_workers; i++ )
+    {
+      vkapi_destroy(work_data[i].vkapi_object);
+    }
+
+  free(work_data);
 }
