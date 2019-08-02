@@ -70,7 +70,7 @@ string_t vkapi_get_longpoll_data(vkapi_handle *object)
   s = string_init();
   s2 = string_init();
 
-  string_format( s2, "act=a_check&key=%s&wait=25&mode=2&ts=%i", object->longpoll_key, object->longpoll_timestamp );
+  string_format( s2, "act=a_check&key=%s&wait=25&mode=2&ts=%lli", object->longpoll_key, object->longpoll_timestamp );
 
   curl_easy_setopt(object->curl_handle, CURLOPT_URL, object->longpoll_server_url );
   curl_easy_setopt(object->curl_handle, CURLOPT_POST, 1L);
@@ -105,7 +105,7 @@ string_t vkapi_get_longpoll_data(vkapi_handle *object)
   cJSON *ts = cJSON_GetObjectItem(json, "ts");
 
   if(ts)
-    object->longpoll_timestamp = atoi(cJSON_GetStringValue(ts));
+    object->longpoll_timestamp = atoll(cJSON_GetStringValue(ts));
   else
     {
       printf("Error while getting long poll data: json ts == NULL\n");
@@ -162,7 +162,7 @@ vkapi_bool vkapi_get_long_poll_server(vkapi_handle *object)
     {
   strncpy(object->longpoll_key, cJSON_GetStringValue(key), sizeof(object->longpoll_key));
   strncpy(object->longpoll_server_url, cJSON_GetStringValue(server), sizeof(object->longpoll_server_url));
-  object->longpoll_timestamp = atoi(cJSON_GetStringValue(timestamp));
+  object->longpoll_timestamp = atoll(cJSON_GetStringValue(timestamp));
     } else {
       printf("Error while getting long poll data: json parser return null json objects. Seems its error %s\n", method_result->ptr);
       cJSON_Delete(json);
@@ -186,8 +186,6 @@ vkapi_handle *vkapi_init(const char *token, int group_id)
 
   strncpy(result->vk_token, token, sizeof(result->vk_token));
   result->group_id = group_id;
-
-  printf("%s : %i\n", result->vk_token, result->group_id);
 
   return result;
 }
