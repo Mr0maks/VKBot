@@ -15,7 +15,7 @@ struct queue {
   list_t *head, *tail;
 };
 
-struct queue *queue_pool = NULL;
+static struct queue *queue_pool = NULL;
 static volatile size_t maxium_tasks_in_queue;
 static volatile size_t queue_tasks_in_queue;
 
@@ -46,7 +46,6 @@ void queue_push(cJSON *update_block) {
 
   if(VK_GROUP_ID == x->peer_id * -1)
     {
-      printf("skip group message\n");
       free(x);
       free(element);
       cJSON_Delete(update_block);

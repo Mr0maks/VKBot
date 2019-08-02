@@ -20,7 +20,7 @@ typedef struct
   CURL *curl_handle;
 } vkapi_handle;
 #else
-typedef void vkapi_object;
+typedef void vkapi_handle;
 #endif
 
 typedef struct

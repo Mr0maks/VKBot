@@ -16,6 +16,8 @@
 
 #include <pthread.h>
 
+#include "memcache.h"
+
 static pthread_mutex_t mutex_lock;
 static pthread_mutex_t command_handler_mutex;
 static pthread_cond_t cond_var;
@@ -75,7 +77,7 @@ void long_poll_worker( void *data )
       gettimeofday( &tv1, NULL );
       long long int ns1 = ((tv1.tv_sec*1000LL) + tv1.tv_usec);
 
-      if( message->text->len < 1024 || message->from_id < 0 )
+      if( message->text->len < 512 || message->from_id < 0 )
 	{
 	  printf( "[Worker %i] Message peer_id: %i from_id: %i message: %s\n", worker_data->worker_id, message->peer_id, message->from_id, message->text->ptr );
 
@@ -86,7 +88,7 @@ void long_poll_worker( void *data )
 	      long long int ns2 = ((tv2.tv_sec*1000LL) + tv2.tv_usec);
 	      double time = (double)((ns2 - ns1) / 1000);
 	      command_processed++;
-	      vkapi_send_message( worker_data->vkapi_object, message->peer_id, va("Сообщение обработано за %f с", time / 1000 ));
+	      printf("[Worker %i] message done in %f sec\n", worker_data->worker_id, time / 1000 );
 	    }
 	}
 
@@ -125,18 +127,12 @@ void worker_exit()
 
 void load_modules();
 
-void queue_deinit();
-
-void worker_messages(void *data)
-{
-
-}
-
 void worker_main_thread( const char *token, int group_id, int num_workers )
 {
   queue_init();
   load_modules();
   cmd_handler_init();
+  memcache_init(64);
 
   command_processed = 0;
   message_processed = 0;

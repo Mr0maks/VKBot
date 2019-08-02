@@ -14,6 +14,8 @@
 
 #include "cmd_handler.h"
 
+#include "memcache.h"
+
 extern cmds_t commands[];
 
 extern cmds_modules_pools_t *modules_cmds_poll;
@@ -105,7 +107,7 @@ long get_param_of_path(const char *filenpath, const char *what);
 void cmd_stat(vkapi_handle *object, vkapi_message_object *message, int argc, char **argv, const char *args)
 {
   string_t s = string_init();
-  string_format( s, "Статистика бота\nКоличество работающих воркеров: %i\nПик очереди: %lu\nПамяти сожрано мной: %ld кб\nКомманд обработано: %lu\nСообщений обработано: %lu\n", worker_get_workers_count(), queue_maxium_tasks(), get_param_of_path( "/proc/self/status", "VmRSS" ), worker_commands_processed(), worker_message_processed() );
+  string_format( s, "Статистика бота\nКоличество работающих воркеров: %i\nПик очереди: %lu\nПамяти сожрано мной: %ld кб\nМаксимальный размер кеша: %lu кб\nСъел кеш: %lu кб\nКомманд обработано: %lu\nСообщений обработано: %lu\n", worker_get_workers_count(), queue_maxium_tasks(), get_param_of_path( "/proc/self/status", "VmRSS" ),memcache_get_max_size(), memcache_get_size() / 1024, worker_commands_processed(), worker_message_processed() );
   vkapi_send_message( object, message->peer_id, s->ptr );
   string_destroy( s );
 }
@@ -352,5 +354,33 @@ void cmd_crc32(vkapi_handle *object, vkapi_message_object *message, int argc, ch
 
 void cmd_debug(vkapi_handle *object, vkapi_message_object *message, int argc, char **argv, const char *args)
 {
-  vkapi_send_message(object, message->peer_id, va("Ваш уровень прав: %s\n", get_name_privilage(get_privilage_by_id(message->from_id))));
+  //vkapi_send_message(object, message->peer_id, va("Ваш уровень прав: %s\n", get_name_privilage(get_privilage_by_id(message->from_id))));
+
+  if(argv[1])
+    {
+      if(argv[2])
+	{
+	  string_t s = string_init();
+
+	      for( int c = 2; c < argc + 1; c++ )
+		{
+		  if( !argv[c] )
+		    break;
+
+		  if(c > 2)
+		    string_strncat( s, " ", 1 );
+
+		  string_strncat( s, argv[c], strlen(argv[c]) );
+		}
+
+	  memcache_push(argv[1], s->ptr);
+	  vkapi_send_message(object, message->peer_id, va("Memcache: push key \"%s\" value \"%s\"\n", argv[1], s->ptr));
+	  return;
+	}
+      const char *value = memcache_get(argv[1]);
+      if(value)
+      vkapi_send_message(object, message->peer_id, va("Memcache: key is \"%s\" value is \"%s\"\n", argv[1], value));
+      else
+	vkapi_send_message(object, message->peer_id, va("Memcache: value for key \"%s\" not found\n", argv[1]));
+    }
 }
