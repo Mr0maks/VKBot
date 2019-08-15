@@ -6,26 +6,19 @@
 #include "vkapi.h"
 #include "dynamic_strings.h"
 
+#include "curl_wrap.h"
+
+#include <stdio.h>
+
 #define VK_URL_METHOD "https://api.vk.com/method/"
 
-size_t vk_string_writefunc(void *ptr, size_t size, size_t nmemb, void *data)
-{
-  string_t s = (string_t)data;
-
-  if(ptr == NULL)
-    return 0;
-
-  string_strncat(s, (const char*)ptr, size*nmemb);
-
-  return size*nmemb;
-}
-
-string_t vkapi_call_method(vkapi_handle *object, const char *method, string_t specific_args, vkapi_bool result_need)
+string_t vkapi_call_method(vkapi_handle *object, const char *method, string_t specific_args, vkapi_boolean result_need)
 {
   string_t s = NULL;
   string_t s2 = NULL;
 
-  s = string_init();
+  vkapi_boolean error_code = false;
+
   s2 = string_init();
 
   if(specific_args)
@@ -33,33 +26,96 @@ string_t vkapi_call_method(vkapi_handle *object, const char *method, string_t sp
   else
   string_format( s2, "group_id=%i&access_token=%s&v=5.101", object->group_id, object->vk_token);
 
-  curl_easy_setopt(object->curl_handle, CURLOPT_URL, va("%s/%s", VK_URL_METHOD, method));
-  curl_easy_setopt(object->curl_handle, CURLOPT_POST, 1L);
-  //curl_easy_setopt(object->curl_handle, CURLOPT_VERBOSE, 1L);
-
-  curl_easy_setopt(object->curl_handle, CURLOPT_POSTFIELDS, s2->ptr );
-  curl_easy_setopt(object->curl_handle, CURLOPT_POSTFIELDSIZE, s2->len );
-  curl_easy_setopt(object->curl_handle, CURLOPT_WRITEFUNCTION, vk_string_writefunc);
-  curl_easy_setopt(object->curl_handle, CURLOPT_WRITEDATA, s);
-
-  CURLcode error_code = curl_easy_perform(object->curl_handle);
+  if(result_need)
+    {
+      s = string_init();
+      error_code = curl_post(object->curl_handle, va("%s/%s", VK_URL_METHOD, method), s2, NULL, s);
+    } else {
+      error_code = curl_post(object->curl_handle, va("%s/%s", VK_URL_METHOD, method), s2, NULL, NULL);
+    }
 
   string_destroy( s2 );
 
-  if(error_code != CURLE_OK)
+  if(error_code != true)
     {
-      printf("vk_api: libcurl error: %s \n", curl_easy_strerror(error_code));
-      string_destroy(s);
-      return NULL;
-    }
-
-  if(!result_need)
-    {
+      printf("vk_api: libcurl error!\n");
       string_destroy(s);
       return NULL;
     }
 
   return s;
+}
+
+typedef enum
+{
+  VKAPI_DOC,
+  VKAPI_PHOTO,
+  VKAPI_AUDIO
+} docs_type_t;
+
+//TODO: More types
+
+typedef struct
+{
+  docs_type_t type;
+} vkapi_attach;
+
+vkapi_boolean vkapi_upload_doc_by_url(vkapi_handle *object, vkapi_message_object *message, string_t data, docs_type_t type)
+{
+  string_t s = string_init();
+
+  switch (type) {
+      case VKAPI_DOC:
+	{
+	  string_format(s, "type=doc&peer_id=%i", message->peer_id);
+	  string_t result = vkapi_call_method(object, "docs.getMessagesUploadServer", s, true );
+
+	  if(!result)
+	    break;
+
+	  cJSON *ptr = cJSON_ParseWithOpts(result->ptr, NULL, false);
+
+	  if(!ptr)
+	    break;
+
+	  cJSON *upload_url = cJSON_GetObjectItem(cJSON_GetObjectItem(ptr, "response"), "upload_url");
+
+	  if(!upload_url)
+	    {
+	    printf("upload url is null\n");
+	    break;
+	    }
+
+	  string_t dataptr = string_init();
+
+	  printf("UPLOAD TO URL %s\n", cJSON_GetStringValue(upload_url));
+
+	  curl_uploadfile(object->curl_handle, cJSON_GetStringValue(upload_url), "file", "zalupa.png", data, NULL, dataptr);
+
+	  cJSON_Delete(ptr);
+	  string_destroy(result);
+
+	  ptr = cJSON_ParseWithOpts(data->ptr, NULL, false);
+
+	  if(ptr)
+	    break;
+
+	  string_format(s, "file=%s", cJSON_GetStringValue(cJSON_GetObjectItem(ptr, "file")));
+	  result = vkapi_call_method(object, "docs.save", s, true );
+
+	  printf("SO.... %s\n", dataptr->ptr);
+
+	  string_destroy(s);
+	  string_destroy(result);
+	  break;
+	}
+      case VKAPI_PHOTO:
+	{
+	  break;
+	}
+
+    }
+
 }
 
 string_t vkapi_get_longpoll_data(vkapi_handle *object)
@@ -72,22 +128,13 @@ string_t vkapi_get_longpoll_data(vkapi_handle *object)
 
   string_format( s2, "act=a_check&key=%s&wait=25&mode=2&ts=%lli", object->longpoll_key, object->longpoll_timestamp );
 
-  curl_easy_setopt(object->curl_handle, CURLOPT_URL, object->longpoll_server_url );
-  curl_easy_setopt(object->curl_handle, CURLOPT_POST, 1L);
-  //curl_easy_setopt(object->curl_handle, CURLOPT_VERBOSE, 1L);
-
-  curl_easy_setopt(object->curl_handle, CURLOPT_POSTFIELDS, s2->ptr );
-  curl_easy_setopt(object->curl_handle, CURLOPT_POSTFIELDSIZE, s2->len );
-  curl_easy_setopt(object->curl_handle, CURLOPT_WRITEFUNCTION, vk_string_writefunc );
-  curl_easy_setopt(object->curl_handle, CURLOPT_WRITEDATA, s );
-
-  CURLcode error_code = curl_easy_perform(object->curl_handle);
+  vkapi_boolean error_code = curl_post(object->curl_handle, object->longpoll_server_url, s2, NULL, s);
 
   string_destroy( s2 );
 
-  if(error_code != CURLE_OK)
+  if(error_code != true)
     {
-      printf("vk_api: libcurl error %s \n", curl_easy_strerror(error_code));
+      printf("vk_api: libcurl error!\n");
       string_destroy( s );
       return NULL;
     }
@@ -127,7 +174,7 @@ void vkapi_send_message(vkapi_handle *object, int peer_id, const char *msg)
   string_destroy(s);
 }
 
-vkapi_bool vkapi_get_long_poll_server(vkapi_handle *object)
+vkapi_boolean vkapi_get_long_poll_server(vkapi_handle *object)
 {
   string_t method_result = vkapi_call_method(object, "groups.getLongPollServer", NULL, true);
 
@@ -182,7 +229,7 @@ vkapi_handle *vkapi_init(const char *token, int group_id)
   if(!result)
     return NULL;
 
-  result->curl_handle = curl_easy_init();
+  result->curl_handle = curl_init();
 
   strncpy(result->vk_token, token, sizeof(result->vk_token));
   result->group_id = group_id;
@@ -194,6 +241,6 @@ void vkapi_destroy(vkapi_handle *ptr)
 {
   assert(ptr != NULL);
 
-  curl_easy_cleanup(ptr->curl_handle);
+  curl_cleanup(ptr->curl_handle);
   free(ptr);
 }

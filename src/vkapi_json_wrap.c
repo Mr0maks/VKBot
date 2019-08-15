@@ -1,7 +1,7 @@
 #include <cJSON.h>
 #include "vkapi.h"
 
-vkapi_bool vkapi_json_long_poll_have_updates( cJSON *main )
+vkapi_boolean vkapi_json_long_poll_have_updates( cJSON *main )
 {
   cJSON *updates = cJSON_GetObjectItem(main, "updates");
 

@@ -2,7 +2,7 @@
 #include <memory.h>
 #include "va_utils.h"
 #include "cmd_handler.h"
-#include "crc32_hash.h"
+#include "crc_hash.h"
 #include "module_api.h"
 
 #ifdef _WIN32

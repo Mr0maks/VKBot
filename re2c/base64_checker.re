@@ -1,5 +1,4 @@
 #include <stdio.h>
-#include "vk_strings.h"
 
 /*!max:re2c*/
 
@@ -13,7 +12,7 @@ int base64_string(const char *base64_str)
         re2c:yyfill:enable = 0;
 
         end = "\x00";
-        string = [0-9a-zA-Z+=/];
+        string = [0-9a-zA-Z+=/ \n];
 
         * { return 0; }
         end { return 1; }

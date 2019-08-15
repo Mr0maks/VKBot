@@ -6,7 +6,7 @@
 
 #include <stdint.h>
 
-#include "crc32_hash.h"
+#include "crc_hash.h"
 
 typedef struct
 {
@@ -99,7 +99,6 @@ memcache_t *memcache_realloc(memcache_t *ptr, const char *data, size_t data_len)
       exit(EXIT_FAILURE);
     }
   ptr->data_len = data_len;
-
   ptr->data[data_len] = '\0';
 
   strncpy(ptr->data, data, data_len);
@@ -112,7 +111,7 @@ void memcache_push(const char *key, const char *value)
   if(!key || !value)
     return;
 
-  memcache_t *ptr = memcache_find(key);
+    memcache_t *ptr = memcache_find(key);
 
   if(ptr)
     {
@@ -130,7 +129,6 @@ size_t memcache_get_max_size()
 {
   return pool->max_size / 1024;
 }
-
 size_t memcache_get_size()
 {
   return pool->size_now;
@@ -154,8 +152,7 @@ const char* memcache_get(const char *key)
 void memcache_init(size_t size)
 {
   pool = malloc(sizeof(memcache_pool_t));
-
+  pool->list = NULL;
   pool->max_size = ((size * 1024) * 1024);
-
   pool->size_now = 0;
 }

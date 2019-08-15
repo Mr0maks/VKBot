@@ -1,5 +1,4 @@
-#ifndef MODULE_API_H
-#define MODULE_API_H
+#pragma once
 
 #include "dynamic_strings.h"
 #include "vkapi.h"
@@ -19,6 +18,3 @@ typedef struct
 
   unsigned int (*crc32_calc) (const unsigned char *buf, size_t len);
 } engine_api_t;
-
-
-#endif // MODULE_API_H

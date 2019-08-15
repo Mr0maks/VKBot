@@ -70,10 +70,9 @@ static const unsigned int crc32_table[256] = {
 unsigned int crc32_calc (const unsigned char *buf, size_t len)
 {
   unsigned int crc = CRC32_INIT;
+
   while (len--)
-    {
-      crc = (crc >> 8) ^ crc32_table[((unsigned char)crc ^ *buf)];
-      buf++;
-    }
+      crc = (crc >> 8) ^ crc32_table[(crc ^ *buf++) & 0xFF];
+
   return (crc ^ CRC32_INIT);
 }

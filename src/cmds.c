@@ -4,16 +4,12 @@
 #include <strings.h>
 #include <time.h>
 #include <limits.h>
-#include <crc32_hash.h>
-
+#include <crc_hash.h>
 #include <curl/curl.h>
-
-#include "base64_decoder.h"
-
+#include "curl_wrap.h"
+#include "base64.h"
 #include "worker_queue.h"
-
 #include "cmd_handler.h"
-
 #include "memcache.h"
 
 extern cmds_t commands[];
@@ -46,7 +42,7 @@ void cmd_about_bot(vkapi_handle *object, vkapi_message_object *message, int argc
 {
   string_t s = string_init();
 
-  string_format( s,"VKBot\nИспользует библиотеки libcurl и cjson\nСобран %s %s\nВерсия %s", __DATE__, __TIME__, VERSION );
+  string_format( s,"VKBot\nБот написан на C\nИспользует библиотеки libcurl и cjson\nСобран %s %s\nВерсия %s", __DATE__, __TIME__, VERSION );
 
   vkapi_send_message(object, message->peer_id, s->ptr);
 
@@ -60,26 +56,24 @@ void cmd_ping(vkapi_handle *object, vkapi_message_object *message, int argc, cha
 
 void cmd_base64_encode(vkapi_handle *object, vkapi_message_object *message, int argc, char **argv, const char *args)
 {
-  string_t s = NULL;
-
   if( argc < 1 )
     {
       vkapi_send_message(object, message->peer_id, "Использование: b64e <строка>");
       return;
     }
 
-  s = string_init();
-  base64_encode( (const unsigned char *)args, (unsigned char *)s->ptr, strlen( args ), 0);
-  vkapi_send_message( object, message->peer_id, va("Закодированная строка: %s", s->ptr ) );
-  string_destroy( s );
+  char *base64_encoded_string = (char*)base64_encode( (const unsigned char *)args, strlen( args ), NULL);
+  if(base64_encoded_string)
+    {
+      vkapi_send_message( object, message->peer_id, va("Закодированная строка: %s", base64_encoded_string ) );
+      free(base64_encoded_string);
+    }
 }
 
 int base64_string(const char *base64_str);
 
 void cmd_base64_decode(vkapi_handle *object, vkapi_message_object *message, int argc, char **argv, const char *args)
 {
-  string_t s = NULL;
-
   if( argc < 1 )
     {
       vkapi_send_message( object, message->peer_id, "Использование: b64d <строка>" );
@@ -92,10 +86,12 @@ void cmd_base64_decode(vkapi_handle *object, vkapi_message_object *message, int 
       return;
     }
 
-  s = string_init();
-  base64_decode( (const unsigned char *)args, (unsigned char *)s->ptr, strlen( args ) );
-  vkapi_send_message( object, message->peer_id, va( "Декодированная строка: %s", s->ptr ) );
-  string_destroy( s );
+  char *base64_decoded_string = (char*)base64_decode( (const unsigned char *)args, strlen( args ), NULL );
+  if(base64_decoded_string)
+    {
+      vkapi_send_message( object, message->peer_id, va( "Декодированная строка: %s", base64_decoded_string ) );
+      free(base64_decoded_string);
+    }
 }
 
 int worker_get_workers_count(void);
@@ -114,8 +110,11 @@ void cmd_stat(vkapi_handle *object, vkapi_message_object *message, int argc, cha
 
 int64_t random_int64(int64_t min, int64_t max)
 {
+  if(min > max)
+    return 0;
+
   if(min != LLONG_MIN || max != LLONG_MAX)
-  return min + rand() % ( max + 1 - min);
+    return min + rand() % ( max + 1 - min);
   else
   return 0;
 }
@@ -204,7 +203,7 @@ void cmd_info(vkapi_handle *object, vkapi_message_object *message, int argc, cha
       vkapi_send_message( object, message->peer_id, "Использование: инфа <строка>" );
     }
 
-  int64_t percents = random_int64( 0, 197 );
+  int64_t percents = random_int64( 0, 172 );
 
   vkapi_send_message( object, message->peer_id, va("Вероятность этого составляет %lli%%", percents) );
 }
@@ -214,86 +213,94 @@ void cmd_info(vkapi_handle *object, vkapi_message_object *message, int argc, cha
 #define OPEN_WEATHER_METHOD "data/2.5/weather"
 #define OPEN_WEATHER_LANG "ru"
 
-size_t vk_string_writefunc(void *ptr, size_t size, size_t nmemb, void *data);
+size_t curl_dynamic_string_writefunc(void *ptr, size_t size, size_t nmemb, void *data);
 
 void cmd_weather(vkapi_handle *object, vkapi_message_object *message, int argc, char **argv, const char *args)
 {
   if( argc < 1 )
     {
       vkapi_send_message( object, message->peer_id, "Использование: погода <Город>" );
+      return;
     }
 
-  string_t params_to_opwe = string_init();
+  string_t url_get = string_init();
+  string_t openweather_json = string_init();
 
-  string_t s = string_init();
+  string_format(url_get, "%s/%s?q=%s&appid=%s&lang=%s&units=metric", OPEN_WEATHER_URL, OPEN_WEATHER_METHOD, argv[1], OPEN_WEATHER_TOKEN, OPEN_WEATHER_LANG );
 
-  string_format(params_to_opwe, "%s/%s?q=%s&appid=%s&lang=%s&units=metric", OPEN_WEATHER_URL, OPEN_WEATHER_METHOD, argv[1], OPEN_WEATHER_TOKEN, OPEN_WEATHER_LANG );
-
-  curl_easy_setopt(object->curl_handle, CURLOPT_URL, params_to_opwe->ptr);
-
-  curl_easy_setopt(object->curl_handle, CURLOPT_WRITEFUNCTION, vk_string_writefunc);
-  curl_easy_setopt(object->curl_handle, CURLOPT_WRITEDATA, s);
+  curl_easy_reset(object->curl_handle);
+  curl_easy_setopt(object->curl_handle, CURLOPT_URL, url_get->ptr);
+  curl_easy_setopt(object->curl_handle, CURLOPT_WRITEFUNCTION, curl_dynamic_string_writefunc);
+  curl_easy_setopt(object->curl_handle, CURLOPT_WRITEDATA, openweather_json);
 
   CURLcode error_code = curl_easy_perform(object->curl_handle);
+
+  string_destroy(url_get);
 
   if(error_code != CURLE_OK)
     {
       vkapi_send_message(object, message->peer_id, "Произошла неизвестная ошибка");
-      string_destroy(s);
-      string_destroy(params_to_opwe);
+      string_destroy(openweather_json);
       return;
     }
-
-    string_destroy(params_to_opwe);
 
     if(argv[argc])
       {
     if(!strncasecmp(argv[argc], "json", 4))
       {
-	vkapi_send_message(object, message->peer_id, s->ptr);
-	string_destroy(s);
+	vkapi_send_message(object, message->peer_id, openweather_json->ptr);
+	string_destroy(openweather_json);
 	return;
       }
       }
 
-  cJSON *ptr = cJSON_ParseWithOpts(s->ptr, NULL, false);
+  cJSON *ptr = cJSON_ParseWithOpts(openweather_json->ptr, NULL, false);
 
   if(!ptr)
     {
 	vkapi_send_message(object, message->peer_id, "cJSON сделал рыг рыг пук пук");
+	string_destroy(openweather_json);
 	return;
     }
 
   cJSON *cod = cJSON_GetObjectItem(ptr, "cod");
 
-      if(cod->valueint == 404)
+
+        if(cod->valueint == 200)
+        {
+	  string_t msg = string_init();
+
+	  cJSON *weather_array = cJSON_GetObjectItem(ptr, "weather");
+	  cJSON *weather = cJSON_GetArrayItem(weather_array, 0);
+	  cJSON *name = cJSON_GetObjectItem(ptr, "name");
+	  cJSON *main_obj = cJSON_GetObjectItem(ptr, "main");
+	  cJSON *temp = cJSON_GetObjectItem(main_obj, "temp");
+
+	  string_format(msg, "Погода в %s\n\n• Сейчас: %i℃, %s\n", cJSON_GetStringValue(name), temp->valueint, cJSON_GetStringValue(cJSON_GetObjectItem(weather, "description")));
+
+	  vkapi_send_message(object, message->peer_id, msg->ptr);
+
+	  string_destroy(msg);
+	  cJSON_Delete(ptr);
+	  string_destroy(openweather_json);
+	  return;
+        } else if(!strncmp(cod->valuestring, "404", 3))
 	{
 	  vkapi_send_message(object, message->peer_id, "Такого города нет");
 	  cJSON_Delete(ptr);
-	  string_destroy(s);
+	  string_destroy(openweather_json);
 	  return;
-	} else if(cod->valueint == 401) {
+	} else if(!strncmp(cod->valuestring, "401", 3)) {
 	  vkapi_send_message(object, message->peer_id, "Ограничение апи openweathermap");
 	  cJSON_Delete(ptr);
-	  string_destroy(s);
+	  string_destroy(openweather_json);
+	  return;
+	} else {
+	  vkapi_send_message(object, message->peer_id, "Неизвестная ошибка");
+	  cJSON_Delete(ptr);
+	  string_destroy(openweather_json);
 	  return;
 	}
-
-  string_t msg = string_init();
-
-  cJSON *weather_array = cJSON_GetObjectItem(ptr, "weather");
-  cJSON *weather = cJSON_GetArrayItem(weather_array, 0);
-  cJSON *name = cJSON_GetObjectItem(ptr, "name");
-  cJSON *main = cJSON_GetObjectItem(ptr, "main");
-  cJSON *temp = cJSON_GetObjectItem(main, "temp");
-
-  string_format(msg, "Погода в %s\n\n• Сейчас: %i℃, %s\n", cJSON_GetStringValue(name), temp->valueint, cJSON_GetStringValue(cJSON_GetObjectItem(weather, "description")));
-
-  vkapi_send_message(object, message->peer_id, msg->ptr);
-
-  string_destroy(msg);
-  cJSON_Delete(ptr);
-  string_destroy(s);
 }
 
 void cmd_crc32(vkapi_handle *object, vkapi_message_object *message, int argc, char **argv, const char *args)
@@ -333,7 +340,7 @@ void cmd_crc32(vkapi_handle *object, vkapi_message_object *message, int argc, ch
       curl_easy_setopt(object->curl_handle, CURLOPT_URL, cJSON_GetStringValue(cJSON_GetObjectItem(doc, "url")));
       curl_easy_setopt(object->curl_handle, CURLOPT_FOLLOWLOCATION, 1L);
       //curl_easy_setopt(object->curl_handle, CURLOPT_VERBOSE, 1L);
-      curl_easy_setopt(object->curl_handle, CURLOPT_WRITEFUNCTION, vk_string_writefunc);
+      curl_easy_setopt(object->curl_handle, CURLOPT_WRITEFUNCTION, curl_dynamic_string_writefunc);
       curl_easy_setopt(object->curl_handle, CURLOPT_WRITEDATA, file);
 
       curl_easy_perform(object->curl_handle);
@@ -348,6 +355,57 @@ void cmd_crc32(vkapi_handle *object, vkapi_message_object *message, int argc, ch
       vkapi_send_message(object, message->peer_id, msg->ptr);
       string_destroy(msg);
     }
+}
+
+void cmd_hlmemes(vkapi_handle *object, vkapi_message_object *message, int argc, char **argv, const char *args)
+{
+  vkapi_send_message(object, message->peer_id, "Держи: https://www.youtube.com/playlist?list=PLxdH4XPU7OZnR5XV-b1QmnM7yCwAlmOUd");
+}
+
+vkapi_boolean vkapi_upload_doc_by_url(vkapi_handle *object, vkapi_message_object *message, string_t data, int type);
+
+void cmd_cat(vkapi_handle *object, vkapi_message_object *message, int argc, char **argv, const char *args)
+{
+  string_t s = string_init();
+
+  string_t url = string_init();
+
+  string_copy(url, "https://aws.random.cat/meow");
+
+  if(curl_get(object->curl_handle, url, NULL, s) != true)
+    {
+      vkapi_send_message(object, message->peer_id, "Увы но сервер с котиками недоступен >:(");
+      string_destroy(s);
+      string_destroy(url);
+    }
+
+  cJSON *ptr = cJSON_ParseWithOpts(s->ptr, NULL, false);
+
+  if(!ptr)
+    {
+      vkapi_send_message(object, message->peer_id, "Увы но сервер с котиками недоступен >:(");
+      string_destroy(s);
+      string_destroy(url);
+    }
+
+  cJSON *file = cJSON_GetObjectItem(ptr, "file");
+
+
+  string_copy(url, cJSON_GetStringValue(file));
+
+  printf("SO.... %s\n", url->ptr);
+
+  string_t filedata = string_init();
+
+  curl_get(object->curl_handle, url, NULL, filedata);
+
+  vkapi_upload_doc_by_url(object, message, filedata, 0);
+
+  vkapi_send_message(object, message->peer_id, s->ptr);
+
+  string_destroy(filedata);
+  string_destroy(s);
+  string_destroy(url);
 }
 
 #include "users.h"

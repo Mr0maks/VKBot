@@ -1,8 +1,8 @@
 #include <pthread.h>
-#include <memory.h>
-
 #include "vkapi.h"
 #include "vk_setting.h"
+
+#include <stdlib.h>
 
 #define MAX(a,b) ((a) > (b) ? (a) : (b))
 
@@ -29,32 +29,29 @@ size_t queue_maxium_tasks()
 }
 
 void queue_push(cJSON *update_block) {
-  list_t *element = malloc(sizeof(list_t));
-  vkapi_message_object *x = malloc(sizeof(vkapi_message_object));
-
   cJSON *object = cJSON_GetObjectItem(update_block, "object");
   cJSON *peer_id = cJSON_GetObjectItem(object, "peer_id");
-
-  if(peer_id)
-  x->peer_id = peer_id->valueint;
-  else {
-      cJSON_Delete(update_block);
-      free(element);
-      free(x);
-      return;
-    }
-
-  if(VK_GROUP_ID == x->peer_id * -1)
-    {
-      free(x);
-      free(element);
-      cJSON_Delete(update_block);
-      return;
-    }
-
   cJSON *from_id = cJSON_GetObjectItem(object, "from_id");
 
+  if(!object || !peer_id || !from_id) {
+    cJSON_Delete(update_block);
+    return;
+    } else if(peer_id->valueint < 0 || from_id->valueint < 0)
+    {
+      cJSON_Delete(update_block);
+      return;
+    }
+
+  list_t *element = malloc(sizeof(list_t));
+  vkapi_message_object *x = calloc(1, sizeof(vkapi_message_object));
+
   x->from_id = from_id->valueint;
+  x->peer_id = peer_id->valueint;
+
+  x->private_message = false;
+
+  if(x->peer_id == x->from_id)
+    x->private_message = true;
 
   x->text = string_init();
 

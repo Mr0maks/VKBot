@@ -28,9 +28,6 @@ CC=clang
 CXX=clang++
 endif
 
-COMPILER_VER_CC = $(shell $(CC) -dumpversion)
-COMPILER_VER_CXX = $(shell $(CC) -dumpversion)
-
 OPT_CFLAGS = -O2 -flto -funroll-loops -fno-omit-frame-pointer -fno-stack-protector -fPIC -Wall
 #-fsanitize=undefined -fsanitize=address
 
@@ -71,7 +68,7 @@ CFLAGS = $(BUILD_TYPE_CFLAGS) $(BASE_CFLAGS) $(OPT_CFLAGS) $(ARCH_CFLAGS)
 
 INCLUDE=-I. -I$(SRCDIR) -I./cjson/
 
-LDFLAGS=-L. -shared
+LDFLAGS=-L. -shared -lm
 
 DO_CC=$(CC) $(CFLAGS) $(INCLUDE) -o $@ -c $<
 

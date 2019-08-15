@@ -1,6 +1,7 @@
 #include <memory.h>
 #include <time.h>
-#include <sys/time.h>
+
+#include <assert.h>
 
 #include "thpool.h"
 
@@ -27,14 +28,16 @@ static threadpool worker_pool = NULL;
 static volatile size_t command_processed;
 static volatile size_t message_processed;
 
-static volatile vkapi_bool main_thread_loop = false;
+static volatile vkapi_boolean main_thread_loop = false;
 
 typedef struct
 {
   int worker_id;
-  vkapi_bool loop;
+  vkapi_boolean loop;
   vkapi_handle *vkapi_object;
 } worker_data_t;
+
+double get_time_s( void );
 
 void long_poll_worker( void *data )
 {
@@ -43,23 +46,22 @@ void long_poll_worker( void *data )
   printf("[Worker %i] OK!\n", worker_data->worker_id);
 
   while (worker_data->loop) {
-      start:
 
 	sleep( 1 );
 
+	      vkapi_message_object *message = NULL;
+
       pthread_mutex_lock( &mutex_lock );
 
-      while( queue_empty() )
+      while( message == NULL )
 	{
 	pthread_cond_wait( &cond_var, &mutex_lock );
+	message = queue_pop();
 	}
-
-      vkapi_message_object *message = queue_pop();
 
       pthread_mutex_unlock( &mutex_lock );
 
-      if( message == NULL )
-	goto start;
+      assert(message != NULL);
 
 	 if( worker_data->vkapi_object->group_id == (message->from_id * -1) )
 	   {
@@ -72,29 +74,23 @@ void long_poll_worker( void *data )
 	    continue;
 	   }
 
-      pthread_mutex_lock(&command_handler_mutex);
-      struct timeval tv1;
-      gettimeofday( &tv1, NULL );
-      long long int ns1 = ((tv1.tv_sec*1000LL) + tv1.tv_usec);
+      //pthread_mutex_lock(&command_handler_mutex);
+	 double start_time = get_time_s();
 
-      if( message->text->len < 512 || message->from_id < 0 )
+      if( message->text->len < 512)
 	{
 	  printf( "[Worker %i] Message peer_id: %i from_id: %i message: %s\n", worker_data->worker_id, message->peer_id, message->from_id, message->text->ptr );
 
 	  if(cmd_handle( worker_data->vkapi_object, message ))
 	    {
-	      struct timeval tv2;
-	      gettimeofday( &tv2, NULL );
-	      long long int ns2 = ((tv2.tv_sec*1000LL) + tv2.tv_usec);
-	      double time = (double)((ns2 - ns1) / 1000);
-	      command_processed++;
-	      printf("[Worker %i] message done in %f sec\n", worker_data->worker_id, time / 1000 );
+	      //command_processed++;
+	      printf("[Worker %i] took at %f sec\n", worker_data->worker_id, get_time_s() - start_time );
 	    }
 	}
 
-      message_processed++;
+      //message_processed++;
 
-      pthread_mutex_unlock(&command_handler_mutex);
+      //pthread_mutex_unlock(&command_handler_mutex);
 
       if( message->attachmens )
 	cJSON_Delete( message->attachmens );

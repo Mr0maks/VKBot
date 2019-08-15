@@ -28,11 +28,7 @@ CC=clang
 CXX=clang++
 endif
 
-COMPILER_VER_CC = $(shell $(CC) -dumpversion)
-COMPILER_VER_CXX = $(shell $(CC) -dumpversion)
-
 OPT_CFLAGS = -O2 -flto -funroll-loops -fno-omit-frame-pointer -fno-stack-protector -fPIC -Wall
-#-fsanitize=undefined -fsanitize=address
 
 BASE_CFLAGS = -D__USE_GNU -std=gnu11 -DVERSION=\"$(VERSION)\"
 
@@ -57,6 +53,8 @@ endif
 ifeq ($(DEBUG),1)
 BUILD_TYPE = debug
 BUILD_TYPE_CFLAGS = -g -DDEBUG
+#-fsanitize=undefined -fsanitize=address
+#-fsanitize=thread
 else
 BUILD_TYPE = release
 BUILD_TYPE_CFLAGS = -DNDEBUG

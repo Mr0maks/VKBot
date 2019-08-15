@@ -40,7 +40,7 @@ typedef struct cmds_modules_pools_s
 } cmds_modules_pools_t;
 
 #ifndef _VKBOT_MODULE
-vkapi_bool cmd_handle(vkapi_handle *object, vkapi_message_object *message);
+vkapi_boolean cmd_handle(vkapi_handle *object, vkapi_message_object *message);
 void cmd_handler_deinit(void);
 void cmd_handler_init(void);
 #endif

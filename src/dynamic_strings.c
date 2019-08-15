@@ -10,7 +10,7 @@
 string_t string_init() {
   string_t s = (string_t)calloc( 1, sizeof(struct string) );
   
-  s->ptr = (char *)calloc( 2, 2048 );
+  s->ptr = (char *)calloc( 1, 4096 );
   if ( s->ptr == NULL ) {
       printf( "сalloc() failed\n" );
       exit( EXIT_FAILURE );
@@ -74,12 +74,18 @@ void string_format( string_t s, const char *fmt, ...)
   if( size < 0 || size == 0 )
     return;
 
+  if(s->size < size)
+    {
   s->ptr = realloc( s->ptr, size + 1 );
+  s->size = size + 1;
+  s->len = 0;
+    }
 
   if ( s->ptr == NULL ) {
       printf( "realloc() failed\n" );
       exit( EXIT_FAILURE );
     }
+
   va_start( ap, fmt );
   size = vsnprintf( s->ptr, s->size, fmt, ap );
   va_end( ap );
@@ -106,6 +112,28 @@ void string_strncat( string_t s, const char *string, size_t size )
 
   strncpy( s->ptr+s->len, string, size );
   s->ptr[new_len] = '\0';
+  s->len = new_len;
+  s->size = new_len + 1;
+}
+
+void string_memcpy( string_t s, const void *data, size_t size )
+{
+  assert( s != NULL );
+
+  if(!data || size == 0)
+    return;
+
+  size_t new_len = s->len + size;
+
+  s->ptr = realloc( s->ptr, new_len + 1 );
+
+  if ( s->ptr == NULL ) {
+      printf( "realloc() failed\n" );
+      exit( EXIT_FAILURE );
+    }
+
+  memcpy( s->ptr+s->len, data, size );
+  //s->ptr[new_len] = '\0';
   s->len = new_len;
   s->size = new_len + 1;
 }

@@ -7,7 +7,7 @@
 
 #include "cmd_handler.h"
 #include "cmds.h"
-#include "crc32_hash.h"
+#include "crc_hash.h"
 #include "vkapi.h"
 #include "va_utils.h"
 
@@ -36,6 +36,8 @@ const cmds_t commands[] = {
   { "флип", "подбросить монетку", cmd_flip },
   { "погода", "показывает погоду сейчас", cmd_weather },
   { "crc32", "подсчитывает crc32 хеш строки или файла", cmd_crc32 },
+  { "хлмемы", "годный плейлист ютуба с мемами хл", cmd_hlmemes },
+  { "котик", "рандомный котик", cmd_cat },
 #ifdef DEBUG
   { "debug", "бот собран с отладочными функциями", cmd_debug },
 #endif
@@ -59,7 +61,7 @@ static size_t static_commands = ARRAY_LENGHT( commands );
 static size_t max_command_len = 0;
 static size_t max_name_len = 0;
 
-vkapi_bool cmd_is_bot_name(const char *name)
+vkapi_boolean cmd_is_bot_name(const char *name)
 {
   if(!name)
     return false;
@@ -114,11 +116,12 @@ cmd_function_callback cmd_get_command(const char *command)
   return NULL;
 }
 
-vkapi_bool cmd_handle(vkapi_handle *object, vkapi_message_object *message)
+vkapi_boolean cmd_handle(vkapi_handle *object, vkapi_message_object *message)
 {
   char *saveptr = NULL;
   char *argv[64] = { NULL };
   char *token = NULL;
+  vkapi_boolean without_name = false;
 
   if( message->text->len == 0 || !message->text->ptr )
     {
@@ -135,10 +138,25 @@ vkapi_bool cmd_handle(vkapi_handle *object, vkapi_message_object *message)
 
    if( !cmd_is_bot_name(token) )
     {
-      goto end;
+      if(message->private_message == true)
+	{
+	  if(!cmd_get_command(token))
+	    goto not_found;
+	  else
+	    without_name = true;
+	} else
+	goto end;
     }
 
    int i = 0;
+   int c = 1;
+
+   if(without_name == true)
+     {
+       i++;
+       argv[0] = token;
+     }
+
    while ( token != NULL ) {
        token = strtok_r( NULL, " ", &saveptr );
         if( token )
@@ -149,13 +167,15 @@ vkapi_bool cmd_handle(vkapi_handle *object, vkapi_message_object *message)
      {
      goto dada;
      } else {
-       for( int c = 1; c < i; c++ )
+       for( ; c < i; c++ )
 	 {
 	  if( !argv[c] )
 	     break;
 
-	   if(c > 1)
+	   if(c > 1 && !without_name)
 	       string_strncat( args_s, " ", 1 );
+	   else if (c > 2)
+	        string_strncat( args_s, " ", 1 );
 
 	   string_strncat( args_s, argv[c], strlen(argv[c]) );
 	 }
