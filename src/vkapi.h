@@ -46,6 +46,6 @@ string_t vkapi_get_longpoll_data(vkapi_handle *object);
 string_t vkapi_call_method(vkapi_handle *object, const char *method, string_t specific_args, vkapi_boolean result_need);
 void vkapi_send_message(vkapi_handle *object, int peer_id, const char *msg);
 vkapi_boolean vkapi_get_long_poll_server(vkapi_handle *object);
-vkapi_handle *vkapi_init(const char *token, int group_id);
+vkapi_handle *vkapi_init(const char *token);
 void vkapi_destroy(vkapi_handle *ptr);
 #endif

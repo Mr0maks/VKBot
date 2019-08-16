@@ -10,6 +10,8 @@
 
 #include <stdio.h>
 
+#include "vkapi_json_wrap.h"
+
 #define VK_URL_METHOD "https://api.vk.com/method/"
 
 string_t vkapi_call_method(vkapi_handle *object, const char *method, string_t specific_args, vkapi_boolean result_need)
@@ -222,7 +224,29 @@ vkapi_boolean vkapi_get_long_poll_server(vkapi_handle *object)
   return true;
 }
 
-vkapi_handle *vkapi_init(const char *token, int group_id)
+static int vkapi_get_group_id(vkapi_handle *object)
+{
+  int value = 0;
+  string_t s2 = string_init();
+  string_t data = string_init();
+
+  string_format(s2, "access_token=%s&v=5.101", object->vk_token);
+
+  vkapi_boolean result = curl_post(object->curl_handle, VK_URL_METHOD"/groups.getById", s2, NULL, data);
+
+  string_destroy(s2);
+
+  if(result)
+    {
+      value = vkapi_json_parse_groups_getById(data);
+    }
+
+  string_destroy(data);
+
+  return value;
+}
+
+vkapi_handle *vkapi_init(const char *token)
 {
   vkapi_handle *result = (vkapi_handle*)calloc(1, sizeof(vkapi_handle));
 
@@ -232,7 +256,13 @@ vkapi_handle *vkapi_init(const char *token, int group_id)
   result->curl_handle = curl_init();
 
   strncpy(result->vk_token, token, sizeof(result->vk_token));
-  result->group_id = group_id;
+  result->group_id = vkapi_get_group_id(result);
+
+  if(result->group_id == 0)
+    {
+      result = NULL;
+      printf("vkapi error: failed to get group id!\n");
+    }
 
   return result;
 }

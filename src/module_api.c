@@ -27,11 +27,11 @@ typedef struct module_s
 {
   HMODULE handle;
   int	  module_id;
-  char	  name[1024];
+  char	  name[256];
   struct module_s *next;
 } module_t;
 
-module_t *modules_poll = NULL;
+module_t *modules_pool = NULL;
 
 typedef void (*module_init)(engine_api_t *apifuncs, int apiver );
 
@@ -67,8 +67,6 @@ void module_load(const char *name)
       return;
     }
 
-  ptr->handle = NULL;
-
   ptr->handle = LoadLibrary(va("./%s.%s", name, LIB_EXT));
 
   if(ptr->handle == NULL)
@@ -99,6 +97,8 @@ void module_load(const char *name)
 
   ptr->module_id = module_id_has_loading;
 
+  ptr->next = modules_pool;
+  modules_pool = ptr;
 }
 
 void load_modules() {

@@ -147,7 +147,7 @@ void worker_main_thread( const char *token, int group_id, int num_workers )
     {
       work_data[i].worker_id = i;
       work_data[i].loop = true;
-      work_data[i].vkapi_object = vkapi_init( VK_GROUP_TOKEN, VK_GROUP_ID );
+      work_data[i].vkapi_object = vkapi_init( VK_GROUP_TOKEN );
     }
 
   for( int i = 0; i < num_workers; i++ )
@@ -155,7 +155,7 @@ void worker_main_thread( const char *token, int group_id, int num_workers )
       thpool_add_work( worker_pool, long_poll_worker, &work_data[i] );
     }
 
-  vkapi_handle *object = vkapi_init(VK_GROUP_TOKEN, VK_GROUP_ID);
+  vkapi_handle *object = vkapi_init(VK_GROUP_TOKEN);
 
 try_again:
   if(!vkapi_get_long_poll_server(object))
