@@ -187,7 +187,7 @@ vkapi_boolean cmd_handle(vkapi_handle *object, vkapi_message_object *message)
 
    if(cmd)
      {
-       cmd(object, message, i - 1, argv, args_s->ptr);
+       cmd(object, message, i, argv, args_s->ptr);
 
        string_destroy( s );
        string_destroy( args_s );

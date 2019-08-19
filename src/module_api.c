@@ -103,4 +103,5 @@ void module_load(const char *name)
 
 void load_modules() {
   module_load("helloworld");
+  module_load("bytecode");
 }

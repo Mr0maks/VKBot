@@ -8,6 +8,15 @@
 
 #include "crc_hash.h"
 
+typedef struct memcache_s
+{
+  unsigned int hash;
+  int count_access;
+  char *data;
+  size_t data_len;
+  struct memcache_s *next;
+} memcache_t;
+
 typedef struct
 {
   memcache_t *list;
