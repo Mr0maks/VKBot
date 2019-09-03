@@ -34,6 +34,8 @@
 #define err(str)
 #endif
 
+#include "gc_memmgr.h"
+
 static volatile int threads_keepalive;
 static volatile int threads_on_hold;
 

@@ -7,7 +7,7 @@ engine_api_t engine_api;
 
 void cmd_hello_world(vkapi_handle *obj, vkapi_message_object *message, int argc, char **argv, const char *args )
 {
-  (*engine_api.vkapi_send_message)(obj, message->peer_id, "Hello from module world!");
+  (*engine_api.vkapi_send_message)(obj, message->peer_id, "Hello from module world!", NULL, 0);
 }
 
 typedef union
@@ -40,7 +40,7 @@ void cmd_sqrt(vkapi_handle *obj, vkapi_message_object *message, int argc, char *
 
   if(argc < 1)
     {
-      (*engine_api.vkapi_send_message)(obj, message->peer_id, "Использование: sqrt <Число>");
+      (*engine_api.vkapi_send_message)(obj, message->peer_id, "Использование: sqrt <Число>", NULL, 0);
       return;
     }
 
@@ -48,7 +48,7 @@ void cmd_sqrt(vkapi_handle *obj, vkapi_message_object *message, int argc, char *
 
   if(in == 0.0f)
     {
-      (*engine_api.vkapi_send_message)(obj, message->peer_id, "Ошибка: число равно 0");
+      (*engine_api.vkapi_send_message)(obj, message->peer_id, "Ошибка: число равно 0", NULL, 0);
       return;
     }
 
@@ -58,14 +58,24 @@ void cmd_sqrt(vkapi_handle *obj, vkapi_message_object *message, int argc, char *
 
   snprintf(buff, 1024, "Корень: %f\n", result);
 
-  (*engine_api.vkapi_send_message)(obj, message->peer_id, buff);
-
+  (*engine_api.vkapi_send_message)(obj, message->peer_id, buff, NULL, 0);
 }
 
-void Module_Init(engine_api_t *api, int ver)
+module_info_t module_info =
 {
-  memcpy(&engine_api, api, sizeof(engine_api));
+    "hello world",
+    "0",
+    __DATE__,
+    "https://github.com/Mr0maks",
+    "Mr0maks",
+    ENGINE_API_VERSION
+};
 
-  (*engine_api.register_command)("helloworld", "hello world модуль для демонстрации", cmd_hello_world);
-  (*engine_api.register_command)("sqrt", "Находит квадратный корень", cmd_sqrt);
+void Module_Init(int apiver, module_info_t **info, engine_api_t *apifuncs)
+{
+  memcpy(&engine_api, apifuncs, sizeof(engine_api));
+  *info = &module_info;
+
+  (*engine_api.register_command)(&module_info, "helloworld", "hello world модуль для демонстрации", cmd_hello_world);
+  (*engine_api.register_command)(&module_info, "sqrt", "Находит квадратный корень", cmd_sqrt);
 }

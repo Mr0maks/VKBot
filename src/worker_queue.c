@@ -4,6 +4,8 @@
 
 #include <stdlib.h>
 
+#include "gc_memmgr.h"
+
 #define MAX(a,b) ((a) > (b) ? (a) : (b))
 
 typedef struct list_s {
@@ -103,7 +105,7 @@ vkapi_message_object *queue_pop() {
 
 void queue_init()
 {
-  queue_pool = malloc(sizeof(struct queue));
+  queue_pool = GC_MALLOC_UNCOLLECTABLE(sizeof(struct queue));
   queue_tasks_in_queue = 0;
   maxium_tasks_in_queue = 0;
   queue_pool->head = NULL;

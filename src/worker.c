@@ -20,6 +20,8 @@
 
 #include "memcache.h"
 
+#include "gc_memmgr.h"
+
 static pthread_mutex_t mutex_lock;
 static pthread_mutex_t command_handler_mutex;
 static pthread_cond_t cond_var;
@@ -62,7 +64,7 @@ void long_poll_worker( void *data )
 
       pthread_mutex_unlock( &mutex_lock );
 
-      assert(message != NULL);
+      assert(message);
 
 	 if( worker_data->vkapi_object->group_id == (message->from_id * -1) )
 	   {
@@ -72,6 +74,7 @@ void long_poll_worker( void *data )
 	     string_destroy( message->text );
 
 	     free( message );
+         CHECK_LEAKS();
 	    continue;
 	   }
 
@@ -99,6 +102,7 @@ void long_poll_worker( void *data )
       string_destroy( message->text );
 
       free( message );
+      CHECK_LEAKS();
     }
 }
 
@@ -126,8 +130,15 @@ void load_modules();
 
 void worker_main_thread( const char *token, int group_id, int num_workers )
 {
-  queue_init();
+//  GC_set_find_leak(1);
+
   load_modules();
+
+  GC_INIT()
+
+  GC_enable_incremental();
+
+  queue_init();
   cmd_handler_init();
   memcache_init(64);
 

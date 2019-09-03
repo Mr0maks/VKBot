@@ -11,7 +11,6 @@
 #include <stdio.h>
 
 #include "vkapi_json_wrap.h"
-#include "gc_memmgr.h"
 
 #define VK_URL_METHOD "https://api.vk.com/method/"
 

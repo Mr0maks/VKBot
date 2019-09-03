@@ -7,10 +7,19 @@
 
 #include <assert.h>
 
+#include "gc_memmgr.h"
+
+void _string_release(string_t s, void *ptr)
+{
+    string_destroy(s);
+}
+
 string_t string_init() {
   string_t s = (string_t)calloc( 1, sizeof(struct string) );
+
+//  GC_REGISTER_FINALIZER(s, _string_release, NULL, NULL, NULL);
   
-  s->ptr = (char *)calloc( 1, 4096 );
+  s->ptr = (char *)malloc( 4096 );
   if ( s->ptr == NULL ) {
       printf( "сalloc() failed\n" );
       exit( EXIT_FAILURE );

@@ -6,10 +6,12 @@
 #include <pthread.h>
 
 #include "cmd_handler.h"
-#include "cmds.h"
+#include "module_api.h"
 #include "crc_hash.h"
 #include "vkapi.h"
 #include "va_utils.h"
+
+#include "engine_cmds.h"
 
 #define MAX(a,b) ((a) > (b) ? (a) : (b))
 #define MIN(a,b) ((a) < (b) ? (a) : (b))
@@ -17,33 +19,15 @@
 #define ARRAY_LENGHT(x) (sizeof(x)/sizeof(x[0])) - 1
 
 cmds_modules_pools_t *modules_cmds_poll = NULL;
-
 cmds_hashs_t *cached_cmds = NULL;
-
 cmds_name_hashs_t *cached_names = NULL;
 
 const cmds_t commands[] = {
   { "помощь", "команда для показа этого сообщения", cmd_help },
+  { "модули", "список загруженных модулей", cmd_modules },
   { "оботе", "о боте", cmd_about_bot },
-  { "ping", "команда для проверки бота на отзывчевость", cmd_ping },
-  { "b64e", "кодирует строку в формате base64", cmd_base64_encode },
-  { "b64d", "декодирует строку в формате base64", cmd_base64_decode },
   { "стат", "показывает разную статистику бота", cmd_stat },
-  { "ранд", "рандомное число", cmd_rand },
-  { "когда", "узнать дату события", cmd_rand_date },
-//  { "кто", "выберает рандомного человека из беседы (нужны права администратора)", cmd_who },
-  { "инфа", "узнать вероятность чего-либо", cmd_info },
-  { "оцени", "оценивает что-либо", cmd_rate },
-  { "доки", "ищет документы в вк", cmd_rand_docs },
-  { "курс", "курс валют", cmd_valute_curse },
-  { "флип", "подбросить монетку", cmd_flip },
-  { "погода", "показывает погоду сейчас", cmd_weather },
-  { "crc32", "подсчитывает crc32 хеш строки или файла", cmd_crc32 },
-  { "хлмемы", "годный плейлист ютуба с мемами хл", cmd_hlmemes },
-  { "котик", "рандомный котик", cmd_cat },
-#ifdef DEBUG
-  { "debug", "бот собран с отладочными функциями", cmd_debug },
-#endif
+  { "gc", "статистика gc", cmd_gc },
   { NULL, NULL, NULL }
 };
 
@@ -123,13 +107,13 @@ int cmd_tokeinize_cmd(char *str, char *tokens[], int *tokens_len );
 
 vkapi_boolean cmd_handle(vkapi_handle *object, vkapi_message_object *message)
 {
+    if( message->text->len == 0 || !message->text->ptr )
+    {
+        return false;
+    }
+
   char *argv[256] = { NULL };
   vkapi_boolean without_name = false;
-
-  if( message->text->len == 0 || !message->text->ptr )
-    {
-      return false;
-    }
 
   string_t s = string_dublicate( message->text );
 
@@ -283,7 +267,7 @@ void cmd_calculate_name_hashes()
     }
 }
 
-void cmd_handler_register_module_cmd(int module_id, const char *cmd_name, const char *description, cmd_function_callback callback)
+void cmd_handler_register_module_cmd(module_info_t *info, const char *cmd_name, const char *description, cmd_function_callback callback)
 {
   cmds_modules_pools_t *ptr = NULL;
 
@@ -301,22 +285,21 @@ void cmd_handler_register_module_cmd(int module_id, const char *cmd_name, const 
 
   ptr->string = cmd_name;
   ptr->description = description;
-  ptr->module_id = module_id;
+  ptr->info = info;
   ptr->function = callback;
 
   ptr->next = modules_cmds_poll;
   modules_cmds_poll = ptr;
 
-  printf("Cmd from module: \"%s\" - \"%s\" hash: %X \n", cmd_name, description, ptr->hash);
+  printf("Cmd from module %s: \"%s\" - \"%s\" hash: %X \n", info->name, cmd_name, description, ptr->hash);
 
   max_command_len = MAX(max_command_len, strlen(cmd_name));
-
 }
 
-void cmd_handler_unregister_module_cmd(int module_id)
+void cmd_handler_unregister_module_cmd(module_info_t *info)
 {
     cmds_modules_pools_t *ptr = modules_cmds_poll, *ptr_t1 = NULL;
-    if(ptr->module_id == module_id)
+    if(ptr->info == info)
       {
 	modules_cmds_poll = ptr->next;
 	return;
@@ -327,7 +310,7 @@ void cmd_handler_unregister_module_cmd(int module_id)
     while(ptr_t1)
       {
 
-	if( ptr_t1->module_id == module_id )
+    if( ptr_t1->info == info )
 	  {
 	    ptr->next = ptr_t1->next;
 	    return;

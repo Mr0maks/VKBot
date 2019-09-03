@@ -29,9 +29,19 @@ typedef struct
   unsigned int hash;
 } cmds_name_hashs_t;
 
+typedef struct
+{
+    char *name;
+    char *version;
+    char *date;
+    char *url;
+    char *author;
+    int ifver; // interface version
+} module_info_t;
+
 typedef struct cmds_modules_pools_s
 {
-  int module_id;
+  module_info_t *info;
   const char	*string;
   const char    *description;
   cmd_function_callback  function;

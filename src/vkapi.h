@@ -12,7 +12,6 @@ typedef enum __attribute__((packed))
   true
 } vkapi_boolean;
 
-#ifndef _VKBOT_MODULE
 typedef struct
 {
   char vk_token[128];
@@ -24,9 +23,6 @@ typedef struct
 
   void *curl_handle;
 } vkapi_handle;
-#else
-typedef void vkapi_handle;
-#endif
 
 typedef struct
 {
