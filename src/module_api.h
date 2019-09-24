@@ -7,7 +7,7 @@
 typedef struct
 {
   void (*register_command)(const char *cmd_name, const char *description, cmd_function_callback callback);
-  void (*vkapi_send_message)(vkapi_handle *object, int peer_id, const char *msg);
+  void (*vkapi_send_message)(vkapi_handle *object, int peer_id, const char *msg, vkapi_attach *attaches, int attaches_len);
 
   string_t (*string_init)( void );
   string_t (*string_dublicate)( string_t s );

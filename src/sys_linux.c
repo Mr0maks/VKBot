@@ -26,7 +26,7 @@ long get_param_of_path(const char *filenpath, const char *what)
   if(!f)
     return 0;
 
-  fread( s->ptr, 1, s->size, f );
+  (void)fread( s->ptr, 1, s->size, f );
 
   fclose( f );
 

@@ -69,7 +69,7 @@ CFLAGS = $(BUILD_TYPE_CFLAGS) $(BASE_CFLAGS) $(OPT_CFLAGS) $(ARCH_CFLAGS)
 
 INCLUDE=-I. -I$(SRCDIR) -I./cjson/
 
-LDFLAGS=-L. -lpthread -lcurl -lcjson -L./cjson/ -ldl
+LDFLAGS=-L. -lpthread -lcurl -lcjson -L./cjson/ -ldl -lsqlite3
 
 DO_CC=$(CC) $(CFLAGS) $(INCLUDE) -o $@ -c $<
 

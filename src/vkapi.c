@@ -48,25 +48,12 @@ string_t vkapi_call_method(vkapi_handle *object, const char *method, string_t sp
   return s;
 }
 
-typedef enum
-{
-  VKAPI_DOC,
-  VKAPI_PHOTO,
-  VKAPI_AUDIO
-} docs_type_t;
-
-//TODO: More types
-
-typedef struct
-{
-  docs_type_t type;
-} vkapi_attach;
-
-vkapi_boolean vkapi_upload_doc_by_url(vkapi_handle *object, vkapi_message_object *message, string_t data, docs_type_t type)
+vkapi_attach *vkapi_upload_doc_by_url(vkapi_handle *object, vkapi_message_object *message, const char *filename, string_t data, docs_type_t type)
 {
   string_t s = string_init();
 
   switch (type) {
+
       case VKAPI_DOC:
 	{
 	  string_format(s, "type=doc&peer_id=%i", message->peer_id);
@@ -92,32 +79,110 @@ vkapi_boolean vkapi_upload_doc_by_url(vkapi_handle *object, vkapi_message_object
 
 	  printf("UPLOAD TO URL %s\n", cJSON_GetStringValue(upload_url));
 
-	  curl_uploadfile(object->curl_handle, cJSON_GetStringValue(upload_url), "file", "zalupa.png", data, NULL, dataptr);
+      curl_uploadfile(object->curl_handle, cJSON_GetStringValue(upload_url), "file", filename, data, NULL, dataptr);
 
 	  cJSON_Delete(ptr);
 	  string_destroy(result);
 
-	  ptr = cJSON_ParseWithOpts(data->ptr, NULL, false);
+      ptr = cJSON_ParseWithOpts(dataptr->ptr, NULL, false);
 
-	  if(ptr)
+      if(!ptr)
 	    break;
 
-	  string_format(s, "file=%s", cJSON_GetStringValue(cJSON_GetObjectItem(ptr, "file")));
+      string_format(s, "file=%s", cJSON_GetStringValue(cJSON_GetObjectItem(ptr, "file")));
+
+      cJSON_Delete(ptr);
+
 	  result = vkapi_call_method(object, "docs.save", s, true );
 
-	  printf("SO.... %s\n", dataptr->ptr);
+      printf("HMMMM: %s\n", result->ptr);
+
+      ptr = cJSON_ParseWithOpts(result->ptr, NULL, false);
+
+      cJSON *resp = cJSON_GetObjectItem(ptr, "response");
+
+      cJSON *doc = cJSON_GetObjectItem(resp, "doc");
+
+      cJSON *owner_id = cJSON_GetObjectItem(doc, "owner_id");
+      cJSON *media_id = cJSON_GetObjectItem(doc, "id");
+
+      vkapi_attach *attach = calloc(1, sizeof(vkapi_attach));
+
+      attach[0].type = VKAPI_DOC;
+      attach[0].owner_id = owner_id->valueint;
+      attach[0].media_id = media_id->valueint;
+
+      cJSON_Delete(ptr);
 
 	  string_destroy(s);
 	  string_destroy(result);
-	  break;
+      return attach;
 	}
       case VKAPI_PHOTO:
-	{
-	  break;
+    {	  string_format(s, "peer_id=%i", message->peer_id);
+      string_t result = vkapi_call_method(object, "photos.getMessagesUploadServer", s, true );
+
+      if(!result)
+        break;
+
+      cJSON *ptr = cJSON_ParseWithOpts(result->ptr, NULL, false);
+
+      if(!ptr)
+        break;
+
+      cJSON *upload_url = cJSON_GetObjectItem(cJSON_GetObjectItem(ptr, "response"), "upload_url");
+
+      if(!upload_url)
+        {
+        printf("upload url is null\n");
+        break;
+        }
+
+      string_t dataptr = string_init();
+
+      printf("UPLOAD TO URL %s\n", cJSON_GetStringValue(upload_url));
+
+      curl_uploadfile(object->curl_handle, cJSON_GetStringValue(upload_url), "photo", filename, data, NULL, dataptr);
+
+      cJSON_Delete(ptr);
+      string_destroy(result);
+
+      ptr = cJSON_ParseWithOpts(dataptr->ptr, NULL, false);
+
+      if(!ptr)
+        break;
+
+      string_format(s, "photo=%s&server=%i&hash=%s", cJSON_GetStringValue(cJSON_GetObjectItem(ptr, "photo")), cJSON_GetObjectItem(ptr, "server")->valueint, cJSON_GetStringValue(cJSON_GetObjectItem(ptr, "hash")));
+
+      cJSON_Delete(ptr);
+
+      result = vkapi_call_method(object, "photos.saveMessagesPhoto", s, true );
+
+      printf("HMMMM: %s\n", result->ptr);
+
+      ptr = cJSON_ParseWithOpts(result->ptr, NULL, false);
+
+      cJSON *resp = cJSON_GetArrayItem(cJSON_GetObjectItem(ptr, "response"), 0);
+
+      cJSON *owner_id = cJSON_GetObjectItem(resp, "owner_id");
+      cJSON *media_id = cJSON_GetObjectItem(resp, "id");
+
+      vkapi_attach *attach = calloc(1, sizeof(vkapi_attach));
+
+      attach[0].type = VKAPI_PHOTO;
+      attach[0].owner_id = owner_id->valueint;
+      attach[0].media_id = media_id->valueint;
+
+      cJSON_Delete(ptr);
+
+      string_destroy(s);
+      string_destroy(result);
+      return attach;
 	}
 
     }
 
+  return NULL;
 }
 
 string_t vkapi_get_longpoll_data(vkapi_handle *object)
@@ -168,10 +233,65 @@ string_t vkapi_get_longpoll_data(vkapi_handle *object)
   return s;
 }
 
-void vkapi_send_message(vkapi_handle *object, int peer_id, const char *msg)
+const char *vkapi_attach_type(docs_type_t doc)
+{
+    switch (doc) {
+    case VKAPI_PHOTO:
+    {
+        return "photo";
+    }
+    case VKAPI_VIDEO:
+    {
+        return "video";
+    }
+    case VKAPI_DOC:
+    {
+        return "doc";
+    }
+    case VKAPI_AUDIO:
+    {
+        return "audio";
+    }
+    case VKAPI_WALL:
+    {
+        return "wall";
+    }
+
+    case VKAPI_NULL:
+    default:
+    {
+        return "unknown";
+    }
+    }
+}
+
+void vkapi_send_message(vkapi_handle *object, int peer_id, const char *msg, vkapi_attach *attachments, int attachmens_len)
 {
   string_t s = string_init();
-  string_format(s, "message=%s&random_id=0&peer_id=%i", msg, peer_id);
+
+  if(!attachments)
+      string_format(s, "message=%s&random_id=0&peer_id=%i", msg, peer_id);
+  else {
+      string_t formated_attachmens = string_init();
+      string_t tmp = string_init();
+      for(int i = 0; attachmens_len > i; i++)
+      {
+          if(i > 0)
+              string_strncat(formated_attachmens, ",", 1);
+
+          string_format(tmp, "%s%i_%i", vkapi_attach_type(attachments[i].type), attachments[i].owner_id, attachments[i].media_id);
+          string_strncat(formated_attachmens, tmp->ptr, tmp->len);
+      }
+
+      if(!msg)
+      string_format(s, "random_id=0&peer_id=%i&attachment=%s", peer_id, formated_attachmens->ptr);
+      else
+      string_format(s, "message=%s&random_id=0&peer_id=%i&attachment=%s", msg, peer_id, formated_attachmens->ptr);
+
+      string_destroy(formated_attachmens);
+      string_destroy(tmp);
+  }
+
   vkapi_call_method(object, "messages.send", s, false);
   string_destroy(s);
 }

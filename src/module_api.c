@@ -48,7 +48,7 @@ engine_api_t engine_funcs = {
   string_init,
   string_dublicate,
   string_format,
-  string_strncat,
+  _string_strncat_char,
   string_copy,
   string_destroy,
   crc32_calc

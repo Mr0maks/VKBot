@@ -1,4 +1,5 @@
 #include <stdlib.h>
+#include <string.h>
 #include "base64.h"
 
 static const unsigned char base64_table[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";

@@ -33,6 +33,9 @@ const cmds_t commands[] = {
   { "когда", "узнать дату события", cmd_rand_date },
 //  { "кто", "выберает рандомного человека из беседы (нужны права администратора)", cmd_who },
   { "инфа", "узнать вероятность чего-либо", cmd_info },
+  { "оцени", "оценивает что-либо", cmd_rate },
+  { "доки", "ищет документы в вк", cmd_rand_docs },
+  { "курс", "курс валют", cmd_valute_curse },
   { "флип", "подбросить монетку", cmd_flip },
   { "погода", "показывает погоду сейчас", cmd_weather },
   { "crc32", "подсчитывает crc32 хеш строки или файла", cmd_crc32 },
@@ -116,11 +119,11 @@ cmd_function_callback cmd_get_command(const char *command)
   return NULL;
 }
 
+int cmd_tokeinize_cmd(char *str, char *tokens[], int *tokens_len );
+
 vkapi_boolean cmd_handle(vkapi_handle *object, vkapi_message_object *message)
 {
-  char *saveptr = NULL;
-  char *argv[64] = { NULL };
-  char *token = NULL;
+  char *argv[256] = { NULL };
   vkapi_boolean without_name = false;
 
   if( message->text->len == 0 || !message->text->ptr )
@@ -129,18 +132,20 @@ vkapi_boolean cmd_handle(vkapi_handle *object, vkapi_message_object *message)
     }
 
   string_t s = string_dublicate( message->text );
+
+  int tokens_count = 0;
+
+  char **tokens = (char**)calloc(256, sizeof(char*));
+
+  cmd_tokeinize_cmd( s->ptr, tokens, &tokens_count );
+
   string_t args_s = string_init();
 
-   token = strtok_r( s->ptr, " ", &saveptr );
-
-   if( !token )
-     goto end;
-
-   if( !cmd_is_bot_name(token) )
+   if( !cmd_is_bot_name(tokens[0]) )
     {
-      if(message->private_message == true)
+      if( message->private_message == true )
 	{
-	  if(!cmd_get_command(token))
+      if( !cmd_get_command(tokens[0]) )
 	    goto not_found;
 	  else
 	    without_name = true;
@@ -148,38 +153,34 @@ vkapi_boolean cmd_handle(vkapi_handle *object, vkapi_message_object *message)
 	goto end;
     }
 
-   int i = 0;
-   int c = 1;
+   if(without_name == true)
+     {
+       if(!tokens[0])
+           goto no_args;
+     } else {
+       if(!tokens[1])
+           goto no_args;
+     }
 
    if(without_name == true)
      {
-       i++;
-       argv[0] = token;
-     }
-
-   while ( token != NULL ) {
-       token = strtok_r( NULL, " ", &saveptr );
-        if( token )
-	    argv[i++] = token;
-     }
-
-   if( !argv[0] )
-     {
-     goto dada;
+       for(int i = 0; i < tokens_count; i++)
+           argv[i] = tokens[i];
      } else {
-       for( ; c < i; c++ )
+       for(int i = 0; i < tokens_count; i++)
+           argv[i] = tokens[i + 1];
+     }
+
+       for(int c = 1; c < tokens_count; c++ )
 	 {
 	  if( !argv[c] )
 	     break;
 
-	   if(c > 1 && !without_name)
-	       string_strncat( args_s, " ", 1 );
-	   else if (c > 2)
+       else if (c > 1)
 	        string_strncat( args_s, " ", 1 );
 
 	   string_strncat( args_s, argv[c], strlen(argv[c]) );
 	 }
-     }
 
    printf( "Try to call cmd %s\n", argv[0] );
 
@@ -187,29 +188,42 @@ vkapi_boolean cmd_handle(vkapi_handle *object, vkapi_message_object *message)
 
    if(cmd)
      {
-       cmd(object, message, i, argv, args_s->ptr);
+       cmd(object, message, tokens_count - 1, argv, args_s->ptr);
 
        string_destroy( s );
        string_destroy( args_s );
+       free( tokens );
        return true;
      } else
        goto not_found;
 
-dada:
-    vkapi_send_message( object, message->peer_id, "Да-да?\n Для того чтобы узнать команды используйте помощь." );
+no_args:
+    vkapi_send_message( object, message->peer_id, "Да-да?\n Для того чтобы узнать команды используйте помощь.", NULL, 0 );
     string_destroy( s );
     string_destroy( args_s );
+
+    if(tokens)
+        free(tokens);
+
     return false;
 
 not_found:
-    vkapi_send_message( object, message->peer_id, "Команда не найдена\n Для того чтобы узнать команды используйте помощь." );
+    vkapi_send_message( object, message->peer_id, "Команда не найдена\n Для того чтобы узнать команды используйте помощь.", NULL, 0 );
     string_destroy( s );
     string_destroy( args_s );
+
+    if(tokens)
+        free(tokens);
+
     return false;
 
 end:
     string_destroy( s );
     string_destroy( args_s );
+
+    if(tokens)
+        free(tokens);
+
     return false;
 }
 

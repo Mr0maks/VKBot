@@ -3,6 +3,7 @@
 #include <assert.h>
 
 #include <string.h>
+#include <stdio.h>
 
 #include <stdint.h>
 
@@ -118,7 +119,9 @@ memcache_t *memcache_realloc(memcache_t *ptr, const char *data, size_t data_len)
 void memcache_push(const char *key, const char *value)
 {
   if(!key || !value)
-    return;
+  {
+      return;
+  }
 
     memcache_t *ptr = memcache_find(key);
 

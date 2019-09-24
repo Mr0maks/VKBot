@@ -1,0 +1,56 @@
+#include <stdio.h>
+#include <stdint.h>
+#include <string.h>
+#include <assert.h>
+#include <string.h>
+#include <memory.h>
+
+// re2 >= 1.2
+// re2c -8 re2c/cmd_string_tokenize.re2c --input-encoding utf8 --tags -o src/cmd_tokeinize_cmd.c
+
+/*!max:re2c*/
+
+void cmd_tokeinize_debug(const uint8_t *start, const uint8_t *end)
+{
+#ifdef DEBUG_LEX
+    printf("TOKEN SIZE: %i TOKEN: %.*s\n", (int)(end - start), (int)(end - start), start );
+#endif
+}
+
+void cmd_tokeinize_push(const uint8_t *start, const uint8_t *end, uint8_t *ptr, char *tokens[], int token_count )
+{
+    if(ptr)
+    *ptr = '\0';
+
+    tokens[token_count] = start;
+//    size_t len = (size_t)(end - start);
+//    tokens[token_count] = calloc(len + 1, sizeof(char));
+//    strncpy(tokens[token_count], start, len);
+}
+
+int cmd_tokeinize_cmd(unsigned char *str, char *tokens[], int *tokens_len )
+{
+assert(str);
+assert(tokens);
+assert(tokens_len);
+
+int tokens_count = 0;
+const uint8_t *t1, *t2;
+uint8_t *ptr;
+/*!stags:re2c format = 'const uint8_t *@@;'; */
+loop:
+/*!re2c
+re2c:define:YYCTYPE = uint8_t;
+re2c:define:YYCURSOR = str;
+re2c:yyfill:enable = 0;
+
+end = "\x00";
+whitespace = [ \t\v\f]+;
+token = [^];
+quotes = ["];
+
+@t1 quotes [а-яА-Яa-zA-Z]+ @t2 quotes { cmd_tokeinize_debug(t1, t2); cmd_tokeinize_push(t1, t2, NULL, tokens, tokens_count++ ); goto loop; }
+@t1 token @t2 @ptr whitespace { cmd_tokeinize_debug(t1, t2); cmd_tokeinize_push(t1, t2, ptr, tokens, tokens_count++ ); goto loop; }
+@t1 token @t2 end { cmd_tokeinize_debug(t1, t2); cmd_tokeinize_push(t1, t2, NULL, tokens, tokens_count++ ); *tokens_len = tokens_count; return tokens_count; }
+*/
+}

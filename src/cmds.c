@@ -28,13 +28,13 @@ void cmd_help(vkapi_handle *object, vkapi_message_object *message, int argc, cha
 
   cmds_modules_pools_t *ptr = modules_cmds_poll;
 
-  while (ptr) {
+  while (ptr != NULL) {
       char *str = va( "• %s - %s\n", ptr->string, ptr->description );
       string_strncat( s, str, strlen( str ) );
       ptr = ptr->next;
     }
 
-  vkapi_send_message( object, message->peer_id, s->ptr );
+  vkapi_send_message( object, message->peer_id, s->ptr, NULL, 0 );
   string_destroy( s );
 }
 
@@ -44,28 +44,28 @@ void cmd_about_bot(vkapi_handle *object, vkapi_message_object *message, int argc
 
   string_format( s,"VKBot\nБот написан на C\nИспользует библиотеки libcurl и cjson\nСобран %s %s\nВерсия %s", __DATE__, __TIME__, VERSION );
 
-  vkapi_send_message(object, message->peer_id, s->ptr);
+  vkapi_send_message(object, message->peer_id, s->ptr, NULL, 0);
 
   string_destroy(s);
 }
 
 void cmd_ping(vkapi_handle *object, vkapi_message_object *message, int argc, char **argv, const char *args)
 {
-  vkapi_send_message( object, message->peer_id, "Pong" );
+  vkapi_send_message( object, message->peer_id, "Pong", NULL, 0 );
 }
 
 void cmd_base64_encode(vkapi_handle *object, vkapi_message_object *message, int argc, char **argv, const char *args)
 {
   if( argc < 1 )
     {
-      vkapi_send_message(object, message->peer_id, "Использование: b64e <строка>");
+      vkapi_send_message(object, message->peer_id, "Использование: b64e <строка>", NULL, 0);
       return;
     }
 
   char *base64_encoded_string = (char*)base64_encode( (const unsigned char *)args, strlen( args ), NULL);
   if(base64_encoded_string)
     {
-      vkapi_send_message( object, message->peer_id, va("Закодированная строка: %s", base64_encoded_string ) );
+      vkapi_send_message( object, message->peer_id, va("Закодированная строка: %s", base64_encoded_string ), NULL, 0 );
       free(base64_encoded_string);
     }
 }
@@ -76,20 +76,20 @@ void cmd_base64_decode(vkapi_handle *object, vkapi_message_object *message, int 
 {
   if( argc < 1 )
     {
-      vkapi_send_message( object, message->peer_id, "Использование: b64d <строка>" );
+      vkapi_send_message( object, message->peer_id, "Использование: b64d <строка>", NULL, 0 );
       return;
     }
 
   if( !base64_string(args) )
     {
-      vkapi_send_message( object, message->peer_id, "Строка имеет недопустимые символы для base64" );
+      vkapi_send_message( object, message->peer_id, "Строка имеет недопустимые символы для base64", NULL, 0 );
       return;
     }
 
   char *base64_decoded_string = (char*)base64_decode( (const unsigned char *)args, strlen( args ), NULL );
   if(base64_decoded_string)
     {
-      vkapi_send_message( object, message->peer_id, va( "Декодированная строка: %s", base64_decoded_string ) );
+      vkapi_send_message( object, message->peer_id, va( "Декодированная строка: %s", base64_decoded_string ), NULL, 0 );
       free(base64_decoded_string);
     }
 }
@@ -104,7 +104,7 @@ void cmd_stat(vkapi_handle *object, vkapi_message_object *message, int argc, cha
 {
   string_t s = string_init();
   string_format( s, "Статистика бота\nКоличество работающих воркеров: %i\nПик очереди: %lu\nПамяти сожрано мной: %ld кб\nМаксимальный размер кеша: %lu кб\nСъел кеш: %lu кб\nКомманд обработано: %lu\nСообщений обработано: %lu\n", worker_get_workers_count(), queue_maxium_tasks(), get_param_of_path( "/proc/self/status", "VmRSS" ),memcache_get_max_size(), memcache_get_size() / 1024, worker_commands_processed(), worker_message_processed() );
-  vkapi_send_message( object, message->peer_id, s->ptr );
+  vkapi_send_message( object, message->peer_id, s->ptr, NULL, 0 );
   string_destroy( s );
 }
 
@@ -129,7 +129,7 @@ void cmd_rand(vkapi_handle *object, vkapi_message_object *message, int argc, cha
   if( argc < 1 || argc > 2 )
     {
       usage:
-      vkapi_send_message( object, message->peer_id, "Использование: ранд максимальное число\nранд минимальное число максимальное число\n" );
+      vkapi_send_message( object, message->peer_id, "Использование: ранд максимальное число\nранд минимальное число максимальное число\n", NULL, 0 );
       return;
     }
 
@@ -145,10 +145,10 @@ void cmd_rand(vkapi_handle *object, vkapi_message_object *message, int argc, cha
 
   if( argc == 2 )
     {
-      vkapi_send_message( object, message->peer_id, va("Случайное число: %lli", random_int64( atoll( argv[1] ), atoll( argv[2] ) ) ) );
+      vkapi_send_message( object, message->peer_id, va("Случайное число: %lli", random_int64( atoll( argv[1] ), atoll( argv[2] ) ) ), NULL, 0 );
     }
   else {
-      vkapi_send_message( object, message->peer_id, va("Случайное число: %lli", random_int64( 1, atoll( argv[1] ) ) ) );
+      vkapi_send_message( object, message->peer_id, va("Случайное число: %lli", random_int64( 1, atoll( argv[1] ) ) ), NULL, 0 );
     }
 
 }
@@ -169,19 +169,16 @@ void cmd_rand_date(vkapi_handle *object, vkapi_message_object *message, int argc
 
   strftime(s->ptr, s->size, "Это произойдёт %e %B %Y", localtime( &date ));
 
-  vkapi_send_message( object, message->peer_id, s->ptr );
+  vkapi_send_message( object, message->peer_id, s->ptr, NULL, 0 );
   string_destroy(s);
 }
 
 void cmd_who(vkapi_handle *object, vkapi_message_object *message, int argc, char **argv, const char *args)
 {
-  string_t method_args = string_init();
-
-  string_format(method_args, "peer_id=%i", message->peer_id);
-
-  string_t s = vkapi_call_method(object, "messages.getConversationMembers", method_args, true);
-
-  vkapi_send_message(object, message->peer_id, s->ptr);
+//    string_t method_args = string_init();
+//    string_format(method_args, "peer_id=%i", message->peer_id);
+//    string_t s = vkapi_call_method(object, "messages.getConversationMembers", method_args, true);
+//    vkapi_send_message(object, message->peer_id, s->ptr);
 }
 
 void cmd_flip(vkapi_handle *object, vkapi_message_object *message, int argc, char **argv, const char *args)
@@ -190,9 +187,9 @@ void cmd_flip(vkapi_handle *object, vkapi_message_object *message, int argc, cha
 
   if( random >= 5000 )
     {
-      vkapi_send_message( object, message->peer_id, "Орёл!" );
+      vkapi_send_message( object, message->peer_id, "Орёл!", NULL, 0 );
     } else {
-      vkapi_send_message( object, message->peer_id, "Решка!" );
+      vkapi_send_message( object, message->peer_id, "Решка!", NULL, 0 );
    }
 }
 
@@ -200,12 +197,196 @@ void cmd_info(vkapi_handle *object, vkapi_message_object *message, int argc, cha
 {
   if( argc < 1 )
     {
-      vkapi_send_message( object, message->peer_id, "Использование: инфа <строка>" );
+      vkapi_send_message( object, message->peer_id, "Использование: инфа <строка>", NULL, 0 );
+      return;
     }
 
   int64_t percents = random_int64( 0, 172 );
 
-  vkapi_send_message( object, message->peer_id, va("Вероятность этого составляет %lli%%", percents) );
+  vkapi_send_message( object, message->peer_id, va("Вероятность этого составляет %lli%%", percents), NULL, 0 );
+}
+
+void cmd_rate(vkapi_handle *object, vkapi_message_object *message, int argc, char **argv, const char *args)
+{
+    if( argc < 1 )
+      {
+        vkapi_send_message( object, message->peer_id, "Использование: оцени <строка>", NULL, 0 );
+        return;
+      }
+
+    int64_t rate = random_int64( 0, 11 );
+
+    vkapi_send_message( object, message->peer_id, va("Я оцениваяю %s в %lli/10", args, rate), NULL, 0 );
+}
+
+void cmd_rand_docs(vkapi_handle *object, vkapi_message_object *message, int argc, char **argv, const char *args)
+{
+    if( argc < 1 )
+      {
+        vkapi_send_message( object, message->peer_id, "Использование: доки <строка для поиска>", NULL, 0 );
+        return;
+      }
+
+    string_t s = string_init();
+
+    string_format(s, "q=%s&count=10", args);
+
+    string_t result = vkapi_call_method( object, "docs.search", s, true);
+
+    cJSON *ptr = cJSON_ParseWithOpts(result->ptr, NULL, false);
+
+    cJSON *resp = cJSON_GetObjectItem(ptr, "response");
+
+    printf("HMM: %s\n", result->ptr);
+
+    cJSON *count = cJSON_GetObjectItem(resp, "count");
+
+    if(!count->valueint)
+    {
+       cJSON_Delete(ptr);
+
+       vkapi_send_message(object, message->peer_id, "По вашему запросу нету документов", NULL, 0);
+
+       string_destroy(s);
+       string_destroy(result);
+       return;
+    }
+
+    cJSON *items = cJSON_GetObjectItem(resp, "items");
+
+    int docs_count = cJSON_GetArraySize(items);
+
+    vkapi_attach *attaches = (vkapi_attach*)calloc(docs_count, sizeof(vkapi_attach));
+
+    for(int i = 0; i < docs_count; i++)
+    {
+        cJSON *obj = cJSON_GetArrayItem(items, i);
+
+        attaches[i].type = VKAPI_DOC;
+        attaches[i].media_id = cJSON_GetObjectItem(obj, "id")->valueint;
+        attaches[i].owner_id = cJSON_GetObjectItem(obj, "owner_id")->valueint;
+    }
+
+    vkapi_send_message(object, message->peer_id, "Документы по вашему запросу:", attaches, docs_count);
+
+    cJSON_Delete(ptr);
+
+    string_destroy(s);
+    string_destroy(result);
+}
+
+void cmd_valute_curse(vkapi_handle *object, vkapi_message_object *message, int argc, char **argv, const char *args )
+{
+
+    if(argc > 2 || argc < 1)
+    {
+        vkapi_send_message(object, message->peer_id, "Для того чтобы узнать какие курсы валют доступны используйте курс помощь", NULL, 0);
+        return;
+    }
+
+    if(!strcasecmp("помощь", argv[1]))
+    {
+        string_t s = string_init();
+        string_t s2 = string_init();
+
+        string_format(s2, "https://www.cbr-xml-daily.ru/daily_json.js" );
+
+        if(!curl_get(object->curl_handle, s2, NULL, s ))
+        {
+            string_destroy(s);
+            string_destroy(s2);
+
+            vkapi_send_message(object, message->peer_id, "Oops", NULL, 0);
+            return;
+        }
+
+        string_destroy(s2);
+
+        s2 = string_init();
+
+        char *info = va( "• Код - Название валюты\n" );
+
+        string_strncat( s2, info, strlen(info) );
+
+        cJSON *ptr = cJSON_ParseWithOpts(s->ptr, NULL, false), *valute_element = NULL, *array_value = NULL;
+
+        array_value = cJSON_GetObjectItem(ptr, "Valute");
+
+        cJSON_ArrayForEach( valute_element, array_value )
+        {
+
+            cJSON *CharCode = cJSON_GetObjectItem(valute_element, "CharCode");
+            cJSON *Name = cJSON_GetObjectItem(valute_element, "Name");
+
+            info = va("• %s - %s\n", cJSON_GetStringValue(CharCode), cJSON_GetStringValue(Name));
+
+            string_strncat(s2, info, strlen(info));
+        }
+
+        vkapi_send_message(object, message->peer_id, s2->ptr, NULL, 0);
+
+        cJSON_Delete(ptr);
+        string_destroy(s);
+        string_destroy(s2);
+        return;
+    }
+
+    string_t s = string_init();
+    string_t s2 = string_init();
+
+    string_format(s2, "https://www.cbr-xml-daily.ru/daily_json.js" );
+
+    if(!curl_get(object->curl_handle, s2, NULL, s ))
+    {
+        string_destroy(s);
+        string_destroy(s2);
+
+        vkapi_send_message(object, message->peer_id, "Oops", NULL, 0);
+        return;
+    }
+
+    string_destroy(s2);
+
+    s2 = string_init();
+
+    cJSON *ptr = cJSON_ParseWithOpts(s->ptr, NULL, false), *valute = NULL, *array_value = NULL;
+
+    array_value = cJSON_GetObjectItem(ptr, "Valute");
+
+    valute = cJSON_GetObjectItem(array_value, argv[1]);
+
+    if(!valute)
+    {
+        vkapi_send_message(object, message->peer_id, "Валюты с таким кодом нету!", NULL, 0);
+
+        cJSON_Delete(ptr);
+        string_destroy(s);
+        string_destroy(s2);
+        return;
+    }
+
+    cJSON *Value = cJSON_GetObjectItem(valute, "Value");
+    cJSON *Previous = cJSON_GetObjectItem(valute, "Previous");
+    cJSON *Name = cJSON_GetObjectItem(valute, "Name");
+
+    double diff = Value->valuedouble - Previous->valuedouble;
+
+    char *info = NULL;
+
+    if(diff < 0.0)
+    {
+    info = va("Курс валют\n%s: %f\n↓ %f\n", cJSON_GetStringValue(Name), Value->valuedouble, diff );
+    } else {
+    info = va("Курс валют\n%s: %f\n↑ %f\n", cJSON_GetStringValue(Name), Value->valuedouble, diff );
+    }
+
+    string_strncat(s2, info, strlen(info));
+
+    vkapi_send_message(object, message->peer_id, s2->ptr, NULL, 0);
+
+    cJSON_Delete(ptr);
+    string_destroy(s);
+    string_destroy(s2);
 }
 
 #define OPEN_WEATHER_TOKEN "4a223e7db4e8c28265df2633448b69f3"
@@ -219,7 +400,7 @@ void cmd_weather(vkapi_handle *object, vkapi_message_object *message, int argc, 
 {
   if( argc < 1 )
     {
-      vkapi_send_message( object, message->peer_id, "Использование: погода <Город>" );
+      vkapi_send_message( object, message->peer_id, "Использование: погода <Город>", NULL, 0 );
       return;
     }
 
@@ -239,7 +420,7 @@ void cmd_weather(vkapi_handle *object, vkapi_message_object *message, int argc, 
 
   if(error_code != CURLE_OK)
     {
-      vkapi_send_message(object, message->peer_id, "Произошла неизвестная ошибка");
+      vkapi_send_message(object, message->peer_id, "Произошла неизвестная ошибка", NULL, 0);
       string_destroy(openweather_json);
       return;
     }
@@ -248,7 +429,7 @@ void cmd_weather(vkapi_handle *object, vkapi_message_object *message, int argc, 
       {
     if(!strncasecmp(argv[argc], "json", 4))
       {
-	vkapi_send_message(object, message->peer_id, openweather_json->ptr);
+    vkapi_send_message(object, message->peer_id, openweather_json->ptr, NULL, 0);
 	string_destroy(openweather_json);
 	return;
       }
@@ -258,7 +439,7 @@ void cmd_weather(vkapi_handle *object, vkapi_message_object *message, int argc, 
 
   if(!ptr)
     {
-	vkapi_send_message(object, message->peer_id, "cJSON сделал рыг рыг пук пук");
+    vkapi_send_message(object, message->peer_id, "cJSON сделал рыг рыг пук пук", NULL, 0);
 	string_destroy(openweather_json);
 	return;
     }
@@ -278,7 +459,7 @@ void cmd_weather(vkapi_handle *object, vkapi_message_object *message, int argc, 
 
 	  string_format(msg, "Погода в %s\n\n• Сейчас: %i℃, %s\n", cJSON_GetStringValue(name), temp->valueint, cJSON_GetStringValue(cJSON_GetObjectItem(weather, "description")));
 
-	  vkapi_send_message(object, message->peer_id, msg->ptr);
+      vkapi_send_message(object, message->peer_id, msg->ptr, NULL, 0);
 
 	  string_destroy(msg);
 	  cJSON_Delete(ptr);
@@ -286,17 +467,17 @@ void cmd_weather(vkapi_handle *object, vkapi_message_object *message, int argc, 
 	  return;
         } else if(!strncmp(cod->valuestring, "404", 3))
 	{
-	  vkapi_send_message(object, message->peer_id, "Такого города нет");
+      vkapi_send_message(object, message->peer_id, "Такого города нет", NULL, 0);
 	  cJSON_Delete(ptr);
 	  string_destroy(openweather_json);
 	  return;
 	} else if(!strncmp(cod->valuestring, "401", 3)) {
-	  vkapi_send_message(object, message->peer_id, "Ограничение апи openweathermap");
+      vkapi_send_message(object, message->peer_id, "Ограничение апи openweathermap", NULL, 0);
 	  cJSON_Delete(ptr);
 	  string_destroy(openweather_json);
 	  return;
 	} else {
-	  vkapi_send_message(object, message->peer_id, "Неизвестная ошибка");
+      vkapi_send_message(object, message->peer_id, "Неизвестная ошибка", NULL, 0);
 	  cJSON_Delete(ptr);
 	  string_destroy(openweather_json);
 	  return;
@@ -311,7 +492,7 @@ void cmd_crc32(vkapi_handle *object, vkapi_message_object *message, int argc, ch
    if(argc < 1 && !message->attachmens)
     {
       usage:
-      vkapi_send_message(object, message->peer_id, "Использование: crc32 <строка> или прикреплённый документ");
+      vkapi_send_message(object, message->peer_id, "Использование: crc32 <строка> или прикреплённый документ", NULL, 0);
       string_destroy(msg);
       string_destroy(file);
       return;
@@ -320,7 +501,7 @@ void cmd_crc32(vkapi_handle *object, vkapi_message_object *message, int argc, ch
   uint32_t crc32 = crc32_calc((const unsigned char *)args, strlen(args));
 
   if(argc > 0)
-  vkapi_send_message(object, message->peer_id, va("CRC32 хеш строки: 0x%X", crc32));
+  vkapi_send_message(object, message->peer_id, va("CRC32 хеш строки: 0x%X", crc32), NULL, 0);
   else
     {
 
@@ -352,59 +533,57 @@ void cmd_crc32(vkapi_handle *object, vkapi_message_object *message, int argc, ch
       string_destroy(file);
       }
 
-      vkapi_send_message(object, message->peer_id, msg->ptr);
+      vkapi_send_message(object, message->peer_id, msg->ptr, NULL, 0);
       string_destroy(msg);
     }
 }
 
 void cmd_hlmemes(vkapi_handle *object, vkapi_message_object *message, int argc, char **argv, const char *args)
 {
-  vkapi_send_message(object, message->peer_id, "Держи: https://www.youtube.com/playlist?list=PLxdH4XPU7OZnR5XV-b1QmnM7yCwAlmOUd");
+  vkapi_send_message(object, message->peer_id, "Держи: https://www.youtube.com/playlist?list=PLxdH4XPU7OZnR5XV-b1QmnM7yCwAlmOUd", NULL, 0);
 }
-
-vkapi_boolean vkapi_upload_doc_by_url(vkapi_handle *object, vkapi_message_object *message, string_t data, int type);
 
 void cmd_cat(vkapi_handle *object, vkapi_message_object *message, int argc, char **argv, const char *args)
 {
   string_t s = string_init();
-
   string_t url = string_init();
 
   string_copy(url, "https://aws.random.cat/meow");
 
   if(curl_get(object->curl_handle, url, NULL, s) != true)
     {
-      vkapi_send_message(object, message->peer_id, "Увы но сервер с котиками недоступен >:(");
+      vkapi_send_message(object, message->peer_id, "Увы но сервер с котиками недоступен >:(", NULL, 0);
       string_destroy(s);
       string_destroy(url);
+      return;
     }
 
   cJSON *ptr = cJSON_ParseWithOpts(s->ptr, NULL, false);
 
   if(!ptr)
     {
-      vkapi_send_message(object, message->peer_id, "Увы но сервер с котиками недоступен >:(");
+      vkapi_send_message(object, message->peer_id, "Увы но сервер с котиками недоступен >:(", NULL, 0);
       string_destroy(s);
       string_destroy(url);
+      return;
     }
 
   cJSON *file = cJSON_GetObjectItem(ptr, "file");
 
-
   string_copy(url, cJSON_GetStringValue(file));
-
-  printf("SO.... %s\n", url->ptr);
 
   string_t filedata = string_init();
 
   curl_get(object->curl_handle, url, NULL, filedata);
 
-  vkapi_upload_doc_by_url(object, message, filedata, 0);
+  vkapi_attach *attach = vkapi_upload_doc_by_url(object, message, "random_cat.png", filedata, VKAPI_PHOTO);
 
-  vkapi_send_message(object, message->peer_id, s->ptr);
+  vkapi_send_message(object, message->peer_id, NULL, attach, 1);
 
-  string_destroy(filedata);
+  cJSON_Delete(ptr);
+
   string_destroy(s);
+  string_destroy(filedata);
   string_destroy(url);
 }
 
@@ -412,7 +591,17 @@ void cmd_cat(vkapi_handle *object, vkapi_message_object *message, int argc, char
 
 void cmd_debug(vkapi_handle *object, vkapi_message_object *message, int argc, char **argv, const char *args)
 {
-  //vkapi_send_message(object, message->peer_id, va("Ваш уровень прав: %s\n", get_name_privilage(get_privilage_by_id(message->from_id))));
+    privilage_t priv = get_privilage_by_id(message->from_id);
+
+    string_t s = string_init();
+
+    string_format(s, "Ваш уровень привелегий - %s\n", get_name_privilage(priv));
+
+    vkapi_send_message(object, message->peer_id, s->ptr, NULL, 0);
+
+    string_destroy(s);
+
+    return;
 
   if(argv[1])
     {
@@ -432,13 +621,13 @@ void cmd_debug(vkapi_handle *object, vkapi_message_object *message, int argc, ch
 		}
 
 	  memcache_push(argv[1], s->ptr);
-	  vkapi_send_message(object, message->peer_id, va("Memcache: push key \"%s\" value \"%s\"\n", argv[1], s->ptr));
+      vkapi_send_message(object, message->peer_id, va("Memcache: push key \"%s\" value \"%s\"\n", argv[1], s->ptr), NULL, 0);
 	  return;
 	}
       const char *value = memcache_get(argv[1]);
       if(value)
-      vkapi_send_message(object, message->peer_id, va("Memcache: key is \"%s\" value is \"%s\"\n", argv[1], value));
+      vkapi_send_message(object, message->peer_id, va("Memcache: key is \"%s\" value is \"%s\"\n", argv[1], value), NULL, 0);
       else
-	vkapi_send_message(object, message->peer_id, va("Memcache: value for key \"%s\" not found\n", argv[1]));
+    vkapi_send_message(object, message->peer_id, va("Memcache: value for key \"%s\" not found\n", argv[1]), NULL, 0);
     }
 }

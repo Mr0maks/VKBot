@@ -1,5 +1,5 @@
 #include <stdarg.h>
-#include <strings.h>
+#include <stdio.h>
 
 char *va( const char *format, ... )
 {

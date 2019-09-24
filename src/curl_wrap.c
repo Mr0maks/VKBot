@@ -95,7 +95,6 @@ vkapi_boolean curl_uploadfile( void *curl_handle, const char *url, const char *f
 {
   curl_mime *form = NULL;
   curl_mimepart *field = NULL;
-  //struct curl_slist *headerlist = NULL;
 
   form = curl_mime_init(curl_handle);
   field = curl_mime_addpart(form);
@@ -103,13 +102,10 @@ vkapi_boolean curl_uploadfile( void *curl_handle, const char *url, const char *f
   curl_mime_filename(field, filename);
   curl_mime_data(field, data->ptr, data->len);
 
-  //headerlist = curl_slist_append(headerlist, "Expect:");
-
   curl_easy_reset(curl_handle);
   curl_easy_setopt(curl_handle, CURLOPT_MIMEPOST, form);
   curl_easy_setopt(curl_handle, CURLOPT_URL, url);
-  curl_easy_setopt(curl_handle, CURLOPT_VERBOSE, 1L);
-  //curl_easy_setopt(curl_handle, CURLOPT_HTTPHEADER, headerlist);
+  //curl_easy_setopt(curl_handle, CURLOPT_VERBOSE, 1L);
 
   if(useragent)
     curl_easy_setopt(curl_handle, CURLOPT_USERAGENT, useragent->ptr);
@@ -119,12 +115,10 @@ vkapi_boolean curl_uploadfile( void *curl_handle, const char *url, const char *f
 
   CURLcode error_code = curl_easy_perform(curl_handle);
 
-  //curl_slist_free_all(headerlist);
-
   if(error_code != CURLE_OK)
     {
       curl_mime_free(form);
-      printf("libcurl mime error: %s\n", curl_easy_strerror(error_code));
+      printf("libcurl error: %s\n", curl_easy_strerror(error_code));
       return false;
     }
 

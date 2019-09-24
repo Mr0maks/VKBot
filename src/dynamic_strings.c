@@ -24,7 +24,7 @@ string_t string_init() {
 
 string_t string_dublicate(string_t s)
 {
-  assert( s != NULL );
+  assert( s );
 
   string_t s_duble = string_init();
 
@@ -39,7 +39,7 @@ string_t string_dublicate(string_t s)
 
 void resize_string_if_need( string_t s, size_t size_need )
 {
-  assert( s != NULL );
+  assert( s );
 
   if( size_need == 0 )
     return;
@@ -61,7 +61,7 @@ void resize_string_if_need( string_t s, size_t size_need )
 
 void string_format( string_t s, const char *fmt, ...)
 {
-  assert( s != NULL );
+  assert( s );
 
   char *ptr = NULL;
   int size = 0;
@@ -94,9 +94,9 @@ void string_format( string_t s, const char *fmt, ...)
   s->ptr[s->len] = '\0';
 }
 
-void string_strncat( string_t s, const char *string, size_t size )
+void _string_strncat_char( string_t s, const char *string, size_t size )
 {
-  assert( s != NULL );
+  assert( s );
 
   if(!string || size == 0)
     return;
@@ -116,9 +116,17 @@ void string_strncat( string_t s, const char *string, size_t size )
   s->size = new_len + 1;
 }
 
+void _string_strncat_string( string_t s, string_t s2)
+{
+    assert( s );
+    assert( s2 );
+
+    _string_strncat_char( s, s2->ptr, s->len);
+}
+
 void string_memcpy( string_t s, const void *data, size_t size )
 {
-  assert( s != NULL );
+  assert( s );
 
   if(!data || size == 0)
     return;
@@ -140,7 +148,7 @@ void string_memcpy( string_t s, const void *data, size_t size )
 
 void string_copy( string_t s, const char *string )
 {
-  assert( s != NULL );
+  assert( s );
 
   size_t slen = strlen( string );
 
