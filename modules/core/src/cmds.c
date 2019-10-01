@@ -349,9 +349,9 @@ void cmd_valute_curse(vkapi_handle *object, vkapi_message_object *message, int a
 
     if(diff < 0.0)
     {
-    info = va("Курс валют\n%s: %f\n↓ %f\n", cJSON_GetStringValue(Name), Value->valuedouble, diff );
+    info = va("Курс валют\n%s: %f ₽\n↓ %f ₽\n", cJSON_GetStringValue(Name), Value->valuedouble, diff );
     } else {
-    info = va("Курс валют\n%s: %f\n↑ %f\n", cJSON_GetStringValue(Name), Value->valuedouble, diff );
+    info = va("Курс валют\n%s: %f ₽\n↑ %f ₽\n", cJSON_GetStringValue(Name), Value->valuedouble, diff );
     }
 
     STRING_STRNCAT(s2, info, strlen(info));
