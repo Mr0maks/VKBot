@@ -18,4 +18,5 @@ void cmd_weather(vkapi_handle *object, vkapi_message_object *message, int argc, 
 void cmd_crc32(vkapi_handle *object, vkapi_message_object *message, int argc, char **argv, const char *args);
 void cmd_hlmemes(vkapi_handle *object, vkapi_message_object *message, int argc, char **argv, const char *args);
 void cmd_cat(vkapi_handle *object, vkapi_message_object *message, int argc, char **argv, const char *args);
+void cmd_get_privilage(vkapi_handle *object, vkapi_message_object *message, int argc, char **argv, const char *args);
 void cmd_debug(vkapi_handle *object, vkapi_message_object *message, int argc, char **argv, const char *args);

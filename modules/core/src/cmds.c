@@ -552,16 +552,15 @@ void cmd_cat(vkapi_handle *object, vkapi_message_object *message, int argc, char
   STRING_DESTROY(url);
 }
 
-//TODO: make get_privilgae_by_id in engine api
-//void cmd_get_privilage(vkapi_handle *object, vkapi_message_object *message, int argc, char **argv, const char *args)
-//{
-//    privilage_t priv = get_privilage_by_id(message->from_id);
-//    string_t s = STRING_INIT();
-//    STRING_FORMAT(s, "Ваш уровень привелегий - %s\n", get_name_privilage(priv));
-//    VKAPI_SEND_MESSAGE(object, message->peer_id, s->ptr, NULL, 0);
-//    STRING_DESTROY(s);
-//    return;
-//}
+void cmd_get_privilage(vkapi_handle *object, vkapi_message_object *message, int argc, char **argv, const char *args)
+{
+    privilage_t priv = USERS_GET_PRIVILAGE(message->from_id);
+    string_t s = STRING_INIT();
+    STRING_FORMAT(s, "Ваш уровень привелегий - %s\n", USERS_GET_PRIVILAGE_NAME(priv));
+    VKAPI_SEND_MESSAGE(object, message->peer_id, s->ptr, NULL, 0);
+    STRING_DESTROY(s);
+    return;
+}
 
 void cmd_debug(vkapi_handle *object, vkapi_message_object *message, int argc, char **argv, const char *args)
 {
