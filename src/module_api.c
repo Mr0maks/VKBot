@@ -51,6 +51,18 @@ const engine_api_t engfuncs_t =
     memcache_push,
     memcache_get,
 
+    // db api
+    db_register_type,
+    db_open,
+    db_exec,
+    db_close,
+
+    // users api
+    users_is_init,
+    users_module_register_users,
+    users_get_privilage,
+    users_get_name_privilage,
+
     // other shit
     crc32_calc,
     module_alert,
@@ -113,7 +125,9 @@ void module_load(const char *name)
 }
 
 void load_modules() {
+  module_load("sqlite");
+  module_load("users_sqlite");
   module_load("core");
-  module_load("helloworld");
-  module_load("bytecode");
+//  module_load("helloworld");
+//  module_load("bytecode");
 }

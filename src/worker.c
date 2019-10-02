@@ -11,8 +11,8 @@
 #include "worker_queue.h"
 #include "va_utils.h"
 #include "cmd_handler.h"
-#include "users.h"
-#include "sqlite3_db.h"
+#include "users_api.h"
+#include "db_api.h"
 #include <cJSON.h>
 #include <unistd.h>
 
@@ -150,14 +150,6 @@ void worker_main_thread( const char *token, int group_id, int num_workers )
   pthread_mutex_init( &mutex_lock, NULL );
   pthread_mutex_init( &command_handler_mutex, NULL );
   pthread_cond_init( &cond_var, NULL );
-
-  db_handle_t *user_db = db_sqlite_open("./users.sqlite3");
-
-  db_sqlite_exec(user_db, DB_CREATE_TABLE_MAIN, NULL, NULL);
-
-  printf("BD INIT OK ?\n");
-
-  users_set_db(user_db);
 
   worker_data_t *work_data = calloc(sizeof(worker_data_t), num_workers + 1);
 

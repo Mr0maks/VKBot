@@ -230,7 +230,7 @@ string_t vkapi_get_longpoll_data(vkapi_handle *object)
   return s;
 }
 
-const char *vkapi_attach_type(docs_type_t doc)
+static inline const char *vkapi_attach_type(docs_type_t doc)
 {
     switch (doc) {
     case VKAPI_PHOTO:

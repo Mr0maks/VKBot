@@ -1,7 +1,7 @@
 #pragma once
 
 #include "vkapi.h"
-#include "users.h"
+#include "users_api.h"
 
 typedef  void	(*cmd_function_callback)(vkapi_handle *object, vkapi_message_object *message, int argc, char *argv[], const char *args);
 

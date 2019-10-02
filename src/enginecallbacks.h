@@ -28,6 +28,16 @@ extern engine_api_t engine_api;
 #define MEMCACHE_PUSH (*engine_api.memcache_push)
 #define MEMCACHE_GET (*engine_api.memcache_get)
 
+#define DB_REGISTER (*engine_api.db_register_type)
+#define DB_OPEN (*engine_api.db_open)
+#define DB_EXEC (*engine_api.db_exec)
+#define DB_CLOSE (*engine_api.db_close)
+
+#define USERS_IS_INITED (*engine_api.users_id_init)
+#define USERS_REGISTER (*engine_api.users_module_register_users)
+#define USERS_GET_PRIVILAGE (*engine_api.users_get_privilage)
+#define USERS_GET_PRIVILAGE_NAME (*engine_api.users_get_name_privilage)
+
 #define CRC32 (*engine_api.crc32_calc)
 #define ALERT (*engine_api.alert)
 

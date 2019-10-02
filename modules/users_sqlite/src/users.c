@@ -1,32 +1,33 @@
 #include "users.h"
 #include "dynamic_strings.h"
-#include "sqlite3_db.h"
 #include <stdio.h>
-
-const users_privilage_t users[] = {
-//  {212232274, admin},
-  {0, none}
-};
+#include <enginecallbacks.h>
 
 static db_handle_t *user_db = NULL;
 
-void users_set_db(db_handle_t *handle)
+int users_init(void)
 {
-    user_db = handle;
+  user_db = DB_OPEN("./users.sqlite3", "sqlite", NULL);
+
+  if(!user_db)
+    return 1;
+
+  DB_EXEC(user_db, DB_CREATE_TABLE_MAIN, NULL, NULL);
+  return 0;
 }
 
-void user_new_user(int id)
+static void user_new_user(int id)
 {
-    string_t s = string_init();
+    string_t s = STRING_INIT();
 
-    string_format(s, DB_INSERT_USER, id);
+    STRING_FORMAT(s, DB_INSERT_USER, id);
 
-    db_sqlite_exec(user_db, s->ptr, NULL, NULL);
+    DB_EXEC(user_db, s->ptr, NULL, NULL);
 
-    string_destroy(s);
+    STRING_DESTROY(s);
 }
 
-int privilage_callback(void *data, int argc, char **argv, char **colums_name)
+static int privilage_callback(void *data, int argc, char **argv, char **colums_name)
 {
        for(int i = 0; i<argc; i++){
           printf("%s = %s\n", colums_name[i], argv[i] ? argv[i] : "NULL");
@@ -42,21 +43,15 @@ int privilage_callback(void *data, int argc, char **argv, char **colums_name)
 
 privilage_t get_privilage_by_id(int id)
 {
-  for(int i = 0; users[i].user_id != 0; i++)
-    {
-      if(users[i].user_id == id)
-	return users[i].privilage;
-    }
+  string_t s = STRING_INIT();
 
-  string_t s = string_init();
-
-  string_format(s, DB_GET_PRIVILAGE_BY_ID, id);
+  STRING_FORMAT(s, DB_GET_PRIVILAGE_BY_ID, id);
 
   privilage_t ret = error;
 
-  db_sqlite_exec(user_db, s->ptr, privilage_callback, &ret );
+  DB_EXEC(user_db, s->ptr, privilage_callback, &ret );
 
-  string_destroy(s);
+  STRING_DESTROY(s);
 
   if(ret != error)
       return ret;

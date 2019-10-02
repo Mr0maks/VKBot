@@ -4,6 +4,7 @@
 #include "vkapi.h"
 #include "cmd_handler.h"
 #include "curl_wrap.h"
+#include "db_api.h"
 
 typedef enum
 {
@@ -76,6 +77,16 @@ typedef struct
 
   void (*memcache_push) (const char *key, const char *value);
   const char* (*memcache_get) (const char *key);
+
+  void (*db_register_type) ( const char *type, db_open_t open, db_exec_t exec, db_close_t close, void *data );
+  db_handle_t *(*db_open) (const char *filename, const char *db_name, void *data);
+  void (*db_exec) (db_handle_t *db, const char *cmd, db_callback_t callback, void *data);
+  void (*db_close) (db_handle_t *db);
+
+  int (*users_is_init) ();
+  void (*users_module_register_users) (users_t *users);
+  int (*users_get_privilage) (int id);
+  const char *(*users_get_name_privilage)(int priv);
 
   unsigned int (*crc32_calc) (const unsigned char *buf, size_t len);
   void (*alert) (module_info_t *info, const char *fmt, ...);
