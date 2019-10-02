@@ -554,7 +554,7 @@ void cmd_cat(vkapi_handle *object, vkapi_message_object *message, int argc, char
 
 void cmd_get_privilage(vkapi_handle *object, vkapi_message_object *message, int argc, char **argv, const char *args)
 {
-    privilage_t priv = USERS_GET_PRIVILAGE(message->from_id);
+    int priv = USERS_GET_PRIVILAGE(message->from_id);
     string_t s = STRING_INIT();
     STRING_FORMAT(s, "Ваш уровень привелегий - %s\n", USERS_GET_PRIVILAGE_NAME(priv));
     VKAPI_SEND_MESSAGE(object, message->peer_id, s->ptr, NULL, 0);
