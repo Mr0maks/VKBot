@@ -151,6 +151,7 @@ vkapi_boolean cmd_handle(vkapi_handle *object, vkapi_message_object *message)
        for(int i = 0; i < tokens_count; i++)
            argv[i] = tokens[i];
      } else {
+       tokens_count--;
        for(int i = 0; i < tokens_count; i++)
            argv[i] = tokens[i + 1];
      }
