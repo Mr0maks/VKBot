@@ -1,8 +1,4 @@
-#include <assert.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <strings.h>
-
+#include "common.h"
 #include "db_api.h"
 
 typedef struct db_pool_s
@@ -40,7 +36,7 @@ void db_register_type( const char *type, db_open_t open, db_exec_t exec, db_clos
 {
   assert(type);
 
-  printf("[DB] Registered Type DB: %s\n", type);
+  Con_Printf("[DB] Registered Type DB: %s\n", type);
 
   db_pool_t *ptr = malloc(sizeof (db_pool_t));
 

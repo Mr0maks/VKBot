@@ -1,16 +1,4 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <strings.h>
-#include <memory.h>
-#include <pthread.h>
-
-#include "cmd_handler.h"
-#include "module_api.h"
-#include "crc_hash.h"
-#include "vkapi.h"
-#include "va_utils.h"
-
+#include "common.h"
 #include "engine_cmds.h"
 
 #define MAX(a,b) ((a) > (b) ? (a) : (b))
@@ -19,8 +7,8 @@
 #define ARRAY_LENGHT(x) (sizeof(x)/sizeof(x[0])) - 1
 
 cmds_modules_pools_t *modules_cmds_poll = NULL;
-cmds_hashs_t *cached_cmds = NULL;
-cmds_name_hashs_t *cached_names = NULL;
+static cmds_hashs_t *cached_cmds = NULL;
+static cmds_name_hashs_t *cached_names = NULL;
 
 const cmds_t commands[] = {
   { "помощь", "команда для показа этого сообщения", cmd_help },
@@ -167,7 +155,7 @@ vkapi_boolean cmd_handle(vkapi_handle *object, vkapi_message_object *message)
 	   string_strncat( args_s, argv[c], strlen(argv[c]) );
 	 }
 
-   printf( "Try to call cmd %s\n", argv[0] );
+   Con_Printf( "Try to call cmd %s\n", argv[0] );
 
    cmd_function_callback cmd = cmd_get_command(argv[0]);
 
@@ -218,11 +206,11 @@ void cmd_calculate_cmd_hashes()
 
   if( cached_cmds == NULL )
     {
-      printf( "Error while allocated memory for commands hashs\n" );
+      Con_Printf( "Error while allocated memory for commands hashs\n" );
       exit( EXIT_FAILURE );
     }
 
-  printf( "Static commands in bot %lu ( static cmds_t commands[] )\n", static_commands );
+  Con_Printf( "Static commands in bot %lu ( static cmds_t commands[] )\n", static_commands );
 
   for( size_t i = 0; i < static_commands; i++ )
     {
@@ -236,7 +224,7 @@ void cmd_calculate_cmd_hashes()
 
       max_command_len = MAX( max_command_len, string_len );
 
-      printf( "\"%s\" \"%s\" hash: %X len: %lu\n", commands[i].string, commands[i].description, cached_cmds[i].hash, string_len );
+      Con_Printf( "\"%s\" \"%s\" hash: %X len: %lu\n", commands[i].string, commands[i].description, cached_cmds[i].hash, string_len );
 
     }
 }
@@ -247,11 +235,11 @@ void cmd_calculate_name_hashes()
 
   if( cached_names == NULL )
     {
-      printf( "Error while allocated memory for commands hashs\n" );
+      Con_Printf( "Error while allocated memory for commands hashs\n" );
       exit( EXIT_FAILURE );
     }
 
-  printf( "Static names in bot %lu ( static cmds_names_t names[] )\n", static_names );
+  Con_Printf( "Static names in bot %lu ( static cmds_names_t names[] )\n", static_names );
 
   for( size_t i = 0; i < static_names; i++ )
     {
@@ -264,7 +252,7 @@ void cmd_calculate_name_hashes()
 
       max_name_len = MAX( max_name_len, string_len );
 
-      printf( "\"%s\" hash: %X\n", names[i].name, cached_names[i].hash );
+      Con_Printf( "\"%s\" hash: %X\n", names[i].name, cached_names[i].hash );
     }
 }
 
@@ -292,7 +280,7 @@ void cmd_handler_register_module_cmd(module_info_t *info, const char *cmd_name, 
   ptr->next = modules_cmds_poll;
   modules_cmds_poll = ptr;
 
-  printf("Cmd from module %s: \"%s\" - \"%s\" hash: %X \n", info->name, cmd_name, description, ptr->hash);
+  Con_Printf("Cmd from module %s: \"%s\" - \"%s\" hash: %X \n", info->name, cmd_name, description, ptr->hash);
 
   max_command_len = MAX(max_command_len, strlen(cmd_name));
 }

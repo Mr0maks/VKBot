@@ -54,7 +54,7 @@ vkapi_boolean curl_get( void *curl_handle, string_t url, string_t useragent, str
 
   if(error_code != CURLE_OK)
     {
-      printf("libcurl error: %s\n", curl_easy_strerror(error_code));
+      Con_Printf("libcurl error: %s\n", curl_easy_strerror(error_code));
       return false;
     }
 
@@ -84,7 +84,7 @@ vkapi_boolean curl_post( void *curl_handle, const char *url, string_t post, stri
 
   if(error_code != CURLE_OK)
     {
-      printf("libcurl error: %s\n", curl_easy_strerror(error_code));
+      Con_Printf("libcurl error: %s\n", curl_easy_strerror(error_code));
       return false;
     }
 
@@ -118,7 +118,7 @@ vkapi_boolean curl_uploadfile( void *curl_handle, const char *url, const char *f
   if(error_code != CURLE_OK)
     {
       curl_mime_free(form);
-      printf("libcurl error: %s\n", curl_easy_strerror(error_code));
+      Con_Printf("libcurl error: %s\n", curl_easy_strerror(error_code));
       return false;
     }
 

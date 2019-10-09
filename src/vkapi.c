@@ -1,17 +1,4 @@
-#include <assert.h>
-#include <string.h>
-#include <cJSON.h>
-
-#include "va_utils.h"
-#include "vkapi.h"
-#include "dynamic_strings.h"
-
-#include "curl_wrap.h"
-
-#include <stdio.h>
-
-#include "vkapi_json_wrap.h"
-#include "gc_memmgr.h"
+#include "common.h"
 
 #define VK_URL_METHOD "https://api.vk.com/method/"
 
@@ -41,7 +28,7 @@ string_t vkapi_call_method(vkapi_handle *object, const char *method, string_t sp
 
   if(error_code != true)
     {
-      printf("vk_api: libcurl error!\n");
+      Con_Printf("vk_api: libcurl error!\n");
       string_destroy(s);
       return NULL;
     }
@@ -72,7 +59,7 @@ vkapi_attach *vkapi_upload_doc_by_url(vkapi_handle *object, vkapi_message_object
 
 	  if(!upload_url)
 	    {
-	    printf("upload url is null\n");
+	    Con_Printf("upload url is null\n");
 	    break;
 	    }
 
@@ -94,7 +81,7 @@ vkapi_attach *vkapi_upload_doc_by_url(vkapi_handle *object, vkapi_message_object
 
 	  result = vkapi_call_method(object, "docs.save", s, true );
 
-      printf("HMMMM: %s\n", result->ptr);
+      Con_Printf("HMMMM: %s\n", result->ptr);
 
       ptr = cJSON_ParseWithOpts(result->ptr, NULL, false);
 
@@ -133,7 +120,7 @@ vkapi_attach *vkapi_upload_doc_by_url(vkapi_handle *object, vkapi_message_object
 
       if(!upload_url)
         {
-        printf("upload url is null\n");
+        Con_Printf("upload url is null\n");
         break;
         }
 
@@ -155,7 +142,7 @@ vkapi_attach *vkapi_upload_doc_by_url(vkapi_handle *object, vkapi_message_object
 
       result = vkapi_call_method(object, "photos.saveMessagesPhoto", s, true );
 
-      printf("HMMMM: %s\n", result->ptr);
+      Con_Printf("HMMMM: %s\n", result->ptr);
 
       ptr = cJSON_ParseWithOpts(result->ptr, NULL, false);
 
@@ -198,7 +185,7 @@ string_t vkapi_get_longpoll_data(vkapi_handle *object)
 
   if(error_code != true)
     {
-      printf("vk_api: libcurl error!\n");
+      Con_Printf("vk_api: libcurl error!\n");
       string_destroy( s );
       return NULL;
     }
@@ -207,7 +194,7 @@ string_t vkapi_get_longpoll_data(vkapi_handle *object)
 
   if( !json )
     {
-      printf( "Error while getting long poll data: json parser return NULL\n");
+      Con_Printf( "Error while getting long poll data: json parser return NULL\n");
       cJSON_Delete( json );
       string_destroy( s );
       return NULL;
@@ -219,7 +206,7 @@ string_t vkapi_get_longpoll_data(vkapi_handle *object)
     object->longpoll_timestamp = atoll(cJSON_GetStringValue(ts));
   else
     {
-      printf("Error while getting long poll data: json ts == NULL\n");
+      Con_Printf("Error while getting long poll data: json ts == NULL\n");
       cJSON_Delete(json);
       string_destroy( s );
       return NULL;
@@ -299,7 +286,7 @@ vkapi_boolean vkapi_get_long_poll_server(vkapi_handle *object)
 
   if(!method_result)
     {
-      printf("Error while getting long poll data: vk_api_call_method return NULL\n");
+      Con_Printf("Error while getting long poll data: vk_api_call_method return NULL\n");
       return false;
     }
 
@@ -309,8 +296,8 @@ vkapi_boolean vkapi_get_long_poll_server(vkapi_handle *object)
 
   if(!json)
     {
-      printf("Error while getting long poll data: json parser return NULL\n");
-      printf("Error before: %s\n", json_return);
+      Con_Printf("Error while getting long poll data: json parser return NULL\n");
+      Con_Printf("Error before: %s\n", json_return);
       cJSON_Delete(json);
       string_destroy(method_result);
       return false;
@@ -330,7 +317,7 @@ vkapi_boolean vkapi_get_long_poll_server(vkapi_handle *object)
   strncpy(object->longpoll_server_url, cJSON_GetStringValue(server), sizeof(object->longpoll_server_url));
   object->longpoll_timestamp = atoll(cJSON_GetStringValue(timestamp));
     } else {
-      printf("Error while getting long poll data: json parser return null json objects. Seems its error %s\n", method_result->ptr);
+      Con_Printf("Error while getting long poll data: json parser return null json objects. Seems its error %s\n", method_result->ptr);
       cJSON_Delete(json);
       string_destroy(method_result);
       return false;
@@ -378,7 +365,7 @@ vkapi_handle *vkapi_init(const char *token)
   if(result->group_id == 0)
     {
       result = NULL;
-      printf("vkapi error: failed to get group id!\n");
+      Con_Printf("vkapi error: failed to get group id!\n");
     }
 
   return result;

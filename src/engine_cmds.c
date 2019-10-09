@@ -1,11 +1,4 @@
-#include "vkapi.h"
-#include "va_utils.h"
-#include "worker_queue.h"
-#include "worker.h"
-#include "cmd_handler.h"
-#include "memcache.h"
-#include "gc_memmgr.h"
-#include "module_api.h"
+#include "common.h"
 
 extern cmds_t commands[];
 extern cmds_modules_pools_t *modules_cmds_poll;
@@ -77,7 +70,7 @@ void cmd_stat(vkapi_handle *object, vkapi_message_object *message, int argc, cha
 void cmd_gc(vkapi_handle *object, vkapi_message_object *message, int argc, char **argv, const char *args)
 {
     string_t s = string_init();
-    string_format( s, "Статистика gc бота\nПамяти свободно: %ld б\nРазмер кучи: %lu б\nИспользованно: %ld б\nОбщее количество памяти которое выделенно: %ld б\nПамять не управляемая gc: %ld б\n", GC_get_free_bytes(), GC_get_heap_size(), GC_get_memory_use(), GC_get_total_bytes(), GC_get_non_gc_bytes() );
+    string_format( s, "Статистика gc бота\nПамяти свободно: %ld б\nРазмер кучи: %lu б\nИспользованно: %ld б\nОбщее количество памяти которое выделенно: %ld б\nПамять не управляемая gc: %ld б\nПамять которая не помечена: %ld б\n", GC_get_free_bytes(), GC_get_heap_size(), GC_get_memory_use(), GC_get_total_bytes(), GC_get_non_gc_bytes(), GC_get_unmapped_bytes() );
 
     vkapi_send_message( object, message->peer_id, s->ptr, NULL, 0 );
     string_destroy( s );

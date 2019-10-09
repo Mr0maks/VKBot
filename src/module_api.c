@@ -19,7 +19,7 @@ void module_reg_cmd(module_info_t *info, const char *cmd_name, const char *descr
 
 void module_alert(module_info_t *info, const char *fmt, ...)
 {
-    printf("[%s] STUB!\n", info->name );
+    Con_Printf("[%s] STUB!\n", info->name );
 }
 
 const engine_api_t engfuncs_t =
@@ -82,7 +82,7 @@ void module_load(const char *name)
 
   if(!ptr)
     {
-      printf("Module %s error: calloc return NULL\n", name);
+      Con_Printf("Module %s error: calloc return NULL\n", name);
       return;
     }
 
@@ -90,7 +90,7 @@ void module_load(const char *name)
 
   if(ptr->handle == NULL)
     {
-      printf("Module %s error: %s\n", name, GetLastError());
+      Con_Printf("Module %s error: %s\n", name, GetLastError());
       free(ptr);
       return;
     }
@@ -99,7 +99,7 @@ void module_load(const char *name)
 
   if(!module_init_func)
     {
-      printf("Module %s error: %s\n", name, GetLastError());
+      Con_Printf("Module %s error: %s\n", name, GetLastError());
       free(ptr);
       return;
     }
@@ -112,7 +112,7 @@ void module_load(const char *name)
 
   if(ptr->info->ifver != ENGINE_API_VERSION)
   {
-      printf("Module %s error: interface mismatch\n", name);
+      Con_Printf("Module %s error: interface mismatch\n", name);
       FreeLibrary(ptr->handle);
       free(ptr);
       return;

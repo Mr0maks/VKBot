@@ -1,10 +1,4 @@
-#include <pthread.h>
-#include "vkapi.h"
-#include "vk_setting.h"
-
-#include <stdlib.h>
-
-#include "gc_memmgr.h"
+#include "common.h"
 
 #define MAX(a,b) ((a) > (b) ? (a) : (b))
 

@@ -1,13 +1,4 @@
-#include "dynamic_strings.h"
-#include <stdio.h>
-#include <string.h>
-#include <stdlib.h>
-
-#include <stdarg.h>
-
-#include <assert.h>
-
-#include "gc_memmgr.h"
+#include "common.h"
 
 void _string_release(string_t s, void *ptr)
 {
@@ -21,7 +12,7 @@ string_t string_init() {
   
   s->ptr = (char *)malloc( 4096 );
   if ( s->ptr == NULL ) {
-      printf( "сalloc() failed\n" );
+      Con_Printf( "сalloc() failed\n" );
       exit( EXIT_FAILURE );
     }
   
@@ -59,7 +50,7 @@ void resize_string_if_need( string_t s, size_t size_need )
   s->ptr = realloc( s->ptr, size_need + 1 );
 
   if ( s->ptr == NULL ) {
-      printf( "realloc() failed\n" );
+      Con_Printf( "realloc() failed\n" );
       exit( EXIT_FAILURE );
     }
   
@@ -91,7 +82,7 @@ void string_format( string_t s, const char *fmt, ...)
     }
 
   if ( s->ptr == NULL ) {
-      printf( "realloc() failed\n" );
+      Con_Printf( "realloc() failed\n" );
       exit( EXIT_FAILURE );
     }
 
@@ -115,7 +106,7 @@ void _string_strncat_char( string_t s, const char *string, size_t size )
   s->ptr = realloc( s->ptr, new_len + 1 );
 
   if ( s->ptr == NULL ) {
-      printf( "realloc() failed\n" );
+      Con_Printf( "realloc() failed\n" );
       exit( EXIT_FAILURE );
     }
 
@@ -145,7 +136,7 @@ void string_memcpy( string_t s, const void *data, size_t size )
   s->ptr = realloc( s->ptr, new_len + 1 );
 
   if ( s->ptr == NULL ) {
-      printf( "realloc() failed\n" );
+      Con_Printf( "realloc() failed\n" );
       exit( EXIT_FAILURE );
     }
 

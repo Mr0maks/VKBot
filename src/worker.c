@@ -1,26 +1,4 @@
-#include <memory.h>
-#include <time.h>
-#include <stdio.h>
-#include <assert.h>
-
-#include "thpool.h"
-
-#include "vkapi.h"
-#include "vkapi_json_wrap.h"
-#include "vk_setting.h"
-#include "worker_queue.h"
-#include "va_utils.h"
-#include "cmd_handler.h"
-#include "users_api.h"
-#include "db_api.h"
-#include <cJSON.h>
-#include <unistd.h>
-
-#include <pthread.h>
-
-#include "memcache.h"
-
-#include "gc_memmgr.h"
+#include "common.h"
 
 static pthread_mutex_t mutex_lock;
 static pthread_mutex_t command_handler_mutex;
@@ -46,7 +24,7 @@ void long_poll_worker( void *data )
 {
   worker_data_t *worker_data = (worker_data_t*)data;
 
-  printf("[Worker %i] OK!\n", worker_data->worker_id);
+  Con_Printf("[Worker %i] OK!\n", worker_data->worker_id);
 
   while (worker_data->loop) {
 
@@ -83,12 +61,12 @@ void long_poll_worker( void *data )
 
       if( message->text->len < 512)
 	{
-	  printf( "[Worker %i] Message peer_id: %i from_id: %i message: %s\n", worker_data->worker_id, message->peer_id, message->from_id, message->text->ptr );
+	  Con_Printf( "[Worker %i] Message peer_id: %i from_id: %i message: %s\n", worker_data->worker_id, message->peer_id, message->from_id, message->text->ptr );
 
 	  if(cmd_handle( worker_data->vkapi_object, message ))
 	    {
 	      //command_processed++;
-	      printf("[Worker %i] took at %f sec\n", worker_data->worker_id, get_time_s() - start_time );
+	      Con_Printf("[Worker %i] took at %f sec\n", worker_data->worker_id, get_time_s() - start_time );
 	    }
 	}
 
@@ -128,8 +106,22 @@ void worker_exit()
 
 void load_modules();
 
-void worker_main_thread( const char *token, int group_id, int num_workers )
+void worker_main_thread( const char *token, int num_workers )
 {
+    if(!token)
+    {
+        Con_Printf("Error: no token from config file!\n");
+        return;
+    }
+
+    if(!num_workers)
+    {
+        Con_Printf("Warn: no workers count from config file!\n");
+
+        num_workers = 4;
+    }
+
+
 //  GC_set_find_leak(1);
 
   load_modules();
@@ -159,7 +151,7 @@ void worker_main_thread( const char *token, int group_id, int num_workers )
     {
       work_data[i].worker_id = i;
       work_data[i].loop = true;
-      work_data[i].vkapi_object = vkapi_init( VK_GROUP_TOKEN );
+      work_data[i].vkapi_object = vkapi_init( token );
     }
 
   for( int i = 0; i < num_workers; i++ )
@@ -167,12 +159,12 @@ void worker_main_thread( const char *token, int group_id, int num_workers )
       thpool_add_work( worker_pool, long_poll_worker, &work_data[i] );
     }
 
-  vkapi_handle *object = vkapi_init(VK_GROUP_TOKEN);
+  vkapi_handle *object = vkapi_init(token);
 
 try_again:
   if(!vkapi_get_long_poll_server(object))
     {
-      printf("Error while getting long poll server. I try again.\n");
+      Con_Printf("Error while getting long poll server. I try again.\n");
       sleep(10);
       goto try_again;
     }
@@ -187,7 +179,7 @@ try_again:
 
       cJSON *main_obj = cJSON_ParseWithOpts( long_poll_string->ptr, NULL, false );
 
-      printf( "%s\n", long_poll_string->ptr );
+      Con_Printf( "%s\n", long_poll_string->ptr );
 
       if( !vkapi_json_long_poll_have_updates( main_obj ) )
 	{

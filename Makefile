@@ -67,9 +67,9 @@ OBJDIR=$(BUILD_TYPE).$(OS).$(ARCH)
 
 CFLAGS = $(BUILD_TYPE_CFLAGS) $(BASE_CFLAGS) $(OPT_CFLAGS) $(ARCH_CFLAGS)
 
-INCLUDE=-I. -I$(SRCDIR) -I./cjson/
+INCLUDE=-I. -I$(SRCDIR) -I./cjson/ -I./inih/
 
-LDFLAGS=-L. -lpthread -lcurl -lcjson -L./cjson/ -ldl -lsqlite3 -lgc
+LDFLAGS=-L. -lpthread -lcurl -lcjson -L./cjson/ -ldl -lgc
 
 DO_CC=$(CC) $(CFLAGS) $(INCLUDE) -o $@ -c $<
 

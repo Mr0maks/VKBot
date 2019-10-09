@@ -105,7 +105,7 @@ memcache_t *memcache_realloc(memcache_t *ptr, const char *data, size_t data_len)
   ptr->data = realloc(ptr->data, data_len + 1);
   if(!ptr->data)
     {
-      printf("realloc failed\n");
+      Con_Printf("realloc failed\n");
       exit(EXIT_FAILURE);
     }
   ptr->data_len = data_len;
