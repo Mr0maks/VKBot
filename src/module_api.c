@@ -1,6 +1,4 @@
-#include <stdio.h>
-#include <memory.h>
-#include "va_utils.h"
+#include "common.h"
 #include "cmd_handler.h"
 #include "crc_hash.h"
 #include "module_api.h"
@@ -128,6 +126,6 @@ void load_modules() {
   module_load("sqlite");
   module_load("users_sqlite");
   module_load("core");
-//  module_load("helloworld");
+  module_load("helloworld");
 //  module_load("bytecode");
 }

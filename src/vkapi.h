@@ -6,11 +6,9 @@
 
 #include "dynamic_strings.h"
 
-typedef enum __attribute__((packed))
-{
-  false,
-  true
-} vkapi_boolean;
+#include <stdbool.h>
+
+typedef _Bool vkapi_boolean;
 
 typedef struct
 {

@@ -1,12 +1,5 @@
+#include "common.h"
 #include "memcache.h"
-#include <stdlib.h>
-#include <assert.h>
-
-#include <string.h>
-#include <stdio.h>
-
-#include <stdint.h>
-
 #include "crc_hash.h"
 
 typedef struct memcache_s

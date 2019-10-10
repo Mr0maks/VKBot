@@ -18,8 +18,6 @@ typedef struct
   vkapi_handle *vkapi_object;
 } worker_data_t;
 
-double get_time_s( void );
-
 void long_poll_worker( void *data )
 {
   worker_data_t *worker_data = (worker_data_t*)data;
@@ -30,57 +28,81 @@ void long_poll_worker( void *data )
 
 	sleep( 1 );
 
-      vkapi_message_object *message = NULL;
+      cJSON *json_event = NULL;
 
       pthread_mutex_lock( &mutex_lock );
 
-      while( message == NULL )
+      while( json_event == NULL )
 	{
 	pthread_cond_wait( &cond_var, &mutex_lock );
-	message = queue_pop();
+    json_event = queue_pop();
 	}
 
       pthread_mutex_unlock( &mutex_lock );
 
-      assert(message);
+      assert(json_event);
 
-	 if( worker_data->vkapi_object->group_id == (message->from_id * -1) )
-	   {
-	     if( message->attachmens )
-	       cJSON_Delete( message->attachmens );
-
-	     string_destroy( message->text );
-
-	     free( message );
-         CHECK_LEAKS();
-	    continue;
-	   }
+      events_manager(worker_data->vkapi_object, json_event);
 
       //pthread_mutex_lock(&command_handler_mutex);
-	 double start_time = get_time_s();
-
-      if( message->text->len < 512)
-	{
-	  Con_Printf( "[Worker %i] Message peer_id: %i from_id: %i message: %s\n", worker_data->worker_id, message->peer_id, message->from_id, message->text->ptr );
-
-	  if(cmd_handle( worker_data->vkapi_object, message ))
-	    {
-	      //command_processed++;
-	      Con_Printf("[Worker %i] took at %f sec\n", worker_data->worker_id, get_time_s() - start_time );
-	    }
-	}
-
       //message_processed++;
-
       //pthread_mutex_unlock(&command_handler_mutex);
 
-      if( message->attachmens )
-	cJSON_Delete( message->attachmens );
-
-      string_destroy( message->text );
-
-      free( message );
       CHECK_LEAKS();
+    }
+}
+
+void longpool_worker( void *data )
+{
+  vkapi_handle *vkapi_object = (vkapi_handle*)data;
+
+try_again:
+  if(!vkapi_get_long_poll_server(vkapi_object))
+    {
+      Con_Printf("Error while getting long poll server. I try again.\n");
+      sleep(10);
+      goto try_again;
+    }
+
+  while (1) {
+      string_t long_poll_string = NULL;
+
+      long_poll_string = vkapi_get_longpoll_data( vkapi_object );
+
+      if( long_poll_string == NULL )
+    goto try_again;
+
+      cJSON *main_obj = cJSON_ParseWithOpts( long_poll_string->ptr, NULL, false );
+
+      Con_Printf( "%s\n", long_poll_string->ptr );
+
+      if( !vkapi_json_long_poll_have_updates( main_obj ) )
+    {
+      cJSON_Delete( main_obj );
+      string_destroy( long_poll_string );
+      continue;
+    }
+
+      cJSON *updates = cJSON_GetObjectItem( main_obj, "updates" );
+      cJSON *update_block = NULL;
+
+      pthread_mutex_lock( &mutex_lock );
+
+      cJSON_ArrayForEach( update_block, updates )
+      {
+    cJSON *copy = cJSON_Duplicate( update_block, true );
+
+    if( !copy )
+      break;
+
+    queue_push( copy );
+      }
+
+      pthread_mutex_unlock( &mutex_lock );
+      pthread_cond_broadcast( &cond_var );
+
+      cJSON_Delete( main_obj );
+      string_destroy( long_poll_string );
     }
 }
 
@@ -104,7 +126,7 @@ void worker_exit()
   main_thread_loop = 0;
 }
 
-void load_modules();
+void load_modules(void);
 
 void worker_main_thread( const char *token, int num_workers )
 {
@@ -120,7 +142,6 @@ void worker_main_thread( const char *token, int num_workers )
 
         num_workers = 4;
     }
-
 
 //  GC_set_find_leak(1);
 
@@ -145,7 +166,7 @@ void worker_main_thread( const char *token, int num_workers )
 
   worker_data_t *work_data = calloc(sizeof(worker_data_t), num_workers + 1);
 
-  worker_pool = thpool_init( num_workers );
+  worker_pool = thpool_init( num_workers + 2 );
 
   for( int i = 0; i < num_workers + 1; i++ )
     {
@@ -154,65 +175,19 @@ void worker_main_thread( const char *token, int num_workers )
       work_data[i].vkapi_object = vkapi_init( token );
     }
 
-  for( int i = 0; i < num_workers; i++ )
+  for( int i = 0; i < num_workers + 1; i++ )
     {
       thpool_add_work( worker_pool, long_poll_worker, &work_data[i] );
     }
 
-  vkapi_handle *object = vkapi_init(token);
+  vkapi_handle *handle = vkapi_init( token );
 
-try_again:
-  if(!vkapi_get_long_poll_server(object))
-    {
-      Con_Printf("Error while getting long poll server. I try again.\n");
-      sleep(10);
-      goto try_again;
-    }
+  thpool_add_work( worker_pool, longpool_worker, handle );
+          
+  while (main_thread_loop) {
 
-  while (1) {
-      string_t long_poll_string = NULL;
+  }
 
-      long_poll_string = vkapi_get_longpoll_data( object );
-
-      if( long_poll_string == NULL )
-	goto try_again;
-
-      cJSON *main_obj = cJSON_ParseWithOpts( long_poll_string->ptr, NULL, false );
-
-      Con_Printf( "%s\n", long_poll_string->ptr );
-
-      if( !vkapi_json_long_poll_have_updates( main_obj ) )
-	{
-	  cJSON_Delete( main_obj );
-	  string_destroy( long_poll_string );
-	  continue;
-	}
-
-      cJSON *updates = cJSON_GetObjectItem( main_obj, "updates" );
-      cJSON *update_block = NULL;
-
-      pthread_mutex_lock( &mutex_lock );
-
-      cJSON_ArrayForEach( update_block, updates )
-      {
-	cJSON *copy = cJSON_Duplicate( update_block, true );
-
-	if( !copy )
-	  break;
-
-	queue_push( copy );
-      }
-
-      pthread_mutex_unlock( &mutex_lock );
-      pthread_cond_broadcast( &cond_var );
-
-      cJSON_Delete( main_obj );
-      string_destroy( long_poll_string );
-    }
-
-  vkapi_destroy(object);
-
-  thpool_wait( worker_pool );
   thpool_pause( worker_pool );
   thpool_destroy( worker_pool );
   queue_deinit();
