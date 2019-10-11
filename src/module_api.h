@@ -5,13 +5,7 @@
 #include "cmd_handler.h"
 #include "curl_wrap.h"
 #include "db_api.h"
-
-typedef enum
-{
-    MODULE_UNLOAD_ANYTIME, // not needed to call
-    MODULE_UNLOAD_UNREGISTER_FUNC_CALL, // need call Module_Unload
-    MODULE_NEVER // cant be unloaded at runtime
-} module_load_type_t;
+#include "worker_vk_events.h"
 
 #define ENGINE_API_VERSION 0
 
@@ -50,15 +44,10 @@ typedef struct module_s
 
 typedef struct
 {
-
-} module_cmds_t;
-
-typedef struct
-{
   void (*register_command) (module_info_t *info, const char *cmd_name, const char *description, cmd_function_callback callback);
   void (*unregister_command) (module_info_t *info, const char *cmd_name);
 
-  string_t (*vkapi_call_method) (vkapi_handle *object, const char *method, string_t specific_args, vkapi_boolean result_need);
+  string_t (*vkapi_call_method) (vkapi_handle *object, const char *method, string_t specific_args, bool result_need);
   void (*vkapi_send_message) (vkapi_handle *object, int peer_id, const char *msg, vkapi_attach *attaches, int attaches_len);
   vkapi_attach *(*vkapi_upload_doc_by_url) (vkapi_handle *object, vkapi_message_object *message, const char *filename, string_t data, docs_type_t type);
 
@@ -70,9 +59,9 @@ typedef struct
   void (*string_destroy) ( string_t s );
 
   void *(*curl_init) (void);
-  vkapi_boolean (*curl_get) ( void *curl_handle, string_t url, string_t useragent, string_t dataptr );
-  vkapi_boolean (*curl_post) (void *curl_handle, const char *url, string_t post, string_t useragent, string_t dataptr );
-  vkapi_boolean (*curl_uploadfile) ( void *curl_handle, const char *url, const char *fieldname, const char *filename, string_t data, string_t useragent, string_t dataptr );
+  bool (*curl_get) ( void *curl_handle, string_t url, string_t useragent, string_t dataptr );
+  bool (*curl_post) (void *curl_handle, const char *url, string_t post, string_t useragent, string_t dataptr );
+  bool (*curl_uploadfile) ( void *curl_handle, const char *url, const char *fieldname, const char *filename, string_t data, string_t useragent, string_t dataptr );
   void (*curl_cleanup) (void *ptr);
 
   void (*memcache_push) (const char *key, const char *value);
@@ -87,6 +76,8 @@ typedef struct
   void (*users_module_register_users) (users_t *users);
   int (*users_get_privilage) (int id);
   const char *(*users_get_name_privilage)(int priv);
+
+  void (*register_event)(const char *event_name, event_handler_t handler);
 
   unsigned int (*crc32_calc) (const unsigned char *buf, size_t len);
   void (*alert) (module_info_t *info, const char *fmt, ...);

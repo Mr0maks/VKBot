@@ -1,9 +1,12 @@
 #include <stdio.h>
 #include <string.h>
+#include <cJSON.h>
 #include <module_api.h>
 #include <enginecallbacks.h>
 
 #include "cmds.h"
+#include "events.h"
+#include "db_core.h"
 
 engine_api_t engine_api;
 
@@ -38,6 +41,7 @@ const cmds_t commands[] = {
 #ifdef DEBUG
   { "debug", "бот собран с отладочными функциями", cmd_debug },
 #endif
+  { "приветствие", "устанавливает приветствие в чате", cmd_set_greeting },
   { NULL, NULL, NULL }
 };
 
@@ -47,10 +51,23 @@ void Module_Init_Cmds()
     REGISTER_COMMAND(&module_info, commands[i].string, commands[i].description, commands[i].function);
 }
 
+void Module_Init_Events()
+{
+    REGISTER_EVENT("chat_invite_user", chat_invite_user_handler );
+    REGISTER_EVENT("chat_invite_user_by_link", chat_invite_user_handler );
+}
+
+void Module_Init_Dbs(void)
+{
+    db_chat_greetings_init();
+}
+
 void Module_Init(int apiver, module_info_t **info, engine_api_t *apifuncs)
 {
   memcpy(&engine_api, apifuncs, sizeof(engine_api));
   *info = &module_info;
 
+  Module_Init_Dbs();
   Module_Init_Cmds();
+  Module_Init_Events();
 }

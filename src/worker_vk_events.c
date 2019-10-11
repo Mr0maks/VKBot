@@ -3,13 +3,30 @@
 
 static event_t *module_pool = NULL;
 
-vkapi_boolean message_new_handler(vkapi_handle *handle, cJSON *raw);
+bool message_new_handler(vkapi_handle *handle, cJSON *raw);
 
 static event_t default_events[] = 
 {
     { "message_new", message_new_handler, NULL },
     { NULL, NULL, NULL, }
 };
+
+void module_event_register(const char *event_name, event_handler_t handler)
+{
+    if(!event_name || !handler)
+        return;
+
+    event_t *ptr = malloc(sizeof (event_t));
+
+    ptr->event_name = event_name;
+    ptr->handler = handler;
+
+    ptr->next = module_pool;
+    module_pool = ptr;
+
+    Con_Printf("[Event] Register '%s'\n", event_name);
+}
+
 
 event_handler_t event_find(const char *event_name)
 {
@@ -34,7 +51,7 @@ event_handler_t event_find(const char *event_name)
 }
 
 
-vkapi_boolean events_manager(vkapi_handle *handle, cJSON *raw)
+bool events_manager(vkapi_handle *handle, cJSON *raw)
 {
     if(!raw)
         return false;

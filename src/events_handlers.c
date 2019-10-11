@@ -2,14 +2,14 @@
 
 double get_time_s( void );
 
-vkapi_boolean message_new_handler(vkapi_handle *handle, cJSON *raw)
+bool message_new_handler(vkapi_handle *handle, cJSON *raw)
 {
     //FIXME: optimise to autodetect "" messages
     cJSON *object = cJSON_GetObjectItem(raw, "object");
     cJSON *peer_id = cJSON_GetObjectItem(object, "peer_id");
     cJSON *from_id = cJSON_GetObjectItem(object, "from_id");
 
-    vkapi_boolean result = false;
+    bool result = false;
   
     if(!object || !peer_id || !from_id) {
       cJSON_Delete(raw);

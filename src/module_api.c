@@ -61,6 +61,9 @@ const engine_api_t engfuncs_t =
     users_get_privilage,
     users_get_name_privilage,
 
+    //events
+    module_event_register,
+
     // other shit
     crc32_calc,
     module_alert,

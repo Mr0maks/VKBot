@@ -1,8 +1,5 @@
+#include "common.h"
 #include "curl/curl.h"
-
-#include "vkapi.h"
-
-#include "dynamic_strings.h"
 
 size_t curl_dynamic_string_writefunc( void *ptr, size_t size, size_t nmemb, void *data )
 {
@@ -35,7 +32,7 @@ size_t curl_dynamic_string_writefunc_binary( void *ptr, size_t size, size_t nmem
   return size*nmemb;
 }
 
-vkapi_boolean curl_get( void *curl_handle, string_t url, string_t useragent, string_t dataptr )
+bool curl_get( void *curl_handle, string_t url, string_t useragent, string_t dataptr )
 {
   curl_easy_reset(curl_handle);
   curl_easy_setopt(curl_handle, CURLOPT_URL, url->ptr);
@@ -61,7 +58,7 @@ vkapi_boolean curl_get( void *curl_handle, string_t url, string_t useragent, str
   return true;
 }
 
-vkapi_boolean curl_post( void *curl_handle, const char *url, string_t post, string_t useragent, string_t dataptr )
+bool curl_post( void *curl_handle, const char *url, string_t post, string_t useragent, string_t dataptr )
 {
   curl_easy_reset(curl_handle);
   curl_easy_setopt(curl_handle, CURLOPT_URL, url);
@@ -91,7 +88,7 @@ vkapi_boolean curl_post( void *curl_handle, const char *url, string_t post, stri
   return true;
 }
 
-vkapi_boolean curl_uploadfile( void *curl_handle, const char *url, const char *fieldname, const char *filename, string_t data, string_t useragent, string_t dataptr )
+bool curl_uploadfile( void *curl_handle, const char *url, const char *fieldname, const char *filename, string_t data, string_t useragent, string_t dataptr )
 {
   curl_mime *form = NULL;
   curl_mimepart *field = NULL;

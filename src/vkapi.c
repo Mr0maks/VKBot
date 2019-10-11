@@ -2,12 +2,12 @@
 
 #define VK_URL_METHOD "https://api.vk.com/method/"
 
-string_t vkapi_call_method(vkapi_handle *object, const char *method, string_t specific_args, vkapi_boolean result_need)
+string_t vkapi_call_method(vkapi_handle *object, const char *method, string_t specific_args, bool result_need)
 {
   string_t s = NULL;
   string_t s2 = NULL;
 
-  vkapi_boolean error_code = false;
+  bool error_code = false;
 
   s2 = string_init();
 
@@ -179,7 +179,7 @@ string_t vkapi_get_longpoll_data(vkapi_handle *object)
 
   string_format( s2, "act=a_check&key=%s&wait=25&mode=2&ts=%lli", object->longpoll_key, object->longpoll_timestamp );
 
-  vkapi_boolean error_code = curl_post(object->curl_handle, object->longpoll_server_url, s2, NULL, s);
+  bool error_code = curl_post(object->curl_handle, object->longpoll_server_url, s2, NULL, s);
 
   string_destroy( s2 );
 
@@ -280,7 +280,7 @@ void vkapi_send_message(vkapi_handle *object, int peer_id, const char *msg, vkap
   string_destroy(s);
 }
 
-vkapi_boolean vkapi_get_long_poll_server(vkapi_handle *object)
+bool vkapi_get_long_poll_server(vkapi_handle *object)
 {
   string_t method_result = vkapi_call_method(object, "groups.getLongPollServer", NULL, true);
 
@@ -336,7 +336,7 @@ static int vkapi_get_group_id(vkapi_handle *object)
 
   string_format(s2, "access_token=%s&v=5.101", object->vk_token);
 
-  vkapi_boolean result = curl_post(object->curl_handle, VK_URL_METHOD"/groups.getById", s2, NULL, data);
+  bool result = curl_post(object->curl_handle, VK_URL_METHOD"/groups.getById", s2, NULL, data);
 
   string_destroy(s2);
 

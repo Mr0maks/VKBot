@@ -36,7 +36,7 @@ static size_t static_commands = ARRAY_LENGHT( commands );
 static size_t max_command_len = 0;
 static size_t max_name_len = 0;
 
-vkapi_boolean cmd_is_bot_name(const char *name)
+bool cmd_is_bot_name(const char *name)
 {
   if(!name)
     return false;
@@ -93,7 +93,7 @@ cmd_function_callback cmd_get_command(const char *command)
 
 int cmd_tokeinize_cmd(char *str, char *tokens[], int *tokens_len );
 
-vkapi_boolean cmd_handle(vkapi_handle *object, vkapi_message_object *message)
+bool cmd_handle(vkapi_handle *object, vkapi_message_object *message)
 {
     if( message->text->len == 0 || !message->text->ptr )
     {
@@ -101,7 +101,7 @@ vkapi_boolean cmd_handle(vkapi_handle *object, vkapi_message_object *message)
     }
 
   char *argv[256] = { NULL };
-  vkapi_boolean without_name = false;
+  bool without_name = false;
 
   string_t s = string_dublicate( message->text );
 

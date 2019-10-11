@@ -9,12 +9,12 @@ static threadpool worker_pool = NULL;
 static volatile size_t command_processed;
 static volatile size_t message_processed;
 
-static volatile vkapi_boolean main_thread_loop = false;
+static volatile bool main_thread_loop = false;
 
 typedef struct
 {
   int worker_id;
-  vkapi_boolean loop;
+  bool loop;
   vkapi_handle *vkapi_object;
 } worker_data_t;
 

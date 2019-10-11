@@ -1,12 +1,12 @@
 #include "va_utils.h"
-#include <string.h>
-#include <strings.h>
+#include "base64.h"
 #include <time.h>
 #include <limits.h>
-#include <curl/curl.h>
-#include "base64.h"
-#include "cmd_handler.h"
-#include "enginecallbacks.h"
+#include <string.h>
+#include <strings.h>
+#include <enginecallbacks.h>
+#include <gc_memmgr.h>
+#include "db_core.h"
 
 //FIXME: MAKE WRAPPER AROUND CJSON
 #include <cJSON.h>
@@ -383,7 +383,7 @@ void cmd_weather(vkapi_handle *object, vkapi_message_object *message, int argc, 
 
   STRING_FORMAT(url_get, "%s/%s?q=%s&appid=%s&lang=%s&units=metric", OPEN_WEATHER_URL, OPEN_WEATHER_METHOD, argv[1], OPEN_WEATHER_TOKEN, OPEN_WEATHER_LANG );
 
-  vkapi_boolean error_code = CURL_GET(object->curl_handle, url_get, NULL, openweather_json );
+  bool error_code = CURL_GET(object->curl_handle, url_get, NULL, openweather_json );
 
   STRING_DESTROY(url_get);
 
@@ -591,4 +591,21 @@ void cmd_debug(vkapi_handle *object, vkapi_message_object *message, int argc, ch
       else
     VKAPI_SEND_MESSAGE(object, message->peer_id, va("Memcache: value for key \"%s\" not found\n", argv[1]), NULL, 0);
     }
+}
+
+void cmd_set_greeting(vkapi_handle *object, vkapi_message_object *message, int argc, char **argv, const char *args)
+{
+    if(message->private_message)
+    {
+        VKAPI_SEND_MESSAGE(object, message->peer_id, "В личных сообщениях команда не работает!\n", NULL, 0);
+        return;
+    }
+
+    if(db_chat_greetings_push(message->peer_id, args))
+    {
+        VKAPI_SEND_MESSAGE(object, message->peer_id, "Приветствие установлено!\n", NULL, 0);
+        return;
+    }
+
+    VKAPI_SEND_MESSAGE(object, message->peer_id, "Приветствие не установлено!\n", NULL, 0);
 }

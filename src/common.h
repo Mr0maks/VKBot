@@ -7,7 +7,6 @@
 #include <strings.h>
 #include <assert.h>
 #include <stdarg.h>
-#include <stdbool.h>
 #include <unistd.h>
 #include <pthread.h>
 #include <time.h>

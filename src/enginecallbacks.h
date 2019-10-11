@@ -38,6 +38,8 @@ extern engine_api_t engine_api;
 #define USERS_GET_PRIVILAGE (*engine_api.users_get_privilage)
 #define USERS_GET_PRIVILAGE_NAME (*engine_api.users_get_name_privilage)
 
+#define REGISTER_EVENT (*engine_api.register_event)
+
 #define CRC32 (*engine_api.crc32_calc)
 #define ALERT (*engine_api.alert)
 
