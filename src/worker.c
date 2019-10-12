@@ -26,7 +26,7 @@ void long_poll_worker( void *data )
 
   while (worker_data->loop) {
 
-	sleep( 1 );
+      sleep( 1 );
 
       cJSON *json_event = NULL;
 
@@ -44,11 +44,11 @@ void long_poll_worker( void *data )
 
       events_manager(worker_data->vkapi_object, json_event);
 
+      CHECK_LEAKS();
+
       //pthread_mutex_lock(&command_handler_mutex);
       //message_processed++;
       //pthread_mutex_unlock(&command_handler_mutex);
-
-      CHECK_LEAKS();
     }
 }
 
@@ -164,7 +164,7 @@ void worker_main_thread( const char *token, int num_workers )
   pthread_mutex_init( &command_handler_mutex, NULL );
   pthread_cond_init( &cond_var, NULL );
 
-  worker_data_t *work_data = calloc(sizeof(worker_data_t), num_workers + 1);
+  worker_data_t *work_data = calloc(num_workers + 1, sizeof(worker_data_t));
 
   worker_pool = thpool_init( num_workers + 2 );
 
@@ -185,7 +185,7 @@ void worker_main_thread( const char *token, int num_workers )
   thpool_add_work( worker_pool, longpool_worker, handle );
           
   while (main_thread_loop) {
-
+      sleep(1);
   }
 
   thpool_pause( worker_pool );

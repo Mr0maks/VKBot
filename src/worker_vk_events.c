@@ -30,26 +30,25 @@ void module_event_register(const char *event_name, event_handler_t handler)
 
 event_handler_t event_find(const char *event_name)
 {
-    for(int i = 0; default_events[i].event_name != NULL; i++ )
-    {
-        if(!strncasecmp(event_name, default_events[i].event_name, strlen(event_name)))
-            return default_events[i].handler;
-    }
-    
     event_t *ptr = module_pool;
-    
+
     while (ptr != NULL) {
         if(!strncasecmp(event_name, ptr->event_name, strlen(event_name)))
             return ptr->handler;
 
         ptr = ptr->next;
     }
+
+    for(int i = 0; default_events[i].event_name != NULL; i++ )
+    {
+        if(!strncasecmp(event_name, default_events[i].event_name, strlen(event_name)))
+            return default_events[i].handler;
+    }
     
     Con_Printf("Warn: Event '%s' not register in event system!\n", event_name);
 
     return NULL;
 }
-
 
 bool events_manager(vkapi_handle *handle, cJSON *raw)
 {
