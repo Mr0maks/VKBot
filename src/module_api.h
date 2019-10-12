@@ -75,6 +75,7 @@ typedef struct
   int (*users_is_init) ();
   void (*users_module_register_users) (users_t *users);
   int (*users_get_privilage) (int id);
+  void (*users_set_privilage)(int id, int priv);
   const char *(*users_get_name_privilage)(int priv);
 
   void (*register_event)(const char *event_name, event_handler_t handler);

@@ -15,6 +15,6 @@ text TEXT NOT NULL \
 ); \
 "
 
-#define DB_GREETINGS_INSERT_GREETING "INSERT INTO chat_greetings( peer_id, text ) VALUES ( %i, '%s' );"
+#define DB_GREETINGS_INSERT_GREETING "INSERT OR REPLACE INTO chat_greetings( id, peer_id, text ) VALUES ( (SELECT id FROM chat_greetings WHERE peer_id = %i), %i, '%s' );"
 
 #define DB_GREETINGS_GET_GREETING_BY_PEER_ID "SELECT text FROM chat_greetings WHERE peer_id = %i;"

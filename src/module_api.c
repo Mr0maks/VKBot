@@ -59,6 +59,7 @@ const engine_api_t engfuncs_t =
     users_is_init,
     users_module_register_users,
     users_get_privilage,
+    users_set_privilage,
     users_get_name_privilage,
 
     //events

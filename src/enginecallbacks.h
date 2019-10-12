@@ -36,6 +36,7 @@ extern engine_api_t engine_api;
 #define USERS_IS_INITED (*engine_api.users_id_init)
 #define USERS_REGISTER (*engine_api.users_module_register_users)
 #define USERS_GET_PRIVILAGE (*engine_api.users_get_privilage)
+#define USERS_SET_PRIVILAGE (*engine_api.users_set_privilage)
 #define USERS_GET_PRIVILAGE_NAME (*engine_api.users_get_name_privilage)
 
 #define REGISTER_EVENT (*engine_api.register_event)

@@ -35,6 +35,11 @@ privilage_t users_get_privilage(int id)
   return users_db->get_privilage(id);
 }
 
+void users_set_privilage(int id, int priv)
+{
+    users_db->set_privilage(id, priv);
+}
+
 const char *users_get_name_privilage(privilage_t priv)
 {
   return users_db->get_privilage_name(priv);

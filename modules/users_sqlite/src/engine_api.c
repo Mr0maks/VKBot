@@ -18,6 +18,7 @@ module_info_t module_info =
 static users_t users = {
   users_init,
   get_privilage_by_id,
+  set_privilage_by_id,
   get_name_privilage,
 };
 

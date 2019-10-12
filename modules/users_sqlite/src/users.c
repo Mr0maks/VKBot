@@ -64,6 +64,17 @@ privilage_t get_privilage_by_id(int id)
   return none;
 }
 
+void set_privilage_by_id(int id, int priv)
+{
+  string_t s = STRING_INIT();
+
+  STRING_FORMAT(s, DB_SET_PRIVILAGE_BY_ID, id, priv);
+
+  DB_EXEC(user_db, s->ptr, NULL, NULL );
+
+  STRING_DESTROY(s);
+}
+
 const char *get_name_privilage(privilage_t priv)
 {
   switch (priv) {

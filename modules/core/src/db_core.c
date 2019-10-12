@@ -27,7 +27,7 @@ int db_chat_greetings_push(int peer_id, const char *args )
     if(!peer_id || !args)
         return false;
 
-    DB_EXEC(chat_greetings, va(DB_GREETINGS_INSERT_GREETING, peer_id, args), NULL, NULL );
+    DB_EXEC(chat_greetings, va(DB_GREETINGS_INSERT_GREETING, peer_id, peer_id, args), NULL, NULL );
 
     return true;
 }
