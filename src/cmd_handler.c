@@ -74,8 +74,8 @@ cmd_function_callback cmd_get_command(const char *command)
       if( cached_cmds[i].hash == cmd_hash )
 	{
 	  return cached_cmds[i].function;
-	}
     }
+  }
 
   cmds_modules_pools_t *ptr = modules_cmds_poll;
 

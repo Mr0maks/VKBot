@@ -1,14 +1,15 @@
-#include <stdio.h>
-#include <string.h>
 #include <cJSON.h>
 #include <module_api.h>
 #include <enginecallbacks.h>
+#include <time.h>
 
 #include "cmds.h"
 #include "events.h"
 #include "db_core.h"
 
 engine_api_t engine_api;
+
+time_t cmd_uptime_start = 0;
 
 module_info_t module_info =
 {
@@ -66,6 +67,8 @@ void Module_Init(int apiver, module_info_t **info, engine_api_t *apifuncs)
 {
   memcpy(&engine_api, apifuncs, sizeof(engine_api));
   *info = &module_info;
+
+  cmd_uptime_start = time(NULL);
 
   Module_Init_Dbs();
   Module_Init_Cmds();

@@ -10,15 +10,21 @@ void cmd_help(vkapi_handle *object, vkapi_message_object *message, int argc, cha
 
   for(int i = 0; commands[i].string != NULL; i++ )
     {
+      if(commands[i].description)
+      {
       char *str = va( "• %s - %s\n", commands[i].string, commands[i].description );
       string_strncat( s, str, strlen( str ) );
+      }
     }
 
   cmds_modules_pools_t *ptr = modules_cmds_poll;
 
   while (ptr != NULL) {
+      if(ptr->description)
+      {
       char *str = va( "• %s - %s\n", ptr->string, ptr->description );
       string_strncat( s, str, strlen( str ) );
+      }
       ptr = ptr->next;
     }
 
@@ -70,7 +76,7 @@ void cmd_stat(vkapi_handle *object, vkapi_message_object *message, int argc, cha
 void cmd_gc(vkapi_handle *object, vkapi_message_object *message, int argc, char **argv, const char *args)
 {
     string_t s = string_init();
-    string_format( s, "Статистика gc бота\nПамяти свободно: %ld б\nРазмер кучи: %lu б\nИспользованно: %ld б\nОбщее количество памяти которое выделенно: %ld б\nПамять не управляемая gc: %ld б\nПамять которая не помечена: %ld б\n", GC_get_free_bytes(), GC_get_heap_size(), GC_get_memory_use(), GC_get_total_bytes(), GC_get_non_gc_bytes(), GC_get_unmapped_bytes() );
+    string_format( s, "Статистика gc бота\nПамяти свободно: %ld кб\nРазмер кучи: %lu кб\nИспользованно: %ld кб\nОбщее количество памяти которое выделенно: %ld кб\nПамять не управляемая gc: %ld кб\nПамять которая не помечена: %ld кб\n", GC_get_free_bytes() / 1024, GC_get_heap_size() / 1024, GC_get_memory_use() / 1024, GC_get_total_bytes() / 1024, GC_get_non_gc_bytes() / 1024, GC_get_unmapped_bytes() / 1024 );
 
     vkapi_send_message( object, message->peer_id, s->ptr, NULL, 0 );
     string_destroy( s );

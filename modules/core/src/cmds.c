@@ -11,6 +11,8 @@
 //FIXME: MAKE WRAPPER AROUND CJSON
 #include <cJSON.h>
 
+extern time_t cmd_uptime_start = 0;
+
 void cmd_ping(vkapi_handle *object, vkapi_message_object *message, int argc, char **argv, const char *args)
 {
   VKAPI_SEND_MESSAGE( object, message->peer_id, "Pong", NULL, 0 );
@@ -608,4 +610,8 @@ void cmd_set_greeting(vkapi_handle *object, vkapi_message_object *message, int a
     }
 
     VKAPI_SEND_MESSAGE(object, message->peer_id, "Приветствие не установлено!\n", NULL, 0);
+}
+
+void cmd_uptime(vkapi_handle *object, vkapi_message_object *message, int argc, char **argv, const char *args)
+{
 }
