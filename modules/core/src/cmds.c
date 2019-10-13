@@ -458,7 +458,7 @@ void cmd_crc32(vkapi_handle *object, vkapi_message_object *message, int argc, ch
    string_t msg = STRING_INIT();
    string_t file = STRING_INIT();
 
-   if(argc < 2 && !message->attachmens)
+   if(!argc && !message->attachmens)
     {
       usage:
       VKAPI_SEND_MESSAGE(object, message->peer_id, "Использование: crc32 <строка> или прикреплённый документ", NULL, 0);
