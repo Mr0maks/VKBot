@@ -469,7 +469,7 @@ void cmd_crc32(vkapi_handle *object, vkapi_message_object *message, int argc, ch
 
   uint32_t crc32 = CRC32((const unsigned char *)args, strlen(args));
 
-  if(argc > 1)
+  if(argc)
   VKAPI_SEND_MESSAGE(object, message->peer_id, va("CRC32 хеш строки: 0x%X", crc32), NULL, 0);
   else
     {
