@@ -55,7 +55,7 @@ int Lua_Call_Method(lua_State *L)
     string_t data = NULL;
     if(lua_isstring(L, 2))
     {
-        special_params = string_init();
+        special_params = STRING_INIT();
         STRING_COPY(special_params, luaL_checkstring(L, 2));
 
         data = VKAPI_CALL_METHOD(luaL_checkstring(L, 1), special_params, lua_toboolean(L, 3));
@@ -63,20 +63,20 @@ int Lua_Call_Method(lua_State *L)
         if(data)
         {
             lua_pushstring(L, data->ptr);
-            string_destroy(data);
-            string_destroy(special_params);
+            STRING_DESTROY(data);
+            STRING_DESTROY(special_params);
             return 1;
         }
 
-        string_destroy(special_params);
+        STRING_DESTROY(special_params);
     } else if(lua_isboolean(L, 2)) {
         data = VKAPI_CALL_METHOD(luaL_checkstring(L, 1), NULL, lua_toboolean(L, 2));
 
         if(data)
         {
             lua_pushstring(L, data->ptr);
-            string_destroy(data);
-            string_destroy(special_params);
+            STRING_DESTROY(data);
+            STRING_DESTROY(special_params);
             return 1;
         }
     }
