@@ -47,9 +47,9 @@ typedef struct
   void (*register_command) (module_info_t *info, const char *cmd_name, const char *description, cmd_function_callback callback);
   void (*unregister_command) (module_info_t *info, const char *cmd_name);
 
-  string_t (*vkapi_call_method) (vkapi_handle *object, const char *method, string_t specific_args, bool result_need);
-  void (*vkapi_send_message) (vkapi_handle *object, int peer_id, const char *msg, vkapi_attach *attaches, int attaches_len);
-  vkapi_attach *(*vkapi_upload_doc_by_url) (vkapi_handle *object, vkapi_message_object *message, const char *filename, string_t data, docs_type_t type);
+  string_t (*vkapi_call_method) (const char *method, string_t specific_args, bool result_need);
+  void (*vkapi_send_message) (int peer_id, const char *msg, vkapi_attach *attaches, int attaches_len);
+  vkapi_attach *(*vkapi_upload_doc_by_url) (vkapi_message_object *message, const char *filename, string_t data, docs_type_t type);
 
   string_t (*string_init) ( void );
   string_t (*string_dublicate) ( string_t s );
@@ -81,5 +81,5 @@ typedef struct
   void (*register_event)(const char *event_name, event_handler_t handler);
 
   unsigned int (*crc32_calc) (const unsigned char *buf, size_t len);
-  void (*alert) (module_info_t *info, const char *fmt, ...);
+  void (*alert) (const char *fmt, ...);
 } engine_api_t;

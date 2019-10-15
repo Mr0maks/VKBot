@@ -3,7 +3,7 @@
 
 static event_t *module_pool = NULL;
 
-bool message_new_handler(vkapi_handle *handle, cJSON *raw);
+bool message_new_handler(cJSON *raw);
 
 static event_t default_events[] = 
 {
@@ -50,7 +50,7 @@ event_handler_t event_find(const char *event_name)
     return NULL;
 }
 
-bool events_manager(vkapi_handle *handle, cJSON *raw)
+bool events_manager(cJSON *raw)
 {
     if(!raw)
         return false;
@@ -77,5 +77,5 @@ bool events_manager(vkapi_handle *handle, cJSON *raw)
     if(!handler)
         return false;
     
-    return handler(handle, raw);
+    return handler(raw);
 }

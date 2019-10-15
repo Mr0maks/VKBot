@@ -7,8 +7,6 @@ void worker_main_thread( const char *token, int num_workers );
 
 int main(int argc, char *argv[])
 {
-    Sys_Reg_LogFile();
-
     if(config_parse_file("./bot.ini"))
     {
         Con_Printf("Bot config parsing error");

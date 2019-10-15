@@ -2,7 +2,7 @@
 #include <enginecallbacks.h>
 #include "db_core.h"
 
-bool chat_invite_user_handler(vkapi_handle *handle, cJSON *raw)
+bool chat_invite_user_handler(cJSON *raw)
 {
     cJSON *peer_id = cJSON_GetObjectItem(cJSON_GetObjectItem(raw, "object"), "peer_id");
 
@@ -13,16 +13,16 @@ bool chat_invite_user_handler(vkapi_handle *handle, cJSON *raw)
 
     if(greetings)
     {
-        VKAPI_SEND_MESSAGE(handle, peer_id->valueint, greetings->ptr, NULL, 0 );
+        VKAPI_SEND_MESSAGE(peer_id->valueint, greetings->ptr, NULL, 0 );
         STRING_DESTROY(greetings);
         return false;
     }
 
-    VKAPI_SEND_MESSAGE(handle, peer_id->valueint, "Приветствую в беседе!", NULL, 0 );
+    VKAPI_SEND_MESSAGE(peer_id->valueint, "Приветствую в беседе!", NULL, 0 );
     return true;
 }
 
-bool chat_kick_user(vkapi_handle *handle, cJSON *raw)
+bool chat_kick_user(cJSON *raw)
 {
     return false;
 }

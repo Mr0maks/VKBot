@@ -13,16 +13,28 @@ static volatile bool main_thread_loop = false;
 
 typedef struct
 {
-  int worker_id;
   bool loop;
   vkapi_handle *vkapi_object;
 } worker_data_t;
 
-void long_poll_worker( void *data )
+static worker_data_t *work_data = NULL;
+
+int worker_get_worker_id(void) {
+    int id = thpool_get_thread_id(worker_pool);
+    return id;
+}
+
+vkapi_handle *worker_get_vkapi_handle()
+{
+    int id = worker_get_worker_id();
+    return work_data[id].vkapi_object;
+}
+
+void lp_event_worker( void *data )
 {
   worker_data_t *worker_data = (worker_data_t*)data;
 
-  Con_Printf("[Worker %i] OK!\n", worker_data->worker_id);
+  Con_Printf("[Worker %i] OK!\n", worker_get_worker_id());
 
   while (worker_data->loop) {
 
@@ -42,19 +54,16 @@ void long_poll_worker( void *data )
 
       assert(json_event);
 
-      events_manager(worker_data->vkapi_object, json_event);
+      events_manager(json_event);
 
       CHECK_LEAKS();
-
-      //pthread_mutex_lock(&command_handler_mutex);
-      //message_processed++;
-      //pthread_mutex_unlock(&command_handler_mutex);
     }
 }
 
 void longpool_worker( void *data )
 {
-  vkapi_handle *vkapi_object = (vkapi_handle*)data;
+    worker_data_t *worker_data = (worker_data_t*)data;
+    vkapi_handle *vkapi_object = worker_data->vkapi_object;
 
 try_again:
   if(!vkapi_get_long_poll_server(vkapi_object))
@@ -64,7 +73,7 @@ try_again:
       goto try_again;
     }
 
-  while (1) {
+  while (worker_data->loop) {
       string_t long_poll_string = NULL;
 
       long_poll_string = vkapi_get_longpoll_data( vkapi_object );
@@ -143,8 +152,6 @@ void worker_main_thread( const char *token, int num_workers )
         num_workers = 4;
     }
 
-//  GC_set_find_leak(1);
-
   load_modules();
 
   GC_INIT()
@@ -164,25 +171,24 @@ void worker_main_thread( const char *token, int num_workers )
   pthread_mutex_init( &command_handler_mutex, NULL );
   pthread_cond_init( &cond_var, NULL );
 
-  worker_data_t *work_data = calloc(num_workers + 1, sizeof(worker_data_t));
+  work_data = calloc(num_workers + 2, sizeof(worker_data_t));
 
   worker_pool = thpool_init( num_workers + 2 );
 
-  for( int i = 0; i < num_workers + 1; i++ )
+  for( int i = 0; i < num_workers + 2; i++ )
     {
-      work_data[i].worker_id = i;
       work_data[i].loop = true;
       work_data[i].vkapi_object = vkapi_init( token );
     }
 
   for( int i = 0; i < num_workers + 1; i++ )
     {
-      thpool_add_work( worker_pool, long_poll_worker, &work_data[i] );
+      thpool_add_work( worker_pool, lp_event_worker, &work_data[i] );
+      //HACKHACK: fast worker init break worker_get_id (race ?) :(
+      usleep(500);
     }
 
-  vkapi_handle *handle = vkapi_init( token );
-
-  thpool_add_work( worker_pool, longpool_worker, handle );
+  thpool_add_work( worker_pool, longpool_worker, &work_data[num_workers + 1] );
           
   while (main_thread_loop) {
       sleep(1);
@@ -193,7 +199,7 @@ void worker_main_thread( const char *token, int num_workers )
   queue_deinit();
   cmd_handler_deinit();
 
-  for( int i = 0; i < num_workers; i++ )
+  for( int i = 0; i < num_workers + 2; i++ )
     {
       vkapi_destroy(work_data[i].vkapi_object);
     }

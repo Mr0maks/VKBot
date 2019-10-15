@@ -1,4 +1,5 @@
 #include <cJSON.h>
+#include <string.h>
 #include <module_api.h>
 #include <enginecallbacks.h>
 #include <time.h>

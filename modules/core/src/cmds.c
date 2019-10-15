@@ -11,49 +11,49 @@
 //FIXME: MAKE WRAPPER AROUND CJSON
 #include <cJSON.h>
 
-extern time_t cmd_uptime_start = 0;
+extern time_t cmd_uptime_start;
 
-void cmd_ping(vkapi_handle *object, vkapi_message_object *message, int argc, char **argv, const char *args)
+void cmd_ping(vkapi_message_object *message, int argc, char **argv, const char *args)
 {
-  VKAPI_SEND_MESSAGE( object, message->peer_id, "Pong", NULL, 0 );
+  VKAPI_SEND_MESSAGE( message->peer_id, "Pong", NULL, 0 );
 }
 
-void cmd_base64_encode(vkapi_handle *object, vkapi_message_object *message, int argc, char **argv, const char *args)
+void cmd_base64_encode(vkapi_message_object *message, int argc, char **argv, const char *args)
 {
   if( argc < 1 )
     {
-      VKAPI_SEND_MESSAGE(object, message->peer_id, "Использование: b64e <строка>", NULL, 0);
+      VKAPI_SEND_MESSAGE( message->peer_id, "Использование: b64e <строка>", NULL, 0);
       return;
     }
 
   char *base64_encoded_string = (char*)base64_encode( (const unsigned char *)args, strlen( args ), NULL);
   if(base64_encoded_string)
     {
-      VKAPI_SEND_MESSAGE( object, message->peer_id, va("Закодированная строка: %s", base64_encoded_string ), NULL, 0 );
+      VKAPI_SEND_MESSAGE( message->peer_id, va("Закодированная строка: %s", base64_encoded_string ), NULL, 0 );
       free(base64_encoded_string);
     }
 }
 
 int base64_string(const char *base64_str);
 
-void cmd_base64_decode(vkapi_handle *object, vkapi_message_object *message, int argc, char **argv, const char *args)
+void cmd_base64_decode(vkapi_message_object *message, int argc, char **argv, const char *args)
 {
   if( argc < 1 )
     {
-      VKAPI_SEND_MESSAGE( object, message->peer_id, "Использование: b64d <строка>", NULL, 0 );
+      VKAPI_SEND_MESSAGE( message->peer_id, "Использование: b64d <строка>", NULL, 0 );
       return;
     }
 
   if( !base64_string(args) )
     {
-      VKAPI_SEND_MESSAGE( object, message->peer_id, "Строка имеет недопустимые символы для base64", NULL, 0 );
+      VKAPI_SEND_MESSAGE( message->peer_id, "Строка имеет недопустимые символы для base64", NULL, 0 );
       return;
     }
 
   char *base64_decoded_string = (char*)base64_decode( (const unsigned char *)args, strlen( args ), NULL );
   if(base64_decoded_string)
     {
-      VKAPI_SEND_MESSAGE( object, message->peer_id, va( "Декодированная строка: %s", base64_decoded_string ), NULL, 0 );
+      VKAPI_SEND_MESSAGE( message->peer_id, va( "Декодированная строка: %s", base64_decoded_string ), NULL, 0 );
       free(base64_decoded_string);
     }
 }
@@ -74,12 +74,12 @@ time_t random_time(time_t min, time_t max)
   return min + rand() % ( max + 1 - min );
 }
 
-void cmd_rand(vkapi_handle *object, vkapi_message_object *message, int argc, char **argv, const char *args)
+void cmd_rand(vkapi_message_object *message, int argc, char **argv, const char *args)
 {
   if( argc < 1 || argc > 2 )
     {
       usage:
-      VKAPI_SEND_MESSAGE( object, message->peer_id, "Использование: ранд максимальное число\nранд минимальное число максимальное число\n", NULL, 0 );
+      VKAPI_SEND_MESSAGE( message->peer_id, "Использование: ранд максимальное число\nранд минимальное число максимальное число\n", NULL, 0 );
       return;
     }
 
@@ -95,15 +95,15 @@ void cmd_rand(vkapi_handle *object, vkapi_message_object *message, int argc, cha
 
   if( argc == 2 )
     {
-      VKAPI_SEND_MESSAGE( object, message->peer_id, va("Случайное число: %lli", random_int64( atoll( argv[1] ), atoll( argv[2] ) ) ), NULL, 0 );
+      VKAPI_SEND_MESSAGE( message->peer_id, va("Случайное число: %lli", random_int64( atoll( argv[1] ), atoll( argv[2] ) ) ), NULL, 0 );
     }
   else {
-      VKAPI_SEND_MESSAGE( object, message->peer_id, va("Случайное число: %lli", random_int64( 1, atoll( argv[1] ) ) ), NULL, 0 );
+      VKAPI_SEND_MESSAGE( message->peer_id, va("Случайное число: %lli", random_int64( 1, atoll( argv[1] ) ) ), NULL, 0 );
     }
 
 }
 
-void cmd_rand_date(vkapi_handle *object, vkapi_message_object *message, int argc, char **argv, const char *args)
+void cmd_rand_date(vkapi_message_object *message, int argc, char **argv, const char *args)
 {
   unsigned int seed = UINT_MAX;
   string_t s = STRING_INIT();
@@ -119,63 +119,63 @@ void cmd_rand_date(vkapi_handle *object, vkapi_message_object *message, int argc
 
   strftime(s->ptr, s->size, "Это произойдёт %e %B %Y", localtime( &date ));
 
-  VKAPI_SEND_MESSAGE( object, message->peer_id, s->ptr, NULL, 0 );
+  VKAPI_SEND_MESSAGE( message->peer_id, s->ptr, NULL, 0 );
   STRING_DESTROY(s);
 }
 
-void cmd_who(vkapi_handle *object, vkapi_message_object *message, int argc, char **argv, const char *args)
+void cmd_who(vkapi_message_object *message, int argc, char **argv, const char *args)
 {
 //    string_t method_args = STRING_INIT();
 //    STRING_FORMAT(method_args, "peer_id=%i", message->peer_id);
-//    string_t s = VKAPI_CALL_METHOD(object, "messages.getConversationMembers", method_args, true);
-//    VKAPI_SEND_MESSAGE(object, message->peer_id, s->ptr);
+//    string_t s = VKAPI_CALL_METHOD( "messages.getConversationMembers", method_args, true);
+//    VKAPI_SEND_MESSAGE( message->peer_id, s->ptr);
 }
 
-void cmd_flip(vkapi_handle *object, vkapi_message_object *message, int argc, char **argv, const char *args)
+void cmd_flip(vkapi_message_object *message, int argc, char **argv, const char *args)
 {
   int64_t random = random_int64( 0, 10000 );
 
   if( random >= 5000 )
     {
-      VKAPI_SEND_MESSAGE( object, message->peer_id, "Орёл!", NULL, 0 );
+      VKAPI_SEND_MESSAGE( message->peer_id, "Орёл!", NULL, 0 );
     } else {
-      VKAPI_SEND_MESSAGE( object, message->peer_id, "Решка!", NULL, 0 );
+      VKAPI_SEND_MESSAGE( message->peer_id, "Решка!", NULL, 0 );
    }
 }
 
-void cmd_info(vkapi_handle *object, vkapi_message_object *message, int argc, char **argv, const char *args)
+void cmd_info(vkapi_message_object *message, int argc, char **argv, const char *args)
 {
   if( argc < 1 )
     {
-      VKAPI_SEND_MESSAGE( object, message->peer_id, "Использование: инфа <строка>", NULL, 0 );
+      VKAPI_SEND_MESSAGE( message->peer_id, "Использование: инфа <строка>", NULL, 0 );
       return;
     }
 
   int64_t percents = random_int64( 0, 172 );
 
-  VKAPI_SEND_MESSAGE( object, message->peer_id, va("Вероятность этого составляет %lli%%", percents), NULL, 0 );
+  VKAPI_SEND_MESSAGE( message->peer_id, va("Вероятность этого составляет %lli%%", percents), NULL, 0 );
 }
 
-void cmd_rate(vkapi_handle *object, vkapi_message_object *message, int argc, char **argv, const char *args)
+void cmd_rate(vkapi_message_object *message, int argc, char **argv, const char *args)
 {
     if( argc < 1 )
       {
-        VKAPI_SEND_MESSAGE( object, message->peer_id, "Использование: оцени <строка>", NULL, 0 );
+        VKAPI_SEND_MESSAGE( message->peer_id, "Использование: оцени <строка>", NULL, 0 );
         return;
       }
 
     int64_t rate = random_int64( 0, 11 );
 
-    VKAPI_SEND_MESSAGE( object, message->peer_id, va("Я оцениваяю %s в %lli/10", args, rate), NULL, 0 );
+    VKAPI_SEND_MESSAGE( message->peer_id, va("Я оцениваяю %s в %lli/10", args, rate), NULL, 0 );
 }
 
 int cmds_choose_tokeinize_cmd( char *str, char *tokens[], int *tokens_len );
 
-void cmd_choose(vkapi_handle *object, vkapi_message_object *message, int argc, char **argv, const char *args)
+void cmd_choose(vkapi_message_object *message, int argc, char **argv, const char *args)
 {
     if(!args || argc < 3)
     {
-        VKAPI_SEND_MESSAGE(object, message->peer_id, "Недостаточно аргументов\n Импользование: <строка> или <строка> ", NULL, 0);
+        VKAPI_SEND_MESSAGE( message->peer_id, "Недостаточно аргументов\n Импользование: <строка> или <строка> ", NULL, 0);
         return;
     }
 
@@ -191,16 +191,16 @@ void cmd_choose(vkapi_handle *object, vkapi_message_object *message, int argc, c
 
     int64_t rand = random_int64(0, tokens_len);
 
-    VKAPI_SEND_MESSAGE(object, message->peer_id, va("Я выбираю %s", tokens[rand]), NULL, 0);
+    VKAPI_SEND_MESSAGE( message->peer_id, va("Я выбираю %s", tokens[rand]), NULL, 0);
     STRING_DESTROY(s);
     free(tokens);
 }
 
-void cmd_rand_docs(vkapi_handle *object, vkapi_message_object *message, int argc, char **argv, const char *args)
+void cmd_rand_docs(vkapi_message_object *message, int argc, char **argv, const char *args)
 {
     if( argc < 1 )
       {
-        VKAPI_SEND_MESSAGE( object, message->peer_id, "Использование: доки <строка для поиска>", NULL, 0 );
+        VKAPI_SEND_MESSAGE( message->peer_id, "Использование: доки <строка для поиска>", NULL, 0 );
         return;
       }
 
@@ -208,13 +208,13 @@ void cmd_rand_docs(vkapi_handle *object, vkapi_message_object *message, int argc
 
     STRING_FORMAT(s, "q=%s&count=10", args);
 
-    string_t result = VKAPI_CALL_METHOD( object, "docs.search", s, true);
+    string_t result = VKAPI_CALL_METHOD( "docs.search", s, true);
 
     cJSON *ptr = cJSON_ParseWithOpts(result->ptr, NULL, false);
 
     cJSON *resp = cJSON_GetObjectItem(ptr, "response");
 
-    printf("HMM: %s\n", result->ptr);
+    //ALERT("HMM: %s\n", result->ptr);
 
     cJSON *count = cJSON_GetObjectItem(resp, "count");
 
@@ -222,7 +222,7 @@ void cmd_rand_docs(vkapi_handle *object, vkapi_message_object *message, int argc
     {
        cJSON_Delete(ptr);
 
-       VKAPI_SEND_MESSAGE(object, message->peer_id, "По вашему запросу нету документов", NULL, 0);
+       VKAPI_SEND_MESSAGE( message->peer_id, "По вашему запросу нету документов", NULL, 0);
 
        STRING_DESTROY(s);
        STRING_DESTROY(result);
@@ -244,7 +244,7 @@ void cmd_rand_docs(vkapi_handle *object, vkapi_message_object *message, int argc
         attaches[i].owner_id = cJSON_GetObjectItem(obj, "owner_id")->valueint;
     }
 
-    VKAPI_SEND_MESSAGE(object, message->peer_id, "Документы по вашему запросу:", attaches, docs_count);
+    VKAPI_SEND_MESSAGE( message->peer_id, "Документы по вашему запросу:", attaches, docs_count);
 
     cJSON_Delete(ptr);
 
@@ -252,11 +252,11 @@ void cmd_rand_docs(vkapi_handle *object, vkapi_message_object *message, int argc
     STRING_DESTROY(result);
 }
 
-void cmd_valute_curse(vkapi_handle *object, vkapi_message_object *message, int argc, char **argv, const char *args )
+void cmd_valute_curse(vkapi_message_object *message, int argc, char **argv, const char *args )
 {
     if(argc > 2 || argc < 1)
     {
-        VKAPI_SEND_MESSAGE(object, message->peer_id, "Для того чтобы узнать какие курсы валют доступны используйте курс помощь", NULL, 0);
+        VKAPI_SEND_MESSAGE( message->peer_id, "Для того чтобы узнать какие курсы валют доступны используйте курс помощь", NULL, 0);
         return;
     }
 
@@ -267,12 +267,12 @@ void cmd_valute_curse(vkapi_handle *object, vkapi_message_object *message, int a
 
         STRING_FORMAT(s2, "https://www.cbr-xml-daily.ru/daily_json.js" );
 
-        if(!CURL_GET(object->curl_handle, s2, NULL, s ))
+        if(!CURL_GET(NULL, s2, NULL, s ))
         {
             STRING_DESTROY(s);
             STRING_DESTROY(s2);
 
-            VKAPI_SEND_MESSAGE(object, message->peer_id, "Oops", NULL, 0);
+            VKAPI_SEND_MESSAGE( message->peer_id, "Oops", NULL, 0);
             return;
         }
 
@@ -299,7 +299,7 @@ void cmd_valute_curse(vkapi_handle *object, vkapi_message_object *message, int a
             STRING_STRNCAT(s2, info, strlen(info));
         }
 
-        VKAPI_SEND_MESSAGE(object, message->peer_id, s2->ptr, NULL, 0);
+        VKAPI_SEND_MESSAGE( message->peer_id, s2->ptr, NULL, 0);
 
         cJSON_Delete(ptr);
         STRING_DESTROY(s);
@@ -312,12 +312,12 @@ void cmd_valute_curse(vkapi_handle *object, vkapi_message_object *message, int a
 
     STRING_FORMAT(s2, "https://www.cbr-xml-daily.ru/daily_json.js" );
 
-    if(!CURL_GET(object->curl_handle, s2, NULL, s ))
+    if(!CURL_GET(NULL, s2, NULL, s ))
     {
         STRING_DESTROY(s);
         STRING_DESTROY(s2);
 
-        VKAPI_SEND_MESSAGE(object, message->peer_id, "Oops", NULL, 0);
+        VKAPI_SEND_MESSAGE( message->peer_id, "Oops", NULL, 0);
         return;
     }
 
@@ -333,7 +333,7 @@ void cmd_valute_curse(vkapi_handle *object, vkapi_message_object *message, int a
 
     if(!valute)
     {
-        VKAPI_SEND_MESSAGE(object, message->peer_id, "Валюты с таким кодом нету!", NULL, 0);
+        VKAPI_SEND_MESSAGE( message->peer_id, "Валюты с таким кодом нету!", NULL, 0);
 
         cJSON_Delete(ptr);
         STRING_DESTROY(s);
@@ -358,7 +358,7 @@ void cmd_valute_curse(vkapi_handle *object, vkapi_message_object *message, int a
 
     STRING_STRNCAT(s2, info, strlen(info));
 
-    VKAPI_SEND_MESSAGE(object, message->peer_id, s2->ptr, NULL, 0);
+    VKAPI_SEND_MESSAGE( message->peer_id, s2->ptr, NULL, 0);
 
     cJSON_Delete(ptr);
     STRING_DESTROY(s);
@@ -372,11 +372,11 @@ void cmd_valute_curse(vkapi_handle *object, vkapi_message_object *message, int a
 
 size_t curl_dynamic_string_writefunc(void *ptr, size_t size, size_t nmemb, void *data);
 
-void cmd_weather(vkapi_handle *object, vkapi_message_object *message, int argc, char **argv, const char *args)
+void cmd_weather(vkapi_message_object *message, int argc, char **argv, const char *args)
 {
   if( argc < 1 )
     {
-      VKAPI_SEND_MESSAGE( object, message->peer_id, "Использование: погода <Город>", NULL, 0 );
+      VKAPI_SEND_MESSAGE( message->peer_id, "Использование: погода <Город>", NULL, 0 );
       return;
     }
 
@@ -385,13 +385,13 @@ void cmd_weather(vkapi_handle *object, vkapi_message_object *message, int argc, 
 
   STRING_FORMAT(url_get, "%s/%s?q=%s&appid=%s&lang=%s&units=metric", OPEN_WEATHER_URL, OPEN_WEATHER_METHOD, argv[1], OPEN_WEATHER_TOKEN, OPEN_WEATHER_LANG );
 
-  bool error_code = CURL_GET(object->curl_handle, url_get, NULL, openweather_json );
+  bool error_code = CURL_GET(NULL, url_get, NULL, openweather_json );
 
   STRING_DESTROY(url_get);
 
   if(!error_code)
     {
-      VKAPI_SEND_MESSAGE(object, message->peer_id, "Произошла неизвестная ошибка", NULL, 0);
+      VKAPI_SEND_MESSAGE( message->peer_id, "Произошла неизвестная ошибка", NULL, 0);
       STRING_DESTROY(openweather_json);
       return;
     }
@@ -400,7 +400,7 @@ void cmd_weather(vkapi_handle *object, vkapi_message_object *message, int argc, 
       {
     if(!strncasecmp(argv[argc], "json", 4))
       {
-    VKAPI_SEND_MESSAGE(object, message->peer_id, openweather_json->ptr, NULL, 0);
+    VKAPI_SEND_MESSAGE( message->peer_id, openweather_json->ptr, NULL, 0);
     STRING_DESTROY(openweather_json);
 	return;
       }
@@ -410,7 +410,7 @@ void cmd_weather(vkapi_handle *object, vkapi_message_object *message, int argc, 
 
   if(!ptr)
     {
-    VKAPI_SEND_MESSAGE(object, message->peer_id, "cJSON сделал рыг рыг пук пук", NULL, 0);
+    VKAPI_SEND_MESSAGE( message->peer_id, "cJSON сделал рыг рыг пук пук", NULL, 0);
     STRING_DESTROY(openweather_json);
 	return;
     }
@@ -430,7 +430,7 @@ void cmd_weather(vkapi_handle *object, vkapi_message_object *message, int argc, 
 
       STRING_FORMAT(msg, "Погода в %s\n\n• Сейчас: %i℃, %s\n", cJSON_GetStringValue(name), temp->valueint, cJSON_GetStringValue(cJSON_GetObjectItem(weather, "description")));
 
-      VKAPI_SEND_MESSAGE(object, message->peer_id, msg->ptr, NULL, 0);
+      VKAPI_SEND_MESSAGE( message->peer_id, msg->ptr, NULL, 0);
 
       STRING_DESTROY(msg);
 	  cJSON_Delete(ptr);
@@ -438,24 +438,24 @@ void cmd_weather(vkapi_handle *object, vkapi_message_object *message, int argc, 
 	  return;
         } else if(!strncmp(cod->valuestring, "404", 3))
 	{
-      VKAPI_SEND_MESSAGE(object, message->peer_id, "Такого города нет", NULL, 0);
+      VKAPI_SEND_MESSAGE( message->peer_id, "Такого города нет", NULL, 0);
 	  cJSON_Delete(ptr);
       STRING_DESTROY(openweather_json);
 	  return;
 	} else if(!strncmp(cod->valuestring, "401", 3)) {
-      VKAPI_SEND_MESSAGE(object, message->peer_id, "Ограничение апи openweathermap", NULL, 0);
+      VKAPI_SEND_MESSAGE( message->peer_id, "Ограничение апи openweathermap", NULL, 0);
 	  cJSON_Delete(ptr);
       STRING_DESTROY(openweather_json);
 	  return;
 	} else {
-      VKAPI_SEND_MESSAGE(object, message->peer_id, "Неизвестная ошибка", NULL, 0);
+      VKAPI_SEND_MESSAGE( message->peer_id, "Неизвестная ошибка", NULL, 0);
 	  cJSON_Delete(ptr);
       STRING_DESTROY(openweather_json);
 	  return;
 	}
 }
 
-void cmd_crc32(vkapi_handle *object, vkapi_message_object *message, int argc, char **argv, const char *args)
+void cmd_crc32(vkapi_message_object *message, int argc, char **argv, const char *args)
 {
    string_t msg = STRING_INIT();
    string_t file = STRING_INIT();
@@ -463,7 +463,7 @@ void cmd_crc32(vkapi_handle *object, vkapi_message_object *message, int argc, ch
    if(!argc && !message->attachmens)
     {
       usage:
-      VKAPI_SEND_MESSAGE(object, message->peer_id, "Использование: crc32 <строка> или прикреплённый документ", NULL, 0);
+      VKAPI_SEND_MESSAGE( message->peer_id, "Использование: crc32 <строка> или прикреплённый документ", NULL, 0);
       STRING_DESTROY(msg);
       STRING_DESTROY(file);
       return;
@@ -472,7 +472,7 @@ void cmd_crc32(vkapi_handle *object, vkapi_message_object *message, int argc, ch
   uint32_t crc32 = CRC32((const unsigned char *)args, strlen(args));
 
   if(argc)
-  VKAPI_SEND_MESSAGE(object, message->peer_id, va("CRC32 хеш строки: 0x%X", crc32), NULL, 0);
+  VKAPI_SEND_MESSAGE( message->peer_id, va("CRC32 хеш строки: 0x%X", crc32), NULL, 0);
   else
     {
       cJSON *attach = NULL;
@@ -491,7 +491,7 @@ void cmd_crc32(vkapi_handle *object, vkapi_message_object *message, int argc, ch
 
       STRING_COPY(url, cJSON_GetStringValue(cJSON_GetObjectItem(doc, "url")));
 
-      CURL_GET(object->curl_handle, url, NULL, file);
+      CURL_GET(NULL, url, NULL, file);
 
       char *ptr = va("CRC32 хеш файла %s: 0x%X\n", cJSON_GetStringValue(cJSON_GetObjectItem(doc, "title")), CRC32((const unsigned char *)file->ptr, file->len));
 
@@ -500,26 +500,26 @@ void cmd_crc32(vkapi_handle *object, vkapi_message_object *message, int argc, ch
       STRING_DESTROY(file);
       }
 
-      VKAPI_SEND_MESSAGE(object, message->peer_id, msg->ptr, NULL, 0);
+      VKAPI_SEND_MESSAGE( message->peer_id, msg->ptr, NULL, 0);
       STRING_DESTROY(msg);
     }
 }
 
-void cmd_hlmemes(vkapi_handle *object, vkapi_message_object *message, int argc, char **argv, const char *args)
+void cmd_hlmemes(vkapi_message_object *message, int argc, char **argv, const char *args)
 {
-  VKAPI_SEND_MESSAGE(object, message->peer_id, "Держи: https://www.youtube.com/playlist?list=PLxdH4XPU7OZnR5XV-b1QmnM7yCwAlmOUd", NULL, 0);
+  VKAPI_SEND_MESSAGE( message->peer_id, "Держи: https://www.youtube.com/playlist?list=PLxdH4XPU7OZnR5XV-b1QmnM7yCwAlmOUd", NULL, 0);
 }
 
-void cmd_cat(vkapi_handle *object, vkapi_message_object *message, int argc, char **argv, const char *args)
+void cmd_cat(vkapi_message_object *message, int argc, char **argv, const char *args)
 {
   string_t s = STRING_INIT();
   string_t url = STRING_INIT();
 
   STRING_COPY(url, "https://aws.random.cat/meow");
 
-  if(CURL_GET(object->curl_handle, url, NULL, s) != true)
+  if(CURL_GET(NULL, url, NULL, s) != true)
     {
-      VKAPI_SEND_MESSAGE(object, message->peer_id, "Увы но сервер с котиками недоступен >:(", NULL, 0);
+      VKAPI_SEND_MESSAGE( message->peer_id, "Увы но сервер с котиками недоступен >:(", NULL, 0);
       STRING_DESTROY(s);
       STRING_DESTROY(url);
       return;
@@ -529,7 +529,7 @@ void cmd_cat(vkapi_handle *object, vkapi_message_object *message, int argc, char
 
   if(!ptr)
     {
-      VKAPI_SEND_MESSAGE(object, message->peer_id, "Увы но сервер с котиками недоступен >:(", NULL, 0);
+      VKAPI_SEND_MESSAGE( message->peer_id, "Увы но сервер с котиками недоступен >:(", NULL, 0);
       STRING_DESTROY(s);
       STRING_DESTROY(url);
       return;
@@ -541,11 +541,11 @@ void cmd_cat(vkapi_handle *object, vkapi_message_object *message, int argc, char
 
   string_t filedata = STRING_INIT();
 
-  CURL_GET(object->curl_handle, url, NULL, filedata);
+  CURL_GET(NULL, url, NULL, filedata);
 
-  vkapi_attach *attach = VKAPI_UPLOAD_DOC(object, message, "random_cat.png", filedata, VKAPI_PHOTO);
+  vkapi_attach *attach = VKAPI_UPLOAD_DOC( message, "random_cat.png", filedata, VKAPI_PHOTO);
 
-  VKAPI_SEND_MESSAGE(object, message->peer_id, NULL, attach, 1);
+  VKAPI_SEND_MESSAGE( message->peer_id, NULL, attach, 1);
 
   cJSON_Delete(ptr);
 
@@ -554,17 +554,17 @@ void cmd_cat(vkapi_handle *object, vkapi_message_object *message, int argc, char
   STRING_DESTROY(url);
 }
 
-void cmd_get_privilage(vkapi_handle *object, vkapi_message_object *message, int argc, char **argv, const char *args)
+void cmd_get_privilage(vkapi_message_object *message, int argc, char **argv, const char *args)
 {
     int priv = USERS_GET_PRIVILAGE(message->from_id);
     string_t s = STRING_INIT();
     STRING_FORMAT(s, "Ваш уровень привелегий - %s\n", USERS_GET_PRIVILAGE_NAME(priv));
-    VKAPI_SEND_MESSAGE(object, message->peer_id, s->ptr, NULL, 0);
+    VKAPI_SEND_MESSAGE( message->peer_id, s->ptr, NULL, 0);
     STRING_DESTROY(s);
     return;
 }
 
-void cmd_debug(vkapi_handle *object, vkapi_message_object *message, int argc, char **argv, const char *args)
+void cmd_debug(vkapi_message_object *message, int argc, char **argv, const char *args)
 {
   if(argv[1])
     {
@@ -584,34 +584,34 @@ void cmd_debug(vkapi_handle *object, vkapi_message_object *message, int argc, ch
 		}
 
       MEMCACHE_PUSH(argv[1], s->ptr);
-      VKAPI_SEND_MESSAGE(object, message->peer_id, va("Memcache: push key \"%s\" value \"%s\"\n", argv[1], s->ptr), NULL, 0);
+      VKAPI_SEND_MESSAGE( message->peer_id, va("Memcache: push key \"%s\" value \"%s\"\n", argv[1], s->ptr), NULL, 0);
 	  return;
 	}
       const char *value = MEMCACHE_GET(argv[1]);
       if(value)
-      VKAPI_SEND_MESSAGE(object, message->peer_id, va("Memcache: key is \"%s\" value is \"%s\"\n", argv[1], value), NULL, 0);
+      VKAPI_SEND_MESSAGE( message->peer_id, va("Memcache: key is \"%s\" value is \"%s\"\n", argv[1], value), NULL, 0);
       else
-    VKAPI_SEND_MESSAGE(object, message->peer_id, va("Memcache: value for key \"%s\" not found\n", argv[1]), NULL, 0);
+    VKAPI_SEND_MESSAGE( message->peer_id, va("Memcache: value for key \"%s\" not found\n", argv[1]), NULL, 0);
     }
 }
 
-void cmd_set_greeting(vkapi_handle *object, vkapi_message_object *message, int argc, char **argv, const char *args)
+void cmd_set_greeting(vkapi_message_object *message, int argc, char **argv, const char *args)
 {
     if(message->private_message)
     {
-        VKAPI_SEND_MESSAGE(object, message->peer_id, "В личных сообщениях команда не работает!\n", NULL, 0);
+        VKAPI_SEND_MESSAGE( message->peer_id, "В личных сообщениях команда не работает!\n", NULL, 0);
         return;
     }
 
     if(db_chat_greetings_push(message->peer_id, args))
     {
-        VKAPI_SEND_MESSAGE(object, message->peer_id, "Приветствие установлено!\n", NULL, 0);
+        VKAPI_SEND_MESSAGE( message->peer_id, "Приветствие установлено!\n", NULL, 0);
         return;
     }
 
-    VKAPI_SEND_MESSAGE(object, message->peer_id, "Приветствие не установлено!\n", NULL, 0);
+    VKAPI_SEND_MESSAGE( message->peer_id, "Приветствие не установлено!\n", NULL, 0);
 }
 
-void cmd_uptime(vkapi_handle *object, vkapi_message_object *message, int argc, char **argv, const char *args)
+void cmd_uptime(vkapi_message_object *message, int argc, char **argv, const char *args)
 {
 }

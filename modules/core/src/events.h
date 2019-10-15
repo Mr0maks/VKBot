@@ -2,4 +2,4 @@
 
 #include <enginecallbacks.h>
 
-bool chat_invite_user_handler(vkapi_handle *handle, cJSON *raw);
+bool chat_invite_user_handler(cJSON *raw);

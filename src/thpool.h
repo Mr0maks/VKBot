@@ -179,6 +179,23 @@ void thpool_destroy(threadpool);
  */
 int thpool_num_threads_working(threadpool);
 
+/**
+ * @brief Get thread id in pool
+ *
+ * @example
+ * int main() {
+ *    threadpool thpool1 = thpool_init(2);
+ *    ..
+ *    printf("Worker id: %d\n", thpool_get_thread_id(thpool1));
+ *    ..
+ *    return 0;
+ * }
+ *
+ * @param threadpool     the threadpool of interest
+ * @return integer       number id of thread in pool
+ */
+
+int thpool_get_thread_id(threadpool);
 
 #ifdef __cplusplus
 }

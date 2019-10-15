@@ -5,9 +5,9 @@
 
 engine_api_t engine_api;
 
-void cmd_hello_world(vkapi_handle *obj, vkapi_message_object *message, int argc, char **argv, const char *args )
+void cmd_hello_world(vkapi_message_object *message, int argc, char **argv, const char *args )
 {
-  VKAPI_SEND_MESSAGE(obj, message->peer_id, "Hello from module world!", NULL, 0);
+  VKAPI_SEND_MESSAGE(message->peer_id, "Hello from module world!", NULL, 0);
 }
 
 module_info_t module_info =

@@ -15,6 +15,10 @@ static int config_handler(const char *section, const char *key, const char *valu
     {
         config.num_workers = atoi(value);
         return 0;
+    } else if(!strncasecmp("debug", key, 5))
+    {
+        Sys_Reg_LogFile();
+        return 0;
     }
 
     return 1;

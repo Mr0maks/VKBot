@@ -80,7 +80,6 @@ cmd_function_callback cmd_get_command(const char *command)
   cmds_modules_pools_t *ptr = modules_cmds_poll;
 
   while (ptr) {
-
       if(ptr->hash == cmd_hash)
 	{
 	  return ptr->function;
@@ -93,7 +92,7 @@ cmd_function_callback cmd_get_command(const char *command)
 
 int cmd_tokeinize_cmd(char *str, char *tokens[], int *tokens_len );
 
-bool cmd_handle(vkapi_handle *object, vkapi_message_object *message)
+bool cmd_handle(vkapi_message_object *message)
 {
     if( message->text->len == 0 || !message->text->ptr )
     {
@@ -161,7 +160,7 @@ bool cmd_handle(vkapi_handle *object, vkapi_message_object *message)
 
    if(cmd)
      {
-       cmd(object, message, tokens_count - 1, argv, args_s->ptr);
+       cmd(message, tokens_count - 1, argv, args_s->ptr);
 
        string_destroy( s );
        string_destroy( args_s );
@@ -171,7 +170,7 @@ bool cmd_handle(vkapi_handle *object, vkapi_message_object *message)
        goto not_found;
 
 no_args:
-    vkapi_send_message( object, message->peer_id, "Да-да?\n Для того чтобы узнать команды используйте помощь.", NULL, 0 );
+    vkapi_send_message( message->peer_id, "Да-да?\n Для того чтобы узнать команды используйте помощь.", NULL, 0 );
     string_destroy( s );
     string_destroy( args_s );
 
@@ -181,7 +180,7 @@ no_args:
     return false;
 
 not_found:
-    vkapi_send_message( object, message->peer_id, "Команда не найдена\n Для того чтобы узнать команды используйте помощь.", NULL, 0 );
+    vkapi_send_message( message->peer_id, "Команда не найдена\n Для того чтобы узнать команды используйте помощь.", NULL, 0 );
     string_destroy( s );
     string_destroy( args_s );
 

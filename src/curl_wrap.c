@@ -34,6 +34,9 @@ size_t curl_dynamic_string_writefunc_binary( void *ptr, size_t size, size_t nmem
 
 bool curl_get( void *curl_handle, string_t url, string_t useragent, string_t dataptr )
 {
+    if(!curl_handle)
+        curl_handle = worker_get_vkapi_handle()->curl_handle;
+
   curl_easy_reset(curl_handle);
   curl_easy_setopt(curl_handle, CURLOPT_URL, url->ptr);
   curl_easy_setopt(curl_handle, CURLOPT_FOLLOWLOCATION, 1L);
@@ -60,6 +63,9 @@ bool curl_get( void *curl_handle, string_t url, string_t useragent, string_t dat
 
 bool curl_post( void *curl_handle, const char *url, string_t post, string_t useragent, string_t dataptr )
 {
+    if(!curl_handle)
+        curl_handle = worker_get_vkapi_handle()->curl_handle;
+
   curl_easy_reset(curl_handle);
   curl_easy_setopt(curl_handle, CURLOPT_URL, url);
   curl_easy_setopt(curl_handle, CURLOPT_POST, 1L);

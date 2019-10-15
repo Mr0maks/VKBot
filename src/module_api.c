@@ -3,6 +3,9 @@
 #include "crc_hash.h"
 #include "module_api.h"
 #include "memcache.h"
+#include "minini.h"
+
+#include <stdarg.h>
 
 module_t *modules_pool = NULL;
 
@@ -15,9 +18,15 @@ void module_reg_cmd(module_info_t *info, const char *cmd_name, const char *descr
   cmd_handler_register_module_cmd(info, cmd_name, description, callback);
 }
 
-void module_alert(module_info_t *info, const char *fmt, ...)
+//TODO: Move from module_api
+void module_alert(const char *fmt, ...)
 {
-    Con_Printf("[%s] STUB!\n", info->name );
+    char buff[1024] = { 0 };
+    va_list args;
+    va_start(args, fmt);
+    vsnprintf(buff, sizeof(buff), fmt, args);
+    va_end(args);
+    Con_Printf(buff);
 }
 
 const engine_api_t engfuncs_t =
@@ -126,10 +135,23 @@ void module_load(const char *name)
   modules_pool = ptr;
 }
 
+int module_minini(const char *section, const char *key, const char *value, void* user)
+{
+    if(value)
+        return 1;
+
+    if(section)
+        return 1;
+
+    module_load(key);
+
+    return 0;
+}
+
 void load_modules() {
-  module_load("sqlite");
-  module_load("users_sqlite");
-  module_load("core");
-  module_load("helloworld");
-//  module_load("bytecode");
+    if(minini_parse("./modules.ini", module_minini, NULL ))
+    {
+        Con_Printf("[Module] Cant load modules: parse error\n");
+        return;
+    }
 }

@@ -53,8 +53,7 @@ endif
 ifeq ($(DEBUG),1)
 BUILD_TYPE = debug
 BUILD_TYPE_CFLAGS = -g -DDEBUG
-#-fsanitize=undefined -fsanitize=address
-#-fsanitize=thread
+#-fsanitize=undefined -fsanitize=address -fsanitize=thread
 else
 BUILD_TYPE = release
 BUILD_TYPE_CFLAGS = -DNDEBUG

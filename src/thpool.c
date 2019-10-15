@@ -268,6 +268,25 @@ int thpool_num_threads_working(thpool_* thpool_p){
 	return thpool_p->num_threads_working;
 }
 
+int thpool_get_thread_id(thpool_* thpool_p)
+{
+    pthread_mutex_lock(&thpool_p->thcount_lock);
+
+    pthread_t pthread = pthread_self();
+
+    int n;
+    for(n = 0; n < thpool_p->num_threads_alive; n++)
+    {
+        if(pthread_equal(thpool_p->threads[n]->pthread, pthread))
+        {
+            int id = thpool_p->threads[n]->id;
+            pthread_mutex_unlock(&thpool_p->thcount_lock);
+            return id;
+        }
+    }
+
+    return -1;
+}
 
 
 

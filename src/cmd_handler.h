@@ -3,7 +3,7 @@
 #include "vkapi.h"
 #include "users_api.h"
 
-typedef  void	(*cmd_function_callback)(vkapi_handle *object, vkapi_message_object *message, int argc, char *argv[], const char *args);
+typedef  void	(*cmd_function_callback)(vkapi_message_object *message, int argc, char *argv[], const char *args);
 
 typedef struct
 {
@@ -50,7 +50,7 @@ typedef struct cmds_modules_pools_s
 } cmds_modules_pools_t;
 
 #ifndef _VKBOT_MODULE
-bool cmd_handle(vkapi_handle *object, vkapi_message_object *message);
+bool cmd_handle(vkapi_message_object *message);
 void cmd_handler_deinit(void);
 void cmd_handler_init(void);
 #endif

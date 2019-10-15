@@ -2,12 +2,14 @@
 
 double get_time_s( void );
 
-bool message_new_handler(vkapi_handle *handle, cJSON *raw)
+bool message_new_handler(cJSON *raw)
 {
     //FIXME: optimise to autodetect "" messages
     cJSON *object = cJSON_GetObjectItem(raw, "object");
     cJSON *peer_id = cJSON_GetObjectItem(object, "peer_id");
     cJSON *from_id = cJSON_GetObjectItem(object, "from_id");
+
+    vkapi_handle *handle = worker_get_vkapi_handle();
 
     bool result = false;
   
@@ -57,11 +59,11 @@ bool message_new_handler(vkapi_handle *handle, cJSON *raw)
 
     if( x->text->len < 512)
     {
-     Con_Printf( "[Worker %i] Message peer_id: %i from_id: %i message: %s\n", 0, x->peer_id, x->from_id, x->text->ptr );
+     Con_Printf( "[Worker %i] Message peer_id: %i from_id: %i message: %s\n", worker_get_worker_id(), x->peer_id, x->from_id, x->text->ptr );
 
-     if(cmd_handle( handle, x ))
+     if(cmd_handle( x ))
      {
-         Con_Printf("[Worker %i] took at %f sec\n", 0, get_time_s() - start_time );
+         Con_Printf("[Worker %i] took at %f sec\n", worker_get_worker_id(), get_time_s() - start_time );
          result = true;
      }
     }
