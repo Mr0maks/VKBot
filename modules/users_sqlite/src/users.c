@@ -68,7 +68,7 @@ void set_privilage_by_id(int id, int priv)
 {
   string_t s = STRING_INIT();
 
-  STRING_FORMAT(s, DB_SET_PRIVILAGE_BY_ID, id, priv);
+  STRING_FORMAT(s, DB_SET_PRIVILAGE_BY_ID, priv, id);
 
   DB_EXEC(user_db, s->ptr, NULL, NULL );
 
