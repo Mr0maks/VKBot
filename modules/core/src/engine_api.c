@@ -44,6 +44,7 @@ const cmds_t commands[] = {
   { "debug", "бот собран с отладочными функциями", cmd_debug },
 #endif
   { "приветствие", "устанавливает приветствие в чате", cmd_set_greeting },
+  { "устприв", "установить привелегию пользователю", cmd_set_privilage },
   { NULL, NULL, NULL }
 };
 

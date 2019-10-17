@@ -612,6 +612,27 @@ void cmd_set_greeting(vkapi_message_object *message, int argc, char **argv, cons
     VKAPI_SEND_MESSAGE( message->peer_id, "Приветствие не установлено!\n", NULL, 0);
 }
 
-void cmd_uptime(vkapi_message_object *message, int argc, char **argv, const char *args)
+void cmd_set_privilage(vkapi_message_object *message, int argc, char **argv, const char *args)
 {
+    int priv_level = USERS_GET_PRIVILAGE(message->from_id);
+    
+    if(priv_level != 2)
+    {
+        VKAPI_SEND_MESSAGE( message->peer_id, "Недостаточно прав для этой команды!", NULL, 0 );
+        return;
+    }
+    
+    if(!argc || argc > 2)
+    {
+        usage:
+        VKAPI_SEND_MESSAGE( message->peer_id, "Использование: <id> <привилегия>", NULL, 0 );
+        return;
+    }
+    
+    if(!atoi(argv[1]) || !atoi(argv[2]))
+        goto usage;
+    
+    USERS_SET_PRIVILAGE(atoi(argv[1]), atoi(argv[2]));
+    
+    VKAPI_SEND_MESSAGE(message->peer_id, va("Привилегия %s для %i установленна", USERS_GET_PRIVILAGE_NAME(priv_level), atoi(argv[1])), NULL, 0);
 }

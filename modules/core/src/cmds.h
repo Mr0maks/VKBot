@@ -21,3 +21,4 @@ void cmd_cat(vkapi_message_object *message, int argc, char **argv, const char *a
 void cmd_get_privilage(vkapi_message_object *message, int argc, char **argv, const char *args);
 void cmd_debug(vkapi_message_object *message, int argc, char **argv, const char *args);
 void cmd_set_greeting(vkapi_message_object *message, int argc, char **argv, const char *args);
+void cmd_set_privilage(vkapi_message_object *message, int argc, char **argv, const char *args);
