@@ -46,7 +46,7 @@ bool cmd_is_bot_name(const char *name)
   if( name_len > max_name_len )
     return false;
 
-  unsigned int name_hash = crc32_calc( (const unsigned char *)name, name_len );
+  unsigned int name_hash = strncrc32case(name, name_len );
 
   for( size_t i = 0; i < static_names; i++ ) {
       if( cached_names[i].hash == name_hash )
@@ -68,7 +68,7 @@ cmd_function_callback cmd_get_command(const char *command)
   if( command_len > max_command_len )
     return NULL;
 
-  unsigned int cmd_hash = crc32_calc( (const unsigned char *)command, command_len );
+  unsigned int cmd_hash = strncrc32case(command, command_len );
 
   for( size_t i = 0; i < static_commands; i++ ) {
       if( cached_cmds[i].hash == cmd_hash )
@@ -218,7 +218,7 @@ void cmd_calculate_cmd_hashes()
 
       size_t string_len = strlen( commands[i].string );
 
-      cached_cmds[i].hash = crc32_calc( (const unsigned char *)commands[i].string, string_len );
+      cached_cmds[i].hash = strncrc32case( commands[i].string, string_len );
       cached_cmds[i].function = commands[i].function;
 
       max_command_len = MAX( max_command_len, string_len );
@@ -247,7 +247,7 @@ void cmd_calculate_name_hashes()
 
       size_t string_len = strlen( names[i].name );
 
-      cached_names[i].hash = crc32_calc( (const unsigned char *)names[i].name, string_len );
+      cached_names[i].hash = strncrc32case(names[i].name, string_len );
 
       max_name_len = MAX( max_name_len, string_len );
 
@@ -269,7 +269,7 @@ void cmd_handler_register_module_cmd(module_info_t *info, const char *cmd_name, 
       return;
     }
 
-  ptr->hash = crc32_calc((const unsigned char*)cmd_name, strlen(cmd_name));
+  ptr->hash = strncrc32case(cmd_name, strlen(cmd_name));
 
   ptr->string = cmd_name;
   ptr->description = description;

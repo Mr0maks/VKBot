@@ -2,6 +2,7 @@
 #include "worker_vk_events.h"
 
 static event_t *module_pool = NULL;
+static event_hook_t *module_hooks_pool = NULL;
 
 bool message_new_handler(cJSON *raw);
 
@@ -27,6 +28,40 @@ void module_event_register(const char *event_name, event_handler_t handler)
     Con_Printf("[Event] Register '%s'\n", event_name);
 }
 
+void module_event_hook_register(const char *event_name, event_hook_handler_t handler)
+{
+    if(!event_name || !handler)
+        return;
+
+    event_hook_t *ptr = malloc(sizeof (event_hook_t));
+
+    ptr->event_name = event_name;
+    ptr->handler = handler;
+
+    ptr->next = module_hooks_pool;
+    module_hooks_pool = ptr;
+
+    Con_Printf("[Event] Register hook for '%s'\n", event_name);
+}
+
+int event_proced_hooks(const char *event_name, cJSON *obj)
+{
+    int result = MODULE_IGNORE;
+
+    event_hook_t *ptr = module_hooks_pool;
+
+    while (ptr) {
+
+        if(!strcrc32casecmp(event_name, ptr->event_name))
+        {
+            result = ptr->handler(obj);
+        }
+
+        ptr = ptr->next;
+    }
+
+    return result;
+}
 
 event_handler_t event_find(const char *event_name)
 {
@@ -74,6 +109,11 @@ bool events_manager(cJSON *raw)
     
     event_handler_t handler = event_find(cJSON_GetStringValue(type));
     
+    int override = event_proced_hooks(cJSON_GetStringValue(type), raw);
+
+    if(override == MODULE_OVERRIDE)
+        return true;
+
     if(!handler)
         return false;
     

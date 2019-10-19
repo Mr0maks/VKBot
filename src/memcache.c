@@ -27,7 +27,7 @@ memcache_t *memcache_find(const char *key)
 
   memcache_t *ptr = pool->list;
 
-  uint32_t hash = crc32_calc((const unsigned char *)key, strlen(key));
+  uint32_t hash = memcrc32((const unsigned char *)key, strlen(key));
 
   while (ptr) {
 
@@ -123,7 +123,7 @@ void memcache_push(const char *key, const char *value)
       memcache_realloc(ptr, value, strlen(value));
 	return;
     } else {
-      unsigned int hash = crc32_calc((const unsigned char *)key, strlen(key));
+      unsigned int hash = memcrc32((const unsigned char *)key, strlen(key));
       ptr = memcache_alloc(hash, value, strlen(value));
       ptr->next = pool->list;
       pool->list = ptr;

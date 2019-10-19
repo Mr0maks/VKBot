@@ -2,7 +2,7 @@
 
 typedef struct config_s
 {
-    const char *token;
+    char *token;
     int num_workers;
 } bot_config_t;
 

@@ -79,7 +79,8 @@ typedef struct
   const char *(*users_get_name_privilage)(int priv);
 
   void (*register_event)(const char *event_name, event_handler_t handler);
+  void (*register_event_hook)(const char *event_name, event_hook_handler_t handler);
 
-  unsigned int (*crc32_calc) (const unsigned char *buf, size_t len);
+  unsigned int (*memcrc32) (const unsigned char *buf, size_t len);
   void (*alert) (const char *fmt, ...);
 } engine_api_t;

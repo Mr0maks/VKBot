@@ -73,9 +73,10 @@ const engine_api_t engfuncs_t =
 
     //events
     module_event_register,
+    module_event_hook_register,
 
     // other shit
-    crc32_calc,
+    memcrc32,
     module_alert,
 };
 
