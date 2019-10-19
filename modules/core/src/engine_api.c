@@ -56,8 +56,9 @@ void Module_Init_Cmds()
 
 void Module_Init_Events()
 {
-    REGISTER_EVENT("chat_invite_user", chat_invite_user_handler );
-    REGISTER_EVENT("chat_invite_user_by_link", chat_invite_user_handler );
+    REGISTER_EVENT( "chat_invite_user", chat_invite_user_handler );
+    REGISTER_EVENT( "chat_invite_user_by_link", chat_invite_user_handler );
+    REGISTER_EVENT_HOOK( "message_new", message_new_hook );
 }
 
 void Module_Init_Dbs(void)

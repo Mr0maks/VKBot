@@ -1,6 +1,35 @@
 #include <cJSON.h>
 #include <enginecallbacks.h>
 #include "db_core.h"
+#include <string.h>
+#include <strings.h>
+
+int message_new_hook(cJSON *raw)
+{
+    cJSON *object = cJSON_GetObjectItem(raw, "object");
+    cJSON *peer_id = cJSON_GetObjectItem(object, "peer_id");
+    cJSON *attachments = cJSON_GetObjectItem(object, "attachments");
+
+    cJSON *attach = NULL;
+
+    if(!attachments)
+        return MODULE_IGNORE;
+
+    cJSON_ArrayForEach(attach, attachments)
+    {
+        if(!strcmp("audio_message", cJSON_GetObjectItem(attach, "type")->valuestring))
+        {
+            string_t message_format = STRING_INIT();
+            STRING_FORMAT(message_format, "text=\"Argv[1] ненужон. Войсер обнаружен!\"&&forward_messages=%i&&peer_id=%i", cJSON_GetObjectItem(raw, "conversation_message_id")->valueint, peer_id->valueint );
+            VKAPI_CALL_METHOD("message.send", message_format, false);
+            STRING_DESTROY(message_format);
+            return MODULE_OVERRIDE;
+        }
+    }
+
+    // "conversation_message_id":540135
+    return MODULE_IGNORE;
+}
 
 bool chat_invite_user_handler(cJSON *raw)
 {
