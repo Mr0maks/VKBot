@@ -61,12 +61,11 @@ endif
 
 VERSION := $(COMMIT)-$(DEVSTAGE)-$(BUILD_TYPE)
 
-
 OBJDIR=$(BUILD_TYPE).$(OS).$(ARCH)
 
 CFLAGS = $(BUILD_TYPE_CFLAGS) $(BASE_CFLAGS) $(OPT_CFLAGS) $(ARCH_CFLAGS)
 
-INCLUDE=-I. -I$(SRCDIR) -I../../cjson/
+INCLUDE=-I. -I$(SRCDIR) -I$(SRCDIR)/cmd -I../../cjson/
 
 LDFLAGS=-L. -shared -lm -lcjson -L../../cjson/
 
@@ -77,7 +76,7 @@ DO_CXX=$(CXX) $(CFLAGS) $(INCLUDE) -o $@ -c $<
 $(OBJDIR)/%.o: $(SRCDIR)/%.c
 	$(DO_CC)
 
-SRC = $(wildcard src/*.c)
+SRC = $(wildcard src/*.c) $(wildcard src/cmd/*.c)
 
 OBJ := $(SRC:$(SRCDIR)/%.c=$(OBJDIR)/%.o)
 
@@ -86,6 +85,7 @@ $(NAME)_$(ARCH)$(LIBRARYEXT) : neat depend $(OBJ)
 
 neat:
 	@mkdir -p $(OBJDIR)
+	@mkdir -p $(OBJDIR)/cmd
 
 $(OBJDIR): neat
 

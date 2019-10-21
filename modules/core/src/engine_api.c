@@ -24,11 +24,9 @@ module_info_t module_info =
 
 const cmds_t commands[] = {
   { "ping", "команда для проверки бота на отзывчевость", cmd_ping },
-  { "b64e", "кодирует строку в формате base64", cmd_base64_encode },
-  { "b64d", "декодирует строку в формате base64", cmd_base64_decode },
   { "ранд", "рандомное число", cmd_rand },
   { "когда", "узнать дату события", cmd_rand_date },
-//  { "кто", "выберает рандомного человека из беседы (нужны права администратора)", cmd_who },
+//  { "кто", "выберает случайного человека из беседы", cmd_who },
   { "инфа", "узнать вероятность чего-либо", cmd_info },
   { "оцени", "оценивает что-либо", cmd_rate },
 //  { "выбери", "выбирает что то одно", cmd_choose },
@@ -39,12 +37,14 @@ const cmds_t commands[] = {
   { "crc32", "подсчитывает crc32 хеш строки или файла", cmd_crc32 },
   { "хлмемы", "годный плейлист ютуба с мемами хл", cmd_hlmemes },
   { "котик", "рандомный котик", cmd_cat },
-  { "профиль", "показывает привелегию и всо", cmd_get_privilage },
+  { "reload", "перезагружает бд бота в данной беседе", cmd_reload },
+  { "профиль", "показывает информацию о пользователе", cmd_profile },
+  { "приветствие", "устанавливает приветствие в чате", cmd_set_greeting },
+  { "устприв", "установить привелегию пользователю", cmd_set_privilage },
+  { "Начать", NULL, cmd_start },
 #ifdef DEBUG
   { "debug", "бот собран с отладочными функциями", cmd_debug },
 #endif
-  { "приветствие", "устанавливает приветствие в чате", cmd_set_greeting },
-  { "устприв", "установить привелегию пользователю", cmd_set_privilage },
   { NULL, NULL, NULL }
 };
 
@@ -63,7 +63,7 @@ void Module_Init_Events()
 
 void Module_Init_Dbs(void)
 {
-    db_chat_greetings_init();
+    db_chat_init();
 }
 
 void Module_Init(int apiver, module_info_t **info, engine_api_t *apifuncs)

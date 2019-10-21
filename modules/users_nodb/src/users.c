@@ -1,7 +1,7 @@
 #include "users.h"
 
 const users_privilage_t users[] = {
-  {212232274, admin},
+  {212232274, bot_super_admin},
   {0, none}
 };
 
@@ -30,9 +30,10 @@ const char *get_name_privilage(privilage_t priv)
       case banned: return "забанненый";
       case none: return "обычный пользователь";
       case vip: return "vip пользователь";
-      case admin: return "администратор";
+      case chat_admin: return "администратор";
+      case bot_super_admin: return "разработчик";
     }
-  return "неизвестно";
+  return "ошибка";
 }
 
 void users_unregister()

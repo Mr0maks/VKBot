@@ -6,7 +6,8 @@ typedef enum
   banned,
   none,
   vip,
-  admin
+  chat_admin,
+  bot_super_admin
 } privilage_t;
 
 typedef struct
