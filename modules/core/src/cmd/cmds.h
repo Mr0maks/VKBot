@@ -25,6 +25,7 @@ void cmd_cat(vkapi_message_object *message, int argc, char **argv, const char *a
 /* chat.c */
 void cmd_reload(vkapi_message_object *message, int argc, char **argv, const char *args);
 void cmd_profile(vkapi_message_object *message, int argc, char **argv, const char *args);
+void cmd_warn(vkapi_message_object *message, int argc, char **argv, const char *args );
 void cmd_set_greeting(vkapi_message_object *message, int argc, char **argv, const char *args);
 void cmd_set_privilage(vkapi_message_object *message, int argc, char **argv, const char *args);
 

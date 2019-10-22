@@ -5,8 +5,8 @@ int vkapi_get_id_from(char *str);
 
 void cmd_debug(vkapi_message_object *message, int argc, char **argv, const char *args)
 {
-    if(argv[1])
-        VKAPI_SEND_MESSAGE(message->peer_id, va("ID: %i", vkapi_get_id_from(argv[1])), NULL, 0);
+//    if(argv[1])
+//        VKAPI_SEND_MESSAGE(message->peer_id, va("ID: %i", vkapi_get_id_from(argv[1])), NULL, 0);
 
 //  if(argv[1])
 //    {

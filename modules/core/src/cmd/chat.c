@@ -3,9 +3,14 @@
 #include "db_core.h"
 #include "core_vkapi.h"
 
+int vkapi_get_id_from(char *str);
+
 void cmd_reload(vkapi_message_object *message, int argc, char **argv, const char *args)
 {
     if(message->private_message)
+        return;
+
+    if(USERS_GET_PRIVILAGE(message->from_id) != 3)
         return;
 
     db_chat_warnings_chat_init(message->peer_id);
@@ -19,6 +24,28 @@ void cmd_profile(vkapi_message_object *message, int argc, char **argv, const cha
     STRING_DESTROY(s);
     return;
 }
+
+void cmd_warn(vkapi_message_object *message, int argc, char **argv, const char *args )
+{
+    if(!argv[1])
+    {
+        VKAPI_SEND_MESSAGE(message->peer_id, "Не указан пользователь", NULL, 0);
+        return;
+    } else if(argv[1])
+    {
+        if(!atoi(argv[1]) || !vkapi_get_id_from(argv[1]))
+            VKAPI_SEND_MESSAGE(message->peer_id, "Не указан пользователь", NULL, 0);
+        return;
+    }
+
+    int member_id = atoi(argv[1]);
+
+    if(!member_id)
+        member_id = vkapi_get_id_from(argv[1]);
+
+    db_chat_warnings_inc(message->peer_id, member_id);
+}
+
 
 void cmd_set_greeting(vkapi_message_object *message, int argc, char **argv, const char *args)
 {
