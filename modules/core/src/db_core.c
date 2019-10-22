@@ -68,7 +68,7 @@ void db_chat_warnings_chat_init(int peer_id)
 
 void db_chat_warnings_set(int peer_id, int id, int warning)
 {
-    DB_EXEC(db_chat, va(DB_CHAT_WARNINGS_SET_WARNING, peer_id, peer_id, id, warning), NULL, NULL);
+    DB_EXEC(db_chat, va(DB_CHAT_WARNINGS_SET_WARNING, peer_id, warning, id), NULL, NULL);
 }
 
 static int db_chat_warnings_get_callback(void *data, int argc, char *argv[], char *colums_name[])

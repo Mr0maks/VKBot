@@ -27,6 +27,17 @@ void cmd_profile(vkapi_message_object *message, int argc, char **argv, const cha
 
 void cmd_warn(vkapi_message_object *message, int argc, char **argv, const char *args )
 {
+    int priv_level = db_chat_get_privilage(message->peer_id, message->from_id);
+
+    if(vkapi_is_chat_admin(message->peer_id, message->from_id))
+        priv_level = 2;
+
+    if(priv_level < 2)
+    {
+        VKAPI_SEND_MESSAGE( message->peer_id, "Недостаточно прав для этой команды!", NULL, 0 );
+        return;
+    }
+
     if(!argv[1])
     {
         VKAPI_SEND_MESSAGE(message->peer_id, "Не указан пользователь", NULL, 0);
