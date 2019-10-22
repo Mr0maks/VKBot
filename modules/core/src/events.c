@@ -59,6 +59,7 @@ bool chat_invite_user_handler(cJSON *raw)
         return false;
     }
 
+    db_chat_privilage_user_init(peer_id->valueint, from_id->valueint);
     db_chat_warnings_chat_init(peer_id->valueint);
 
     return true;

@@ -10,22 +10,12 @@
 
 /*!max:re2c*/
 
-void cmd_tokeinize_debug(const uint8_t *start, const uint8_t *end)
+static void cmd_tokeinize_push(uint8_t *start, uint8_t *end, char *tokens[], int token_count )
 {
-#ifdef DEBUG_LEX
-    printf("TOKEN SIZE: %i TOKEN: %.*s\n", (int)(end - start), (int)(end - start), start );
-#endif
-}
+    if(end)
+    *end = '\0';
 
-void cmd_tokeinize_push(const uint8_t *start, const uint8_t *end, uint8_t *ptr, char *tokens[], int token_count )
-{
-    if(ptr)
-    *ptr = '\0';
-
-    tokens[token_count] = start;
-//    size_t len = (size_t)(end - start);
-//    tokens[token_count] = calloc(len + 1, sizeof(char));
-//    strncpy(tokens[token_count], start, len);
+    tokens[token_count] = (char *)start;
 }
 
 int cmd_tokeinize_cmd(unsigned char *str, char *tokens[], int *tokens_len )
@@ -35,22 +25,23 @@ assert(tokens);
 assert(tokens_len);
 
 int tokens_count = 0;
-const uint8_t *t1, *t2;
-uint8_t *ptr;
-/*!stags:re2c format = 'const uint8_t *@@;'; */
+uint8_t *YYMARKER = NULL;
+uint8_t *t1, *t2;
+/*!stags:re2c format = 'uint8_t *@@;'; */
 loop:
 /*!re2c
 re2c:define:YYCTYPE = uint8_t;
 re2c:define:YYCURSOR = str;
 re2c:yyfill:enable = 0;
 
-end = "\x00";
 whitespace = [ \t\v\f]+;
-token = [^];
+token = [^-" ];
+token2 = [^-"]+;
 quotes = ["];
 
-@t1 quotes [а-яА-Яa-zA-Z]+ @t2 quotes { cmd_tokeinize_debug(t1, t2); cmd_tokeinize_push(t1, t2, NULL, tokens, tokens_count++ ); goto loop; }
-@t1 token @t2 @ptr whitespace { cmd_tokeinize_debug(t1, t2); cmd_tokeinize_push(t1, t2, ptr, tokens, tokens_count++ ); goto loop; }
-@t1 token @t2 end { cmd_tokeinize_debug(t1, t2); cmd_tokeinize_push(t1, t2, NULL, tokens, tokens_count++ ); *tokens_len = tokens_count; return tokens_count; }
+quotes @t1 token2 @t2 quotes whitespace { cmd_tokeinize_push(t1, t2, tokens, tokens_count++ ); goto loop; }
+quotes @t1 token2 @t2 quotes "\x00" { cmd_tokeinize_push(t1, t2, tokens, tokens_count++ ); *tokens_len = tokens_count; return tokens_count; }
+@t1 token @t2 whitespace { cmd_tokeinize_push(t1, t2, tokens, tokens_count++ ); goto loop; }
+@t1 token @t2 "\x00" { cmd_tokeinize_push(t1, NULL, tokens, tokens_count++ ); *tokens_len = tokens_count; return tokens_count; }
 */
 }

@@ -1,0 +1,29 @@
+#include <stdlib.h>
+#include <stdint.h>
+#include <assert.h>
+
+// re2 >= 1.2
+// re2c -8 re2c/vkapi_get_id.re2c --input-encoding utf8 --tags -o src/vkapi_get_id.c
+
+/*!max:re2c*/
+
+int vkapi_get_id_from(unsigned char *str)
+{
+assert(str);
+
+uint8_t *t1, *t2, *YYMARKER;
+/*!stags:re2c format = 'uint8_t *@@;'; */
+/*!re2c
+re2c:define:YYCTYPE = uint8_t;
+re2c:define:YYCURSOR = str;
+re2c:yyfill:enable = 0;
+
+end = "\x00";
+number = [0-9];
+token = [^-|]+;
+
+end { return 0; }
+'[id' @t1 number @t2 token end { return atoi((const char *)t1); }
+'[club' @t1 number @t2 token end { return (-1 * atoi((const char*)t1)); }
+*/
+}
