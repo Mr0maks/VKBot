@@ -161,7 +161,8 @@ void worker_main_thread( const char *token, int num_workers )
 
   GC_enable_incremental();
 
-  GC_disable();
+  if(config.gc_disable)
+      GC_disable();
 
   queue_init();
   cmd_handler_init();

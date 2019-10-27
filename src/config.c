@@ -19,12 +19,20 @@ static int config_handler(const char *section, const char *key, const char *valu
     {
         Sys_Reg_LogFile();
         return 0;
-    } else if(!strncasecmp("debug_workers", key, 5))
+    } else if(!strncasecmp("debug_workers", key, 14))
     {
         if(!strcasecmp("true", value))
             config.debug_workers = true;
         else
             config.debug_workers = false;
+
+        return 0;
+    } else if(!strncasecmp("debug_gc_disable", key, 17))
+    {
+        if(!strcasecmp("true", value))
+            config.gc_disable = true;
+        else
+            config.gc_disable = false;
 
         return 0;
     }
