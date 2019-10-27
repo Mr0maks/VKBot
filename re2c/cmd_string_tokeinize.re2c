@@ -10,7 +10,7 @@
 
 /*!max:re2c*/
 
-static void cmd_tokeinize_push(uint8_t *start, uint8_t *end, char *tokens[], int token_count )
+static inline void cmd_tokeinize_push(uint8_t *start, uint8_t *end, char *tokens[], int token_count )
 {
     if(end)
     *end = '\0';
@@ -18,7 +18,7 @@ static void cmd_tokeinize_push(uint8_t *start, uint8_t *end, char *tokens[], int
     tokens[token_count] = (char *)start;
 }
 
-int cmd_tokeinize_cmd(unsigned char *str, char *tokens[], int *tokens_len )
+int cmd_string_tokeinize(unsigned char *str, char *tokens[], int *tokens_len )
 {
 assert(str);
 assert(tokens);
@@ -35,8 +35,8 @@ re2c:define:YYCURSOR = str;
 re2c:yyfill:enable = 0;
 
 whitespace = [ \t\v\f]+;
-token = [^-" ];
-token2 = [^-"]+;
+token = [^" ];
+token2 = [^"]+;
 quotes = ["];
 
 quotes @t1 token2 @t2 quotes whitespace { cmd_tokeinize_push(t1, t2, tokens, tokens_count++ ); goto loop; }

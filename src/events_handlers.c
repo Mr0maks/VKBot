@@ -46,6 +46,14 @@ bool message_new_handler(cJSON *raw)
     if(text_string)
       string_copy(x->text, cJSON_GetStringValue(text_string));
   
+    if(x->text->len == 0)
+    {
+        cJSON_Delete( raw );
+        string_destroy(x->text);
+        free(x);
+        return false;
+    }
+
     cJSON *attachments = cJSON_GetObjectItem(object, "attachments");
   
     x->attachmens = NULL;

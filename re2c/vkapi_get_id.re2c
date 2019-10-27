@@ -20,7 +20,7 @@ re2c:yyfill:enable = 0;
 
 end = "\x00";
 number = [0-9];
-token = [^-|]+;
+token = [^]+;
 
 end { return 0; }
 '[id' @t1 number @t2 token end { return atoi((const char *)t1); }

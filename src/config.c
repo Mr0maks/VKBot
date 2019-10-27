@@ -19,6 +19,14 @@ static int config_handler(const char *section, const char *key, const char *valu
     {
         Sys_Reg_LogFile();
         return 0;
+    } else if(!strncasecmp("debug_workers", key, 5))
+    {
+        if(!strcasecmp("true", value))
+            config.debug_workers = true;
+        else
+            config.debug_workers = false;
+
+        return 0;
     }
 
     return 1;

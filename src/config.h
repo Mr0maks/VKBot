@@ -1,9 +1,12 @@
 #pragma once
 
+#include "common.h"
+
 typedef struct config_s
 {
     char *token;
     int num_workers;
+    bool debug_workers;
 } bot_config_t;
 
 extern bot_config_t config;

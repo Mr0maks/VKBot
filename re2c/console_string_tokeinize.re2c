@@ -1,0 +1,47 @@
+#include <stdio.h>
+#include <stdint.h>
+#include <string.h>
+#include <assert.h>
+#include <string.h>
+
+// re2 >= 1.2
+// re2c -8 re2c/console_string_tokeinize.re2c --input-encoding utf8 --tags -o src/console_string_tokeinize.c
+
+/*!max:re2c*/
+
+static inline void tokeinize_push(uint8_t *start, uint8_t *end, char *tokens[], int token_count )
+{
+    if(end)
+    *end = '\0';
+
+    tokens[token_count] = (char *)start;
+}
+
+int console_string_tokeinize(unsigned char *str, char *tokens[], int *tokens_len )
+{
+assert(str);
+assert(tokens);
+assert(tokens_len);
+
+int tokens_count = 0;
+uint8_t *t1, *t2;
+/*!stags:re2c format = 'uint8_t *@@;'; */
+loop:
+/*!re2c
+re2c:define:YYCTYPE = uint8_t;
+re2c:define:YYCURSOR = str;
+re2c:yyfill:enable = 0;
+
+whitespace = [ \t\v\f]+;
+token = [^" \n];
+token2 = [^"]+;
+quotes = ["];
+newline = [\n];
+
+quotes @t1 token2 @t2 quotes whitespace { tokeinize_push(t1, t2, tokens, tokens_count++ ); goto loop; }
+quotes @t1 token2 @t2 quotes "\x00" { tokeinize_push(t1, t2, tokens, tokens_count++ ); *tokens_len = tokens_count; return tokens_count; }
+@t1 token @t2 whitespace { tokeinize_push(t1, t2, tokens, tokens_count++ ); goto loop; }
+@t1 token @t2 "\x00" { tokeinize_push(t1, NULL, tokens, tokens_count++ ); *tokens_len = tokens_count; return tokens_count; }
+@t1 token @t2 newline "\x00" { tokeinize_push(t1, t2, tokens, tokens_count++ ); *tokens_len = tokens_count; return tokens_count; }
+*/
+}

@@ -1,4 +1,6 @@
 #include "common.h"
+#include "console.h"
+#include "config.h"
 
 static pthread_mutex_t mutex_lock;
 static pthread_mutex_t command_handler_mutex;
@@ -83,7 +85,8 @@ try_again:
 
       cJSON *main_obj = cJSON_ParseWithOpts( long_poll_string->ptr, NULL, false );
 
-      Con_Printf( "%s\n", long_poll_string->ptr );
+      if(config.debug_workers)
+          Con_Printf( "%s\n", long_poll_string->ptr );
 
       if( !vkapi_json_long_poll_have_updates( main_obj ) )
     {
@@ -158,6 +161,8 @@ void worker_main_thread( const char *token, int num_workers )
 
   GC_enable_incremental();
 
+  GC_disable();
+
   queue_init();
   cmd_handler_init();
   memcache_init(64);
@@ -181,7 +186,7 @@ void worker_main_thread( const char *token, int num_workers )
       work_data[i].vkapi_object = vkapi_init( token );
     }
 
-  for( int i = 0; i < num_workers + 1; i++ )
+  for( int i = 0; i < num_workers; i++ )
     {
       thpool_add_work( worker_pool, lp_event_worker, &work_data[i] );
       //HACKHACK: fast worker init break worker_get_id (race ?) :(
@@ -189,9 +194,12 @@ void worker_main_thread( const char *token, int num_workers )
     }
 
   thpool_add_work( worker_pool, longpool_worker, &work_data[num_workers + 1] );
-          
+
+  char buff[256];
+
   while (main_thread_loop) {
-      sleep(1);
+      while(fgets(buff, sizeof (buff), stdin) == NULL) { }
+      console_handler(buff);
   }
 
   thpool_pause( worker_pool );

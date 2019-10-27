@@ -121,7 +121,7 @@ vkapi_attach *vkapi_upload_doc_by_url(vkapi_message_object *message, const char 
 
       result = vkapi_call_method("docs.save", s, true );
 
-      Con_Printf("HMMMM: %s\n", result->ptr);
+      //Con_Printf("HMMMM: %s\n", result->ptr);
 
       ptr = cJSON_ParseWithOpts(result->ptr, NULL, false);
 
@@ -182,7 +182,7 @@ vkapi_attach *vkapi_upload_doc_by_url(vkapi_message_object *message, const char 
 
       result = vkapi_call_method("photos.saveMessagesPhoto", s, true );
 
-      Con_Printf("HMMMM: %s\n", result->ptr);
+      //Con_Printf("HMMMM: %s\n", result->ptr);
 
       ptr = cJSON_ParseWithOpts(result->ptr, NULL, false);
 
@@ -293,9 +293,11 @@ void vkapi_send_message(int peer_id, const char *msg, vkapi_attach *attachments,
 {
   string_t s = string_init();
 
-  if(!attachments)
-      string_format(s, "message=%s&random_id=0&peer_id=%i", msg, peer_id);
-  else {
+  if(!attachments) {
+      char *message_encoded = curl_urlencode(msg);
+      string_format(s, "message=%s&random_id=0&peer_id=%i", message_encoded, peer_id);
+      curl_ptr_free(message_encoded);
+  } else {
       string_t formated_attachmens = string_init();
       string_t tmp = string_init();
       for(int i = 0; attachmens_len > i; i++)

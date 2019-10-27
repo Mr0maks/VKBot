@@ -87,14 +87,23 @@ static int db_chat_warnings_get_callback(void *data, int argc, char *argv[], cha
 
 int db_chat_warnings_get(int peer_id, int id)
 {
-    int warnings = 0;
+    int warnings = -3;
     DB_EXEC(db_chat, va(DB_CHAT_WARNINGS_GET_WARNING, peer_id, id), db_chat_warnings_get_callback, &warnings );
     return warnings;
 }
 
 void db_chat_warnings_inc(int peer_id, int id)
 {
-    int warnings = db_chat_warnings_get(peer_id, id);
+    int warnings = -3;
+
+    again:
+    warnings = db_chat_warnings_get(peer_id, id);
+
+    if(warnings == -3)
+    {
+        db_chat_privilage_user_init(peer_id, id);
+        goto again;
+    }
 
     warnings++;
 

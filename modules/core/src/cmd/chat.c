@@ -44,7 +44,7 @@ void cmd_warn(vkapi_message_object *message, int argc, char **argv, const char *
         return;
     } else if(argv[1])
     {
-        if(!atoi(argv[1]) || !vkapi_get_id_from(argv[1]))
+        if(!atoi(argv[1]) && !vkapi_get_id_from(argv[1]))
             VKAPI_SEND_MESSAGE(message->peer_id, "Не указан пользователь", NULL, 0);
         return;
     }
@@ -54,7 +54,12 @@ void cmd_warn(vkapi_message_object *message, int argc, char **argv, const char *
     if(!member_id)
         member_id = vkapi_get_id_from(argv[1]);
 
-    db_chat_warnings_inc(message->peer_id, member_id);
+    VKAPI_SEND_MESSAGE( message->peer_id, "Пук", NULL, 0 );
+
+    int warnings = db_chat_warnings_get(message->peer_id, member_id);
+    db_chat_warnings_set(message->peer_id, member_id, warnings + 1);
+
+    VKAPI_SEND_MESSAGE(message->peer_id, "Предупреждение установлено", NULL, 0);
 }
 
 
@@ -92,14 +97,19 @@ void cmd_set_privilage(vkapi_message_object *message, int argc, char **argv, con
     if(!argc || argc > 2)
     {
         usage:
-        VKAPI_SEND_MESSAGE( message->peer_id, "Использование: <id> <привилегия>", NULL, 0 );
+        VKAPI_SEND_MESSAGE( message->peer_id, "Использование: <id или упоминание> <привилегия>", NULL, 0 );
         return;
     }
 
-    if(!atoi(argv[1]))
+    int member_id = atoi(argv[1]);
+
+    if(!member_id)
+        member_id = vkapi_get_id_from(argv[1]);
+
+    if(!member_id)
         goto usage;
 
-    db_chat_set_privilage(message->peer_id, atoi(argv[1]), atoi(argv[2]));
+    db_chat_set_privilage(message->peer_id, member_id, atoi(argv[2]));
 
-    VKAPI_SEND_MESSAGE(message->peer_id, va("Привилегия %s для %i установленна", USERS_GET_PRIVILAGE_NAME(atoi(argv[2])), atoi(argv[1])), NULL, 0);
+    VKAPI_SEND_MESSAGE(message->peer_id, va("Привилегия %s для %i установленна", USERS_GET_PRIVILAGE_NAME(atoi(argv[2])), member_id), NULL, 0);
 }

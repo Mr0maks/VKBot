@@ -135,6 +135,17 @@ void *curl_init()
   return curl_easy_init();
 }
 
+char *curl_urlencode(const char *data)
+{
+    void *curl_handle = worker_get_vkapi_handle()->curl_handle;
+    return curl_easy_escape(curl_handle, data, 0);
+}
+
+void curl_ptr_free(void *ptr)
+{
+    curl_free(ptr);
+}
+
 void curl_cleanup(void *ptr)
 {
   curl_easy_cleanup(ptr);
