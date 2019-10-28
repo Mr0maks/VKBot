@@ -39,6 +39,7 @@ token = [^" ];
 token2 = [^"]+;
 quotes = ["];
 
+* { tokens_count = -1; *tokens_len = -1; return tokens_count; }
 quotes @t1 token2 @t2 quotes whitespace { cmd_tokeinize_push(t1, t2, tokens, tokens_count++ ); goto loop; }
 quotes @t1 token2 @t2 quotes "\x00" { cmd_tokeinize_push(t1, t2, tokens, tokens_count++ ); *tokens_len = tokens_count; return tokens_count; }
 @t1 token @t2 whitespace { cmd_tokeinize_push(t1, t2, tokens, tokens_count++ ); goto loop; }

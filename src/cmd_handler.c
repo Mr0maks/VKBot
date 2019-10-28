@@ -108,9 +108,12 @@ bool cmd_handle(vkapi_message_object *message)
 
   char **tokens = (char**)calloc(256, sizeof(char*));
 
-  cmd_string_tokeinize( s->ptr, tokens, &tokens_count );
+  int error = cmd_string_tokeinize( s->ptr, tokens, &tokens_count );
 
   string_t args_s = string_init();
+
+  if(error == -1)
+      goto end;
 
    if( !cmd_is_bot_name(tokens[0]) )
     {
