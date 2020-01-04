@@ -62,7 +62,7 @@ cJSON *queue_pop(void) {
 
 void queue_init(void)
 {
-  queue_pool = GC_MALLOC_UNCOLLECTABLE(sizeof(struct queue));
+  queue_pool = malloc(sizeof(struct queue));
   queue_tasks_in_queue = 0;
   maxium_tasks_in_queue = 0;
   queue_pool->head = NULL;

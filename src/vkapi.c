@@ -324,7 +324,7 @@ void vkapi_send_message(int peer_id, const char *msg, vkapi_attach *attachments,
 
 bool vkapi_get_long_poll_server(vkapi_handle *object)
 {
-  string_t method_result = vkapi_call_method("groups.getLongPollServer", NULL, true);
+  string_t method_result = _vkapi_call_method(object, "groups.getLongPollServer", NULL, true);
 
   if(!method_result)
     {

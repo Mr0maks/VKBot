@@ -3,7 +3,7 @@
 #include "config.h"
 // void
 
-void worker_main_thread( const char *token, int num_workers );
+void Host_Init(void);
 
 int main(int argc, char *argv[])
 {
@@ -13,10 +13,9 @@ int main(int argc, char *argv[])
         return 0;
     }
 
-  (void)argc;
-  (void)argv;
+    (void)argc;
+    (void)argv;
 
-  worker_main_thread( config.token, config.num_workers );
-
-  return 0;
+    Host_Init();
+    return 0;
 }

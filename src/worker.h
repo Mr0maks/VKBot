@@ -8,4 +8,6 @@ vkapi_handle *worker_get_vkapi_handle(void);
 int worker_get_workers_count(void);
 size_t worker_commands_processed(void);
 size_t worker_message_processed(void);
+void worker_init(void);
+void worker_deinit(void);
 #endif

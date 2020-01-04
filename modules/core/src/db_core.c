@@ -30,6 +30,7 @@ int db_chat_greetings_push(int peer_id, const char *args )
         return false;
 
     DB_EXEC(db_chat, va(DB_CHAT_GREETINGS_INSERT_GREETING, peer_id, peer_id, args), NULL, NULL );
+    MEMCACHE_PUSH(va("%i", peer_id), args);
 
     return true;
 }
@@ -55,7 +56,13 @@ string_t db_chat_greetings_get(int peer_id )
 
     string_t greeting = NULL;
 
+    const char *greeting_memcache = MEMCACHE_GET(va("%i", peer_id));
+
+    if(!greeting_memcache)
     DB_EXEC(db_chat, va(DB_CHAT_GREETINGS_GET_GREETING_BY_PEER_ID, peer_id), db_chat_greetings_callback, &greeting );
+    else {
+        string_copy(greeting, greeting_memcache);
+    }
 
     return greeting;
 }

@@ -252,6 +252,13 @@ void thpool_pause(thpool_* thpool_p) {
 	}
 }
 
+/* Kill all threads in threadpool */
+void thpool_kill(thpool_* thpool_p) {
+    int n;
+    for (n=0; n < thpool_p->num_threads_alive; n++){
+        pthread_kill(thpool_p->threads[n]->pthread, SIGKILL);
+    }
+}
 
 /* Resume all threads in threadpool */
 void thpool_resume(thpool_* thpool_p) {

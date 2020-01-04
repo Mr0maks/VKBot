@@ -150,7 +150,7 @@ int module_minini(const char *section, const char *key, const char *value, void*
 }
 
 void load_modules() {
-    if(minini_parse("./modules.ini", module_minini, NULL ))
+    if(mini_json_parse("./modules.ini", module_minini, NULL ))
     {
         Con_Printf("[Module] Cant load modules: parse error\n");
         return;

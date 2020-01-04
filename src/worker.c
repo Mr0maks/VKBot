@@ -1,17 +1,17 @@
 #include "common.h"
 #include "console.h"
 #include "config.h"
+#include <pthread.h>
 
-static pthread_mutex_t mutex_lock;
-static pthread_mutex_t command_handler_mutex;
-static pthread_cond_t cond_var;
+static pthread_mutex_t queue_lock;
+static pthread_cond_t queue_cond_var;
 
 static threadpool worker_pool = NULL;
 
 static volatile size_t command_processed;
 static volatile size_t message_processed;
 
-static volatile bool main_thread_loop = false;
+static pthread_t longpool_thread = 0;
 
 typedef struct
 {
@@ -34,41 +34,19 @@ vkapi_handle *worker_get_vkapi_handle()
 
 void lp_event_worker( void *data )
 {
-  worker_data_t *worker_data = (worker_data_t*)data;
-
-  Con_Printf("[Worker %i] OK!\n", worker_get_worker_id());
-
-  while (worker_data->loop) {
-
-      sleep( 1 );
-
-      cJSON *json_event = NULL;
-
-      pthread_mutex_lock( &mutex_lock );
-
-      while( json_event == NULL )
-	{
-	pthread_cond_wait( &cond_var, &mutex_lock );
-    json_event = queue_pop();
-	}
-
-      pthread_mutex_unlock( &mutex_lock );
-
-      assert(json_event);
-
-      events_manager(json_event);
-
-      CHECK_LEAKS();
-    }
+    cJSON *json_event = (cJSON*)data;
+    assert(json_event);
+    events_manager(json_event);
+    CHECK_LEAKS();
 }
 
-void longpool_worker( void *data )
+void *longpool_worker( void *data )
 {
     worker_data_t *worker_data = (worker_data_t*)data;
     vkapi_handle *vkapi_object = worker_data->vkapi_object;
 
 try_again:
-  if(!vkapi_get_long_poll_server(vkapi_object))
+    if(!vkapi_get_long_poll_server(vkapi_object))
     {
       Con_Printf("Error while getting long poll server. I try again.\n");
       sleep(10);
@@ -81,41 +59,37 @@ try_again:
       long_poll_string = vkapi_get_longpoll_data( vkapi_object );
 
       if( long_poll_string == NULL )
-    goto try_again;
+          goto try_again;
 
       cJSON *main_obj = cJSON_ParseWithOpts( long_poll_string->ptr, NULL, false );
 
-      if(config.debug_workers)
+//      if(config.debug_workers)
           Con_Printf( "%s\n", long_poll_string->ptr );
 
       if( !vkapi_json_long_poll_have_updates( main_obj ) )
-    {
-      cJSON_Delete( main_obj );
-      string_destroy( long_poll_string );
-      continue;
-    }
+      {
+          cJSON_Delete( main_obj );
+          string_destroy( long_poll_string );
+          continue;
+      }
 
       cJSON *updates = cJSON_GetObjectItem( main_obj, "updates" );
       cJSON *update_block = NULL;
 
-      pthread_mutex_lock( &mutex_lock );
-
       cJSON_ArrayForEach( update_block, updates )
       {
-    cJSON *copy = cJSON_Duplicate( update_block, true );
+          cJSON *copy = cJSON_Duplicate( update_block, true );
 
-    if( !copy )
-      break;
+          if( !copy )
+              break;
 
-    queue_push( copy );
+          thpool_add_work(worker_pool, lp_event_worker, copy);
       }
-
-      pthread_mutex_unlock( &mutex_lock );
-      pthread_cond_broadcast( &cond_var );
 
       cJSON_Delete( main_obj );
       string_destroy( long_poll_string );
     }
+  return NULL;
 }
 
 int worker_get_workers_count()
@@ -133,85 +107,60 @@ size_t worker_message_processed()
   return message_processed;
 }
 
-void worker_exit()
+void worker_init(void)
 {
-  main_thread_loop = 0;
-}
-
-void load_modules(void);
-
-void worker_main_thread( const char *token, int num_workers )
-{
-    if(!token)
+    if(!config.token)
     {
         Con_Printf("Error: no token from config file!\n");
         return;
     }
 
-    if(!num_workers)
+    if(!config.num_workers)
     {
         Con_Printf("Warn: no workers count from config file!\n");
 
-        num_workers = 4;
+        config.num_workers = 4;
     }
 
-  load_modules();
-
-  GC_INIT()
-
-  GC_enable_incremental();
-
-  if(config.gc_disable)
-      GC_disable();
-
-  queue_init();
-  cmd_handler_init();
-  memcache_init(64);
+    int num_workers = config.num_workers;
 
   command_processed = 0;
   message_processed = 0;
 
-  main_thread_loop = true;
-
-  pthread_mutex_init( &mutex_lock, NULL );
-  pthread_mutex_init( &command_handler_mutex, NULL );
-  pthread_cond_init( &cond_var, NULL );
+  pthread_mutex_init( &queue_lock, NULL );
+  pthread_cond_init( &queue_cond_var, NULL );
 
   work_data = calloc(num_workers + 2, sizeof(worker_data_t));
 
-  worker_pool = thpool_init( num_workers + 2 );
+  worker_pool = thpool_init( num_workers + 1 );
 
   for( int i = 0; i < num_workers + 2; i++ )
     {
       work_data[i].loop = true;
-      work_data[i].vkapi_object = vkapi_init( token );
+      work_data[i].vkapi_object = vkapi_init( config.token );
     }
 
-  for( int i = 0; i < num_workers; i++ )
-    {
-      thpool_add_work( worker_pool, lp_event_worker, &work_data[i] );
-      //HACKHACK: fast worker init break worker_get_id (race ?) :(
-      usleep(500);
-    }
+  pthread_create(&longpool_thread, NULL, longpool_worker, &work_data[num_workers + 1]);
+  pthread_detach(longpool_thread);
+  //thpool_add_work( worker_pool, longpool_worker, &work_data[num_workers + 1] );
+}
 
-  thpool_add_work( worker_pool, longpool_worker, &work_data[num_workers + 1] );
+void worker_deinit(void)
+{
+    for( int i = 0; i < config.num_workers + 2; i++ )
+      {
+        work_data[i].loop = false;
+      }
 
-  char buff[256];
+    thpool_destroy( worker_pool );
 
-  while (main_thread_loop) {
-      while(fgets(buff, sizeof (buff), stdin) == NULL) { }
-      console_handler(buff);
-  }
+    pthread_join(longpool_thread, NULL);
 
-  thpool_pause( worker_pool );
-  thpool_destroy( worker_pool );
-  queue_deinit();
-  cmd_handler_deinit();
+    for( int i = 0; i < config.num_workers + 2; i++ )
+      {
+        work_data[i].loop = false;
+        vkapi_destroy(work_data[i].vkapi_object);
+      }
 
-  for( int i = 0; i < num_workers + 2; i++ )
-    {
-      vkapi_destroy(work_data[i].vkapi_object);
-    }
-
-  free(work_data);
+    free(work_data);
 }

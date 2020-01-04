@@ -79,7 +79,7 @@ static int mini_ini_push_token(const uint8_t *start_key, const uint8_t *end_key,
   return result;
 }
 
-int minini_tokeinize(unsigned char *str, mini_ini_handler_t handler, void *dataptr )
+int mini_json_tokeinize(unsigned char *str, mini_ini_handler_t handler, void *dataptr )
 {
 assert(str);
 assert(handler);
@@ -6177,7 +6177,7 @@ return 1;
 
 }
 
-int minini_parse(const char *filename, mini_ini_handler_t handler, void *userdata )
+int mini_json_parse(const char *filename, mini_ini_handler_t handler, void *userdata )
 {
     if(!filename || !handler)
         return 1;
@@ -6202,7 +6202,7 @@ int minini_parse(const char *filename, mini_ini_handler_t handler, void *userdat
         return 1;
       }
 
-    int result = minini_tokeinize((uint8_t*)buff, handler, userdata);
+    int result = mini_json_tokeinize((uint8_t*)buff, handler, userdata);
 
     fclose(f);
     return result;

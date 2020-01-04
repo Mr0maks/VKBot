@@ -45,7 +45,7 @@ int config_parse_file(const char *filename)
     if(!filename)
         return 1;
 
-    if (minini_parse(filename, config_handler, NULL)) {
+    if (mini_json_parse(filename, config_handler, NULL)) {
         Con_Printf("Can't load '%s'\n", filename);
         return 1;
     }

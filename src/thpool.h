@@ -120,7 +120,8 @@ void thpool_wait(threadpool);
  */
 void thpool_pause(threadpool);
 
-
+/* Kill all threads in threadpool */
+void thpool_kill(threadpool);
 /**
  * @brief Unpauses all threads if they are paused
  *
