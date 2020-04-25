@@ -81,8 +81,12 @@ SRC = $(wildcard src/*.c)
 
 OBJ := $(SRC:$(SRCDIR)/%.c=$(OBJDIR)/%.o)
 
-$(NAME)_$(ARCH)$(PROGRAMEXT) : neat depend $(OBJ)
+$(NAME)_$(ARCH)$(PROGRAMEXT) : cjson neat depend $(OBJ)
 	$(CC) $(CFLAGS) $(OBJ) $(LDFLAGS) -o $(OBJDIR)/$@
+
+cjson:
+	@cd cjson
+	@make -f Makefile static
 
 neat:
 	@mkdir -p $(OBJDIR)
