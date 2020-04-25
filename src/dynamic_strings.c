@@ -1,15 +1,8 @@
 #include "common.h"
 
-void _string_release(string_t s, void *ptr)
-{
-    string_destroy(s);
-}
-
 string_t string_init() {
   string_t s = (string_t)calloc( 1, sizeof(struct string) );
 
-//  GC_REGISTER_FINALIZER(s, _string_release, NULL, NULL, NULL);
-  
   s->ptr = (char *)malloc( 4096 );
   if ( s->ptr == NULL ) {
       Con_Printf( "сalloc() failed\n" );
@@ -31,7 +24,7 @@ string_t string_dublicate(string_t s)
   if(s->len > 0)
     {
       s_duble->ptr = realloc( s_duble->ptr, s->size );
-      memcpy( s_duble->ptr, s->ptr, s->len );
+	  memcpy( s_duble->ptr, s->ptr, s->len + 1 );
     }
 
   return s_duble;
@@ -141,7 +134,7 @@ void string_memcpy( string_t s, const void *data, size_t size )
     }
 
   memcpy( s->ptr+s->len, data, size );
-  //s->ptr[new_len] = '\0';
+  s->ptr[new_len] = '\0';
   s->len = new_len;
   s->size = new_len + 1;
 }

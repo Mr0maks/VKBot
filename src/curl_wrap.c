@@ -143,10 +143,12 @@ char *curl_urlencode(const char *data)
 
 void curl_ptr_free(void *ptr)
 {
-    curl_free(ptr);
+	assert(ptr);
+	curl_free(ptr);
 }
 
 void curl_cleanup(void *ptr)
 {
-  curl_easy_cleanup(ptr);
+	assert(ptr);
+	curl_easy_cleanup(ptr);
 }

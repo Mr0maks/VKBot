@@ -61,7 +61,7 @@ string_t db_chat_greetings_get(int peer_id )
     if(!greeting_memcache)
     DB_EXEC(db_chat, va(DB_CHAT_GREETINGS_GET_GREETING_BY_PEER_ID, peer_id), db_chat_greetings_callback, &greeting );
     else {
-        string_copy(greeting, greeting_memcache);
+        STRING_COPY(greeting, greeting_memcache);
     }
 
     return greeting;

@@ -121,8 +121,6 @@ vkapi_attach *vkapi_upload_doc_by_url(vkapi_message_object *message, const char 
 
       result = vkapi_call_method("docs.save", s, true );
 
-      //Con_Printf("HMMMM: %s\n", result->ptr);
-
       ptr = cJSON_ParseWithOpts(result->ptr, NULL, false);
 
       cJSON *resp = cJSON_GetObjectItem(ptr, "response");
@@ -181,8 +179,6 @@ vkapi_attach *vkapi_upload_doc_by_url(vkapi_message_object *message, const char 
       cJSON_Delete(ptr);
 
       result = vkapi_call_method("photos.saveMessagesPhoto", s, true );
-
-      //Con_Printf("HMMMM: %s\n", result->ptr);
 
       ptr = cJSON_ParseWithOpts(result->ptr, NULL, false);
 
@@ -410,7 +406,7 @@ vkapi_handle *vkapi_init(const char *token)
 
 void vkapi_destroy(vkapi_handle *ptr)
 {
-  assert(ptr != NULL);
+  assert(ptr);
 
   curl_cleanup(ptr->curl_handle);
   free(ptr);

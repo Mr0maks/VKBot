@@ -15,7 +15,6 @@ const cmds_t commands[] = {
   { "модули", "список загруженных модулей", cmd_modules },
   { "оботе", "о боте", cmd_about_bot },
   { "стат", "показывает разную статистику бота", cmd_stat },
-  { "gc", "статистика gc", cmd_gc },
   { NULL, NULL, NULL }
 };
 

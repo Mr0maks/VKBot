@@ -15,7 +15,6 @@
 #include <cJSON.h>
 
 #include "sys_con.h"
-#include "gc_memmgr.h"
 #include "va_utils.h"
 
 #include "thpool.h"

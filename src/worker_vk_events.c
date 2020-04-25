@@ -9,7 +9,7 @@ bool message_new_handler(cJSON *raw);
 static event_t default_events[] = 
 {
     { "message_new", message_new_handler, NULL },
-    { NULL, NULL, NULL, }
+	{ NULL, NULL, NULL }
 };
 
 void module_event_register(const char *event_name, event_handler_t handler)

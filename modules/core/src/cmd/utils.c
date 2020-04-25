@@ -5,6 +5,7 @@
 #include <string.h>
 
 #include <cJSON.h>
+#include <minijson.h>
 
 extern time_t cmd_uptime_start;
 
@@ -45,24 +46,24 @@ void cmd_valute_curse(vkapi_message_object *message, int argc, char **argv, cons
 
         STRING_STRNCAT( s2, info, strlen(info) );
 
-        cJSON *ptr = cJSON_ParseWithOpts(s->ptr, NULL, false), *valute_element = NULL, *array_value = NULL;
+		minijson *ptr = minijson_parse(s->ptr), *valute_element = NULL, *array_value = NULL;
 
-        array_value = cJSON_GetObjectItem(ptr, "Valute");
+		array_value = minijson_getobjectitem(ptr, "Valute");
 
-        cJSON_ArrayForEach( valute_element, array_value )
+		minijson_arrayforeach( valute_element, array_value )
         {
 
-            cJSON *CharCode = cJSON_GetObjectItem(valute_element, "CharCode");
-            cJSON *Name = cJSON_GetObjectItem(valute_element, "Name");
+			minijson *CharCode = minijson_getobjectitem(valute_element, "CharCode");
+			minijson *Name = minijson_getobjectitem(valute_element, "Name");
 
-            info = va("• %s - %s\n", cJSON_GetStringValue(CharCode), cJSON_GetStringValue(Name));
+			info = va("• %s - %s\n", minijson_getstringvalue(CharCode), minijson_getstringvalue(Name));
 
             STRING_STRNCAT(s2, info, strlen(info));
         }
 
         VKAPI_SEND_MESSAGE( message->peer_id, s2->ptr, NULL, 0);
 
-        cJSON_Delete(ptr);
+		minijson_delete(ptr);
         STRING_DESTROY(s);
         STRING_DESTROY(s2);
         return;
@@ -86,25 +87,25 @@ void cmd_valute_curse(vkapi_message_object *message, int argc, char **argv, cons
 
     s2 = STRING_INIT();
 
-    cJSON *ptr = cJSON_ParseWithOpts(s->ptr, NULL, false), *valute = NULL, *array_value = NULL;
+	minijson *ptr = minijson_parse(s->ptr), *valute = NULL, *array_value = NULL;
 
-    array_value = cJSON_GetObjectItem(ptr, "Valute");
+	array_value = minijson_getobjectitem(ptr, "Valute");
 
-    valute = cJSON_GetObjectItem(array_value, argv[1]);
+	valute = minijson_getobjectitem(array_value, argv[1]);
 
     if(!valute)
     {
         VKAPI_SEND_MESSAGE( message->peer_id, "Валюты с таким кодом нету!", NULL, 0);
 
-        cJSON_Delete(ptr);
+		minijson_delete(ptr);
         STRING_DESTROY(s);
         STRING_DESTROY(s2);
         return;
     }
 
-    cJSON *Value = cJSON_GetObjectItem(valute, "Value");
-    cJSON *Previous = cJSON_GetObjectItem(valute, "Previous");
-    cJSON *Name = cJSON_GetObjectItem(valute, "Name");
+	minijson *Value = minijson_getobjectitem(valute, "Value");
+	minijson *Previous = minijson_getobjectitem(valute, "Previous");
+	minijson *Name = minijson_getobjectitem(valute, "Name");
 
     double diff = Value->valuedouble - Previous->valuedouble;
 
@@ -112,16 +113,16 @@ void cmd_valute_curse(vkapi_message_object *message, int argc, char **argv, cons
 
     if(diff < 0.0)
     {
-    info = va("Курс валют\n%s: %f ₽\n↓ %f ₽\n", cJSON_GetStringValue(Name), Value->valuedouble, diff );
+	info = va("Курс валют\n%s: %f ₽\n↓ %f ₽\n", minijson_getstringvalue(Name), Value->valuedouble, diff );
     } else {
-    info = va("Курс валют\n%s: %f ₽\n↑ %f ₽\n", cJSON_GetStringValue(Name), Value->valuedouble, diff );
+	info = va("Курс валют\n%s: %f ₽\n↑ %f ₽\n", minijson_getstringvalue(Name), Value->valuedouble, diff );
     }
 
     STRING_STRNCAT(s2, info, strlen(info));
 
     VKAPI_SEND_MESSAGE( message->peer_id, s2->ptr, NULL, 0);
 
-    cJSON_Delete(ptr);
+	minijson_delete(ptr);
     STRING_DESTROY(s);
     STRING_DESTROY(s2);
 }
@@ -165,50 +166,50 @@ void cmd_weather(vkapi_message_object *message, int argc, char **argv, const cha
       }
       }
 
-  cJSON *ptr = cJSON_ParseWithOpts(openweather_json->ptr, NULL, false);
+  minijson *ptr = minijson_parse(openweather_json->ptr);
 
   if(!ptr)
     {
-    VKAPI_SEND_MESSAGE( message->peer_id, "cJSON сделал рыг рыг пук пук", NULL, 0);
+	VKAPI_SEND_MESSAGE( message->peer_id, "minijson сделал рыг рыг пук пук", NULL, 0);
     STRING_DESTROY(openweather_json);
     return;
     }
 
-  cJSON *cod = cJSON_GetObjectItem(ptr, "cod");
+  minijson *cod = minijson_getobjectitem(ptr, "cod");
 
 
         if(cod->valueint == 200)
         {
       string_t msg = STRING_INIT();
 
-      cJSON *weather_array = cJSON_GetObjectItem(ptr, "weather");
-      cJSON *weather = cJSON_GetArrayItem(weather_array, 0);
-      cJSON *name = cJSON_GetObjectItem(ptr, "name");
-      cJSON *main_obj = cJSON_GetObjectItem(ptr, "main");
-      cJSON *temp = cJSON_GetObjectItem(main_obj, "temp");
+	  minijson *weather_array = minijson_getobjectitem(ptr, "weather");
+	  minijson *weather = minijson_getarrayitem(weather_array, 0);
+	  minijson *name = minijson_getobjectitem(ptr, "name");
+	  minijson *main_obj = minijson_getobjectitem(ptr, "main");
+	  minijson *temp = minijson_getobjectitem(main_obj, "temp");
 
-      STRING_FORMAT(msg, "Погода в %s\n\n• Сейчас: %i℃, %s\n", cJSON_GetStringValue(name), temp->valueint, cJSON_GetStringValue(cJSON_GetObjectItem(weather, "description")));
+	  STRING_FORMAT(msg, "Погода в %s\n\n• Сейчас: %i℃, %s\n", minijson_getstringvalue(name), temp->valueint, minijson_getstringvalue(minijson_getobjectitem(weather, "description")));
 
       VKAPI_SEND_MESSAGE( message->peer_id, msg->ptr, NULL, 0);
 
       STRING_DESTROY(msg);
-      cJSON_Delete(ptr);
+	  minijson_delete(ptr);
       STRING_DESTROY(openweather_json);
       return;
         } else if(!strncmp(cod->valuestring, "404", 3))
     {
       VKAPI_SEND_MESSAGE( message->peer_id, "Такого города нет", NULL, 0);
-      cJSON_Delete(ptr);
+	  minijson_delete(ptr);
       STRING_DESTROY(openweather_json);
       return;
     } else if(!strncmp(cod->valuestring, "401", 3)) {
       VKAPI_SEND_MESSAGE( message->peer_id, "Ограничение апи openweathermap", NULL, 0);
-      cJSON_Delete(ptr);
+	  minijson_delete(ptr);
       STRING_DESTROY(openweather_json);
       return;
     } else {
       VKAPI_SEND_MESSAGE( message->peer_id, "Неизвестная ошибка", NULL, 0);
-      cJSON_Delete(ptr);
+	  minijson_delete(ptr);
       STRING_DESTROY(openweather_json);
       return;
     }

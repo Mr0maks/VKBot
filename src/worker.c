@@ -37,7 +37,7 @@ void lp_event_worker( void *data )
     cJSON *json_event = (cJSON*)data;
     assert(json_event);
     events_manager(json_event);
-    CHECK_LEAKS();
+    //CHECK_LEAKS();
 }
 
 void *longpool_worker( void *data )

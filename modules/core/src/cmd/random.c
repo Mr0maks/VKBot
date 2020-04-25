@@ -1,10 +1,9 @@
 #include <enginecallbacks.h>
 #include <limits.h>
 #include <time.h>
-#include <gc_memmgr.h>
 #include "va_utils.h"
 
-#include <cJSON.h>
+#include <minijson.h>
 
 int64_t random_int64(int64_t min, int64_t max)
 {
@@ -158,17 +157,17 @@ void cmd_rand_docs(vkapi_message_object *message, int argc, char **argv, const c
 
     string_t result = VKAPI_CALL_METHOD( "docs.search", s, true);
 
-    cJSON *ptr = cJSON_ParseWithOpts(result->ptr, NULL, false);
+	minijson *ptr = minijson_parse(result->ptr);
 
-    cJSON *resp = cJSON_GetObjectItem(ptr, "response");
+	minijson *resp = minijson_getobjectitem(ptr, "response");
 
     //ALERT("HMM: %s\n", result->ptr);
 
-    cJSON *count = cJSON_GetObjectItem(resp, "count");
+	minijson *count = minijson_getobjectitem(resp, "count");
 
     if(!count->valueint)
     {
-       cJSON_Delete(ptr);
+	   minijson_delete(ptr);
 
        VKAPI_SEND_MESSAGE( message->peer_id, "По вашему запросу нету документов", NULL, 0);
 
@@ -177,24 +176,24 @@ void cmd_rand_docs(vkapi_message_object *message, int argc, char **argv, const c
        return;
     }
 
-    cJSON *items = cJSON_GetObjectItem(resp, "items");
+	minijson *items = minijson_getobjectitem(resp, "items");
 
-    int docs_count = cJSON_GetArraySize(items);
+	int docs_count = minijson_getarraysize(items);
 
     vkapi_attach *attaches = (vkapi_attach*)calloc(docs_count, sizeof(vkapi_attach));
 
     for(int i = 0; i < docs_count; i++)
     {
-        cJSON *obj = cJSON_GetArrayItem(items, i);
+		minijson *obj = minijson_getarrayitem(items, i);
 
         attaches[i].type = VKAPI_DOC;
-        attaches[i].media_id = cJSON_GetObjectItem(obj, "id")->valueint;
-        attaches[i].owner_id = cJSON_GetObjectItem(obj, "owner_id")->valueint;
+		attaches[i].media_id = minijson_getobjectitem(obj, "id")->valueint;
+		attaches[i].owner_id = minijson_getobjectitem(obj, "owner_id")->valueint;
     }
 
     VKAPI_SEND_MESSAGE( message->peer_id, "Документы по вашему запросу:", attaches, docs_count);
 
-    cJSON_Delete(ptr);
+	minijson_delete(ptr);
 
     STRING_DESTROY(s);
     STRING_DESTROY(result);

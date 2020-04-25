@@ -34,8 +34,6 @@ void Host_Init()
 {
     main_thread_loop = true;
 
-    Host_Memmgr_Init();
-
     memcache_init(64);
 
     load_modules();

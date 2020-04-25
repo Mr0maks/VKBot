@@ -30,7 +30,7 @@ endif
 
 OPT_CFLAGS = -O2 -flto -funroll-loops -fno-omit-frame-pointer -fstack-protector-all -fPIC -Wall
 
-BASE_CFLAGS = -D__USE_GNU -std=gnu11 -DVERSION=\"$(VERSION)\"
+BASE_CFLAGS = -D__USE_GNU -std=gnu11 -DVERSION=\"$(VERSION)\" -Wall
 
 ARCH=$(shell uname -m)
 
@@ -66,9 +66,9 @@ OBJDIR=$(BUILD_TYPE).$(OS).$(ARCH)
 
 CFLAGS = $(BUILD_TYPE_CFLAGS) $(BASE_CFLAGS) $(OPT_CFLAGS) $(ARCH_CFLAGS)
 
-INCLUDE=-I. -I$(SRCDIR) -I./cjson/ -I./inih/
+INCLUDE=-I. -I$(SRCDIR) -Icjson
 
-LDFLAGS=-L. -lpthread -lcurl -lcjson -L./cjson/ -ldl -lgc -flto
+LDFLAGS=-lpthread -lcurl -lcjson -ldl -flto -Lcjson/
 
 DO_CC=$(CC) $(CFLAGS) $(INCLUDE) -o $@ -c $<
 
