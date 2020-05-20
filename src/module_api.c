@@ -2,7 +2,6 @@
 #include "cmd_handler.h"
 #include "crc_hash.h"
 #include "module_api.h"
-#include "memcache.h"
 #include "minini.h"
 
 #include <stdarg.h>
@@ -54,22 +53,11 @@ const engine_api_t engfuncs_t =
     curl_uploadfile,
     curl_cleanup,
 
-    // memcache
-    memcache_push,
-    memcache_get,
-
     // db api
-    db_register_type,
+    db_register,
     db_open,
     db_exec,
     db_close,
-
-    // users api
-    users_is_init,
-    users_module_register_users,
-    users_get_privilage,
-    users_set_privilage,
-    users_get_name_privilage,
 
     //events
     module_event_register,
@@ -85,26 +73,26 @@ void module_fill_funcs(engine_api_t *ptr)
     memcpy(ptr, &engfuncs_t, sizeof (engfuncs_t));
 }
 
-void module_load(const char *name)
+bool module_load(const char *name)
 {
   if(!name)
-    return;
+    return false;
 
   module_t *ptr = (module_t*)calloc(1, sizeof(module_t));
 
   if(!ptr)
     {
       Con_Printf("Module %s error: calloc return NULL\n", name);
-      return;
+      return false;
     }
 
-  ptr->handle = LoadLibrary(va("./%s.%s", name, LIB_EXT));
+  ptr->handle = LoadLibrary(va("./%s_%s.%s", name, ARCH, LIB_EXT));
 
   if(ptr->handle == NULL)
     {
       Con_Printf("Module %s error: %s\n", name, GetLastError());
       free(ptr);
-      return;
+      return false;
     }
 
   module_init module_init_func = (module_init)dlsym(ptr->handle, "Module_Init");
@@ -113,7 +101,7 @@ void module_load(const char *name)
     {
       Con_Printf("Module %s error: %s\n", name, GetLastError());
       free(ptr);
-      return;
+      return false;
     }
 
   engine_api_t local_copy;
@@ -127,13 +115,18 @@ void module_load(const char *name)
       Con_Printf("Module %s error: interface mismatch\n", name);
       FreeLibrary(ptr->handle);
       free(ptr);
-      return;
+      return false;
   }
 
   strncpy(ptr->name, name, sizeof(ptr->name));
 
   ptr->next = modules_pool;
   modules_pool = ptr;
+}
+
+bool module_get_func(const char *name, const char *func)
+{
+
 }
 
 int module_minini(const char *section, const char *key, const char *value, void* user)

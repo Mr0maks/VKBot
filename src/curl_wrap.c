@@ -1,6 +1,41 @@
 #include "common.h"
 #include "curl/curl.h"
 
+static pthread_mutex_t connlock;
+static CURLSH *share = NULL;
+
+static void lock_cb(CURL *handle, curl_lock_data data, curl_lock_access access, void *userptr)
+{
+  (void)access; /* unused */
+  (void)userptr; /* unused */
+  (void)handle; /* unused */
+  (void)data; /* unused */
+  pthread_mutex_lock(&connlock);
+}
+
+static void unlock_cb(CURL *handle, curl_lock_data data, void *userptr)
+{
+  (void)userptr; /* unused */
+  (void)handle;  /* unused */
+  (void)data;    /* unused */
+  pthread_mutex_unlock(&connlock);
+}
+
+void curl_worker_share_init(void)
+{
+    pthread_mutex_init(&connlock, NULL);
+    share = curl_share_init();
+    curl_share_setopt(share, CURLSHOPT_LOCKFUNC, lock_cb);
+    curl_share_setopt(share, CURLSHOPT_UNLOCKFUNC, unlock_cb);
+    curl_share_setopt(share, CURLSHOPT_SHARE, CURL_LOCK_DATA_CONNECT);
+}
+
+void curl_worker_share_deinit(void)
+{
+    pthread_mutex_destroy(&connlock);
+    curl_share_cleanup(share);
+}
+
 size_t curl_dynamic_string_writefunc( void *ptr, size_t size, size_t nmemb, void *data )
 {
   string_t s = (string_t)data;
@@ -8,12 +43,7 @@ size_t curl_dynamic_string_writefunc( void *ptr, size_t size, size_t nmemb, void
   if(ptr == NULL)
     return 0;
 
-#ifdef DEBUG
-  const char *ptr_dbg = (const char *)ptr;
-  string_strncat(s, ptr_dbg, size*nmemb);
-#else
   string_strncat(s, (const char*)ptr, size*nmemb);
-#endif
 
   return size*nmemb;
 }
@@ -32,13 +62,15 @@ size_t curl_dynamic_string_writefunc_binary( void *ptr, size_t size, size_t nmem
   return size*nmemb;
 }
 
-bool curl_get( void *curl_handle, string_t url, string_t useragent, string_t dataptr )
+bool curl_get( void *curl_handle, const char *url, string_t useragent, string_t dataptr )
 {
     if(!curl_handle)
         curl_handle = worker_get_vkapi_handle()->curl_handle;
 
   curl_easy_reset(curl_handle);
-  curl_easy_setopt(curl_handle, CURLOPT_URL, url->ptr);
+
+  curl_easy_setopt(curl_handle, CURLOPT_URL, url);
+  curl_easy_setopt(curl_handle, CURLOPT_SHARE, share);
   curl_easy_setopt(curl_handle, CURLOPT_FOLLOWLOCATION, 1L);
 
   if(useragent)
@@ -68,6 +100,7 @@ bool curl_post( void *curl_handle, const char *url, string_t post, string_t user
 
   curl_easy_reset(curl_handle);
   curl_easy_setopt(curl_handle, CURLOPT_URL, url);
+  curl_easy_setopt(curl_handle, CURLOPT_SHARE, share);
   curl_easy_setopt(curl_handle, CURLOPT_POST, 1L);
   //curl_easy_setopt(object->curl_handle, CURLOPT_VERBOSE, 1L);
 

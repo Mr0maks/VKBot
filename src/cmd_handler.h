@@ -1,7 +1,6 @@
 #pragma once
 
 #include "vkapi.h"
-#include "users_api.h"
 
 typedef  void	(*cmd_function_callback)(vkapi_message_object *message, int argc, char *argv[], const char *args);
 
@@ -9,7 +8,6 @@ typedef struct
 {
   const char	*string;
   const char    *description;
-//  privilage_t	privilage;
   cmd_function_callback  function;
 } cmds_t;
 

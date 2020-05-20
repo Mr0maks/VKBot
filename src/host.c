@@ -1,4 +1,5 @@
 #include "common.h"
+#include "config.h"
 
 static volatile bool main_thread_loop = false;
 
@@ -6,7 +7,7 @@ void Host_Deinit()
 {
     worker_deinit();
     cmd_handler_deinit();
-    queue_deinit();
+    curl_worker_share_deinit();
 }
 
 void Host_Main_Thread()
@@ -28,18 +29,20 @@ void Host_Exit()
 
 void load_modules(void);
 
-void Host_Memmgr_Init(void);
-
 void Host_Init()
 {
-    main_thread_loop = true;
+    if(config_parse_file("./bot.ini"))
+    {
+        Con_Printf("Bot config parsing error");
+        return;
+    }
 
-    memcache_init(64);
+    main_thread_loop = true;
 
     load_modules();
 
-    queue_init();
     cmd_handler_init();
+    curl_worker_share_init();
     worker_init();
 
     Host_Main_Thread();

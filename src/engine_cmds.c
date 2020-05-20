@@ -57,18 +57,15 @@ void cmd_modules(vkapi_message_object *message, int argc, char **argv, const cha
 void cmd_about_bot(vkapi_message_object *message, int argc, char **argv, const char *args)
 {
   string_t s = string_init();
-
-  string_format( s, "VKBot\nБот написан на C\nИспользует библиотеки libcurl и cjson\nСобран %s %s\nВерсия %s", __DATE__, __TIME__, VERSION );
-
+  string_format( s, "VKBot\nИспользует библиотеки libcurl и cJSON\nСобран %s %s\nВерсия %s\nАрхитектура CPU %s", __DATE__, __TIME__, VERSION, ARCH );
   vkapi_send_message(message->peer_id, s->ptr, NULL, 0);
-
   string_destroy(s);
 }
 
 void cmd_stat(vkapi_message_object *message, int argc, char **argv, const char *args)
 {
-//  string_t s = string_init();
-//  string_format( s, "Статистика бота\nКоличество работающих воркеров: %i\nПик очереди: %lu\nПамяти сожрано мной: %ld кб\nМаксимальный размер кеша: %lu кб\nСъел кеш: %lu кб\nКомманд обработано: %lu\nСообщений обработано: %lu\n", worker_get_workers_count(), queue_maxium_tasks(), GC_get_free_bytes() / 1000,memcache_get_max_size(), memcache_get_size() / 1024, worker_commands_processed(), worker_message_processed() );
-//  vkapi_send_message( message->peer_id, s->ptr, NULL, 0 );
-//  string_destroy( s );
+  string_t s = string_init();
+  string_format( s, "Статистика бота\nКоличество работающих воркеров: %i\nКомманд обработано: %lu\nСообщений обработано: %lu\n", worker_get_workers_count(), worker_commands_processed(), worker_message_processed() );
+  vkapi_send_message( message->peer_id, s->ptr, NULL, 0 );
+  string_destroy( s );
 }

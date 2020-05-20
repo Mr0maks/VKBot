@@ -32,7 +32,7 @@ static inline db_pool_t *db_find(const char *name)
   return NULL;
 }
 
-void db_register_type( const char *type, db_open_t open, db_exec_t exec, db_close_t close, void *data )
+void db_register( const char *type, db_open_t open, db_exec_t exec, db_close_t close, void *data )
 {
   assert(type);
 

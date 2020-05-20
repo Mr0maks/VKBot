@@ -2,22 +2,27 @@
 
 #define VK_URL_METHOD "https://api.vk.com/method/"
 
-static string_t _vkapi_call_method(vkapi_handle *object, const char *method, string_t specific_args, bool result_need)
+static string_t _vkapi_call_method(vkapi_handle *object, const char *method, curl_postfield_t args, bool result_need)
 {
   string_t s = NULL;
   string_t s2 = NULL;
+  bool args_null = (args == NULL);
+  bool error_code = false;
 
   if(!object)
       object = worker_get_vkapi_handle();
 
-  bool error_code = false;
+  if (args_null)
+      args = curl_postfield_init();
 
-  s2 = string_init();
+  curl_postfield_push(args, "v", "5.101");
+  curl_postfield_push(args, "access_token", object->vk_token);
+  curl_postfield_push(args, "group_id", va("%i", object->group_id));
 
-  if(specific_args)
-  string_format( s2, "group_id=%i&access_token=%s&%s&v=5.101", object->group_id, object->vk_token, specific_args->ptr);
-  else
-  string_format( s2, "group_id=%i&access_token=%s&v=5.101", object->group_id, object->vk_token);
+  s2 = curl_postfield_serialize(args);
+
+  if(args_null)
+      curl_postfield_destroy(args);
 
   if(result_need)
     {
@@ -39,20 +44,25 @@ static string_t _vkapi_call_method(vkapi_handle *object, const char *method, str
   return s;
 }
 
-string_t vkapi_call_method(const char *method, string_t specific_args, bool result_need)
+string_t vkapi_call_method(const char *method, curl_postfield_t args, bool result_need)
 {
   string_t s = NULL;
   string_t s2 = NULL;
   vkapi_handle *object = worker_get_vkapi_handle();
-
+      bool args_null = (args == NULL);
   bool error_code = false;
 
-  s2 = string_init();
+  if (args_null)
+      args = curl_postfield_init();
 
-  if(specific_args)
-  string_format( s2, "group_id=%i&access_token=%s&%s&v=5.101", object->group_id, object->vk_token, specific_args->ptr);
-  else
-  string_format( s2, "group_id=%i&access_token=%s&v=5.101", object->group_id, object->vk_token);
+  curl_postfield_push(args, "v", "5.101");
+  curl_postfield_push(args, "access_token", object->vk_token);
+  curl_postfield_push(args, "group_id", va("%i", object->group_id));
+
+  s2 = curl_postfield_serialize(args);
+
+  if(args_null)
+      curl_postfield_destroy(args);
 
   if(result_need)
     {
@@ -76,16 +86,17 @@ string_t vkapi_call_method(const char *method, string_t specific_args, bool resu
 
 vkapi_attach *vkapi_upload_doc_by_url(vkapi_message_object *message, const char *filename, string_t data, docs_type_t type)
 {
-  string_t s = string_init();
-
   vkapi_handle *object = worker_get_vkapi_handle();
 
   switch (type) {
 
       case VKAPI_DOC:
 	{
-	  string_format(s, "type=doc&peer_id=%i", message->peer_id);
-      string_t result = vkapi_call_method("docs.getMessagesUploadServer", s, true );
+          curl_postfield_t args = curl_postfield_init();
+          curl_postfield_push(args, "type", "doc");
+          curl_postfield_push(args, "peer_id", va("%i", message->peer_id));
+      string_t result = vkapi_call_method("docs.getMessagesUploadServer", args, true );
+      curl_postfield_destroy(args);
 
 	  if(!result)
 	    break;
@@ -115,11 +126,13 @@ vkapi_attach *vkapi_upload_doc_by_url(vkapi_message_object *message, const char 
       if(!ptr)
 	    break;
 
-      string_format(s, "file=%s", cJSON_GetStringValue(cJSON_GetObjectItem(ptr, "file")));
-
       cJSON_Delete(ptr);
 
-      result = vkapi_call_method("docs.save", s, true );
+      args = curl_postfield_init();
+      curl_postfield_push(args, "file", cJSON_GetStringValue(cJSON_GetObjectItem(ptr, "file")));
+
+      result = vkapi_call_method("docs.save", args, true );
+      curl_postfield_destroy(args);
 
       ptr = cJSON_ParseWithOpts(result->ptr, NULL, false);
 
@@ -138,13 +151,15 @@ vkapi_attach *vkapi_upload_doc_by_url(vkapi_message_object *message, const char 
 
       cJSON_Delete(ptr);
 
-	  string_destroy(s);
 	  string_destroy(result);
       return attach;
 	}
       case VKAPI_PHOTO:
-    {	  string_format(s, "peer_id=%i", message->peer_id);
-      string_t result = vkapi_call_method("photos.getMessagesUploadServer", s, true );
+    {
+          curl_postfield_t args = curl_postfield_init();
+          curl_postfield_push(args, "peer_id", va("%i", message->peer_id));
+      string_t result = vkapi_call_method("photos.getMessagesUploadServer", args, true );
+          curl_postfield_destroy(args);
 
       if(!result)
         break;
@@ -174,11 +189,14 @@ vkapi_attach *vkapi_upload_doc_by_url(vkapi_message_object *message, const char 
       if(!ptr)
         break;
 
-      string_format(s, "photo=%s&server=%i&hash=%s", cJSON_GetStringValue(cJSON_GetObjectItem(ptr, "photo")), cJSON_GetObjectItem(ptr, "server")->valueint, cJSON_GetStringValue(cJSON_GetObjectItem(ptr, "hash")));
+      args = curl_postfield_init();
+      curl_postfield_push(args, "photo", cJSON_GetStringValue(cJSON_GetObjectItem(ptr, "photo")));
+      curl_postfield_push(args, "server", va("%i", cJSON_GetObjectItem(ptr, "server")->valueint));
+      curl_postfield_push(args, "hash", cJSON_GetStringValue(cJSON_GetObjectItem(ptr, "hash")));
 
+      result = vkapi_call_method("photos.saveMessagesPhoto", args, true );
       cJSON_Delete(ptr);
-
-      result = vkapi_call_method("photos.saveMessagesPhoto", s, true );
+      curl_postfield_destroy(args);
 
       ptr = cJSON_ParseWithOpts(result->ptr, NULL, false);
 
@@ -195,7 +213,6 @@ vkapi_attach *vkapi_upload_doc_by_url(vkapi_message_object *message, const char 
 
       cJSON_Delete(ptr);
 
-      string_destroy(s);
       string_destroy(result);
       return attach;
 	}
@@ -287,13 +304,12 @@ static inline const char *vkapi_attach_type(docs_type_t doc)
 
 void vkapi_send_message(int peer_id, const char *msg, vkapi_attach *attachments, int attachmens_len)
 {
-  string_t s = string_init();
+  curl_postfield_t args = curl_postfield_init();
+  string_t formated_attachmens = NULL;
+  char *message_encoded = NULL;
 
-  if(!attachments) {
-      char *message_encoded = curl_urlencode(msg);
-      string_format(s, "message=%s&random_id=0&peer_id=%i", message_encoded, peer_id);
-      curl_ptr_free(message_encoded);
-  } else {
+  if (attachments)
+  {
       string_t formated_attachmens = string_init();
       string_t tmp = string_init();
       for(int i = 0; attachmens_len > i; i++)
@@ -304,18 +320,27 @@ void vkapi_send_message(int peer_id, const char *msg, vkapi_attach *attachments,
           string_format(tmp, "%s%i_%i", vkapi_attach_type(attachments[i].type), attachments[i].owner_id, attachments[i].media_id);
           string_strncat(formated_attachmens, tmp->ptr, tmp->len);
       }
-
-      if(!msg)
-      string_format(s, "random_id=0&peer_id=%i&attachment=%s", peer_id, formated_attachmens->ptr);
-      else
-      string_format(s, "message=%s&random_id=0&peer_id=%i&attachment=%s", msg, peer_id, formated_attachmens->ptr);
-
-      string_destroy(formated_attachmens);
       string_destroy(tmp);
   }
 
-  vkapi_call_method("messages.send", s, false);
-  string_destroy(s);
+      if(msg)
+      {
+          char *message_encoded = curl_urlencode(msg);
+          curl_postfield_push(args, "message", message_encoded);
+      }
+
+      curl_postfield_push(args, "random_id", "0");
+      curl_postfield_push(args, "peer_id", va("%i", peer_id));
+
+      if(attachments)
+      {
+          curl_postfield_push(args, "attachment", formated_attachmens->ptr);
+      }
+
+  vkapi_call_method("messages.send", args, false);
+  string_destroy(formated_attachmens);
+  curl_postfield_destroy(args);
+  curl_ptr_free(message_encoded);
 }
 
 bool vkapi_get_long_poll_server(vkapi_handle *object)
@@ -349,7 +374,7 @@ bool vkapi_get_long_poll_server(vkapi_handle *object)
   cJSON *server = cJSON_GetObjectItem(response, "server");
   cJSON *timestamp = cJSON_GetObjectItem(response, "ts");
 
-  if(key && server && timestamp)
+  if(key != NULL && server != NULL && timestamp != NULL)
     {
   strncpy(object->longpoll_key, cJSON_GetStringValue(key), sizeof(object->longpoll_key));
   strncpy(object->longpoll_server_url, cJSON_GetStringValue(server), sizeof(object->longpoll_server_url));

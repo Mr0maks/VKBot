@@ -28,9 +28,13 @@ CC=clang
 CXX=clang++
 endif
 
+ifeq ($(TCC), 1)
+CC=tcc
+endif
+
 OPT_CFLAGS = -O2 -flto -funroll-loops -fno-omit-frame-pointer -fstack-protector-all -fPIC -Wall
 
-BASE_CFLAGS = -D__USE_GNU -std=gnu11 -DVERSION=\"$(VERSION)\" -Wall
+BASE_CFLAGS = -D__USE_GNU -std=gnu11 -DVERSION=\"$(VERSION)\" -DARCH=\"$(ARCH)\" -Wall
 
 ARCH=$(shell uname -m)
 
@@ -60,7 +64,6 @@ BUILD_TYPE_CFLAGS = -DNDEBUG
 endif
 
 VERSION := $(COMMIT)-$(DEVSTAGE)-$(BUILD_TYPE)
-
 
 OBJDIR=$(BUILD_TYPE).$(OS).$(ARCH)
 

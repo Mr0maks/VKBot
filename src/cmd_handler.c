@@ -303,12 +303,6 @@ void cmd_handler_unregister_module_cmd(module_info_t *info)
       }
 }
 
-void cmd_calculate_hashes()
-{
-  cmd_calculate_cmd_hashes();
-  cmd_calculate_name_hashes();
-}
-
 void cmd_handler_deinit()
 {
   free(cached_cmds);
@@ -317,5 +311,6 @@ void cmd_handler_deinit()
 
 void cmd_handler_init()
 {
-  cmd_calculate_hashes();
+    cmd_calculate_cmd_hashes();
+    cmd_calculate_name_hashes();
 }

@@ -37,7 +37,6 @@ void lp_event_worker( void *data )
     cJSON *json_event = (cJSON*)data;
     assert(json_event);
     events_manager(json_event);
-    //CHECK_LEAKS();
 }
 
 void *longpool_worker( void *data )
@@ -48,7 +47,7 @@ void *longpool_worker( void *data )
 try_again:
     if(!vkapi_get_long_poll_server(vkapi_object))
     {
-      Con_Printf("Error while getting long poll server. I try again.\n");
+      Con_Printf("Error while getting long poll server. I try again later.\n");
       sleep(10);
       goto try_again;
     }
@@ -63,7 +62,7 @@ try_again:
 
       cJSON *main_obj = cJSON_ParseWithOpts( long_poll_string->ptr, NULL, false );
 
-//      if(config.debug_workers)
+	  if(config.debug_workers)
           Con_Printf( "%s\n", long_poll_string->ptr );
 
       if( !vkapi_json_long_poll_have_updates( main_obj ) )
@@ -142,7 +141,6 @@ void worker_init(void)
 
   pthread_create(&longpool_thread, NULL, longpool_worker, &work_data[num_workers + 1]);
   pthread_detach(longpool_thread);
-  //thpool_add_work( worker_pool, longpool_worker, &work_data[num_workers + 1] );
 }
 
 void worker_deinit(void)
