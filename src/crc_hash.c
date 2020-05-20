@@ -1,5 +1,6 @@
 #include <stdlib.h>
 #include <ctype.h>
+#include <stdint.h>
 
 /*
   Name  : CRC-32
@@ -70,12 +71,34 @@ static const unsigned int crc32_table[256] = {
 
 unsigned int memcrc32 (const unsigned char *buf, size_t len)
 {
-  unsigned int crc = CRC32_INIT;
+  unsigned int crc32 = CRC32_INIT;
+
+  while ((uintptr_t)buf % 4u != 0)
+      crc32 = (crc32 >> 8) ^ crc32_table[(crc32 ^ *buf++) & 0xFF];
+
+  uint32_t *ubuf = (uint32_t*)buf;
+
+  while (len >= sizeof (uint64_t)) {
+      crc32 ^= *ubuf++;
+      crc32  = crc32_table[(uint8_t)crc32] ^ (crc32 >> 8);
+      crc32  = crc32_table[(uint8_t)crc32] ^ (crc32 >> 8);
+      crc32  = crc32_table[(uint8_t)crc32] ^ (crc32 >> 8);
+      crc32  = crc32_table[(uint8_t)crc32] ^ (crc32 >> 8);
+      len -= sizeof (uint32_t);
+      crc32 ^= *ubuf++;
+      crc32  = crc32_table[(uint8_t)crc32] ^ (crc32 >> 8);
+      crc32  = crc32_table[(uint8_t)crc32] ^ (crc32 >> 8);
+      crc32  = crc32_table[(uint8_t)crc32] ^ (crc32 >> 8);
+      crc32  = crc32_table[(uint8_t)crc32] ^ (crc32 >> 8);
+      len -= sizeof (uint32_t);
+  }
+
+  buf = (uint8_t*)ubuf;
 
   while (len--)
-      crc = (crc >> 8) ^ crc32_table[(crc ^ *buf++) & 0xFF];
+      crc32 = (crc32 >> 8) ^ crc32_table[(crc32 ^ *buf++) & 0xFF];
 
-  return (crc ^ CRC32_INIT);
+  return (crc32 ^ CRC32_INIT);
 }
 
 int memcrc32cmp(const unsigned char *buf1 , const unsigned char *buf2, size_t len)
