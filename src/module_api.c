@@ -48,6 +48,9 @@ const engine_api_t engfuncs_t =
 
     // curl
     curl_init,
+    curl_postfield_init,
+    curl_postfield_push,
+    curl_postfield_destroy,
     curl_get,
     curl_post,
     curl_uploadfile,

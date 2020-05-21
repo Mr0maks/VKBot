@@ -151,17 +151,15 @@ void cmd_rand_docs(vkapi_message_object *message, int argc, char **argv, const c
         return;
       }
 
-    string_t s = STRING_INIT();
-
-    STRING_FORMAT(s, "q=%s&count=10", args);
-
-    string_t result = VKAPI_CALL_METHOD( "docs.search", s, true);
+    curl_postfield_t post = CURL_POSTFIELD_INIT();
+    CURL_POSTFIELD_PUSH(post, "q", args);
+    CURL_POSTFIELD_PUSH(post, "count", "10");
+    string_t result = VKAPI_CALL_METHOD( "docs.search", post, true);
+    CURL_POSTFIELD_DESTROY(post);
 
 	minijson *ptr = minijson_parse(result->ptr);
 
 	minijson *resp = minijson_getobjectitem(ptr, "response");
-
-    //ALERT("HMM: %s\n", result->ptr);
 
 	minijson *count = minijson_getobjectitem(resp, "count");
 
@@ -170,8 +168,6 @@ void cmd_rand_docs(vkapi_message_object *message, int argc, char **argv, const c
 	   minijson_delete(ptr);
 
        VKAPI_SEND_MESSAGE( message->peer_id, "По вашему запросу нету документов", NULL, 0);
-
-       STRING_DESTROY(s);
        STRING_DESTROY(result);
        return;
     }
@@ -195,6 +191,5 @@ void cmd_rand_docs(vkapi_message_object *message, int argc, char **argv, const c
 
 	minijson_delete(ptr);
 
-    STRING_DESTROY(s);
     STRING_DESTROY(result);
 }

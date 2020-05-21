@@ -45,7 +45,6 @@ string_t curl_postfield_serialize(curl_postfield_t pool)
 
         ptr = ptr->next;
     }
-    printf("%s\n", s->ptr);
     string_destroy(s2);
     return s;
 }

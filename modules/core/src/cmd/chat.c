@@ -3,6 +3,7 @@
 #include "db_core.h"
 #include "core_vkapi.h"
 
+#if 0
 int vkapi_get_id_from(char *str);
 
 void cmd_reload(vkapi_message_object *message, int argc, char **argv, const char *args)
@@ -113,3 +114,4 @@ void cmd_set_privilage(vkapi_message_object *message, int argc, char **argv, con
 
     VKAPI_SEND_MESSAGE(message->peer_id, va("Привилегия %s для %i установленна", USERS_GET_PRIVILAGE_NAME(atoi(argv[2])), member_id), NULL, 0);
 }
+#endif

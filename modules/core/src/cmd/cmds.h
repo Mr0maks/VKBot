@@ -23,11 +23,13 @@ void cmd_hlmemes(vkapi_message_object *message, int argc, char **argv, const cha
 void cmd_cat(vkapi_message_object *message, int argc, char **argv, const char *args);
 
 /* chat.c */
+#if 0
 void cmd_reload(vkapi_message_object *message, int argc, char **argv, const char *args);
 void cmd_profile(vkapi_message_object *message, int argc, char **argv, const char *args);
 void cmd_warn(vkapi_message_object *message, int argc, char **argv, const char *args );
 void cmd_set_greeting(vkapi_message_object *message, int argc, char **argv, const char *args);
 void cmd_set_privilage(vkapi_message_object *message, int argc, char **argv, const char *args);
+#endif
 
 /* debug.c */
 void cmd_debug(vkapi_message_object *message, int argc, char **argv, const char *args);

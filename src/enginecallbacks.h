@@ -19,25 +19,19 @@ extern engine_api_t engine_api;
 #define STRING_COPY (*engine_api.string_copy)
 #define STRING_DESTROY (*engine_api.string_destroy)
 
+#define CURL_POSTFIELD_INIT (*engine_api.curl_postfield_init)
+#define CURL_POSTFIELD_PUSH (*engine_api.curl_postfield_push)
+#define CURL_POSTFIELD_DESTROY (*engine_api.curl_postfield_destroy)
 #define CURL_INIT (*engine_api.curl_init)
 #define CURL_GET (*engine_api.curl_get)
 #define CURL_POST (*engine_api.curl_post)
 #define CURL_UPLOAD_FILE (*engine_api.curl_uploadfile)
 #define CURL_CLEANUP (*engine_api.cleanup)
 
-#define MEMCACHE_PUSH (*engine_api.memcache_push)
-#define MEMCACHE_GET (*engine_api.memcache_get)
-
 #define DB_REGISTER (*engine_api.db_register_type)
 #define DB_OPEN (*engine_api.db_open)
 #define DB_EXEC (*engine_api.db_exec)
 #define DB_CLOSE (*engine_api.db_close)
-
-#define USERS_IS_INITED (*engine_api.users_id_init)
-#define USERS_REGISTER (*engine_api.users_module_register_users)
-#define USERS_GET_PRIVILAGE (*engine_api.users_get_privilage)
-#define USERS_SET_PRIVILAGE (*engine_api.users_set_privilage)
-#define USERS_GET_PRIVILAGE_NAME (*engine_api.users_get_name_privilage)
 
 #define REGISTER_EVENT (*engine_api.register_event)
 #define REGISTER_EVENT_HOOK (*engine_api.register_event_hook)

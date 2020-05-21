@@ -61,6 +61,7 @@ BUILD_TYPE_CFLAGS = -g -DDEBUG
 else
 BUILD_TYPE = release
 BUILD_TYPE_CFLAGS = -DNDEBUG
+DEBUG=0
 endif
 
 VERSION := $(COMMIT)-$(DEVSTAGE)-$(BUILD_TYPE)
@@ -84,8 +85,13 @@ SRC = $(wildcard src/*.c)
 
 OBJ := $(SRC:$(SRCDIR)/%.c=$(OBJDIR)/%.o)
 
-$(NAME)_$(ARCH)$(PROGRAMEXT): thirdparty neat depend $(OBJ)
+$(NAME)_$(ARCH)$(PROGRAMEXT): thirdparty modules_build neat depend $(OBJ)
 	$(CC) $(CFLAGS) $(OBJ) $(LDFLAGS) -o $(OBJDIR)/$@
+
+modules_build:
+	cd modules/core && $(MAKE) DEBUG=$(DEBUG)
+	echo $(DEBUG)
+	mv modules/core/$(OBJDIR)/core_$(ARCH).so $(OBJDIR)
 
 thirdparty:
 	cd cjson && $(MAKE) static

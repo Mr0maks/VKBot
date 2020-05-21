@@ -305,12 +305,11 @@ static inline const char *vkapi_attach_type(docs_type_t doc)
 void vkapi_send_message(int peer_id, const char *msg, vkapi_attach *attachments, int attachmens_len)
 {
   curl_postfield_t args = curl_postfield_init();
-  string_t formated_attachmens = NULL;
+  string_t formated_attachmens = string_init();
   char *message_encoded = NULL;
 
   if (attachments)
   {
-      string_t formated_attachmens = string_init();
       string_t tmp = string_init();
       for(int i = 0; attachmens_len > i; i++)
       {

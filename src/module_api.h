@@ -59,6 +59,9 @@ typedef struct
   void (*string_destroy) ( string_t s );
 
   void *(*curl_init) (void);
+  curl_postfield_t (*curl_postfield_init)(void);
+  void (*curl_postfield_push)(curl_postfield_t pool, const char *key, const char *value);
+  void (*curl_postfield_destroy)(curl_postfield_t pool);
   bool (*curl_get) ( void *curl_handle, const char *url, string_t useragent, string_t dataptr );
   bool (*curl_post) (void *curl_handle, const char *url, string_t post, string_t useragent, string_t dataptr );
   bool (*curl_uploadfile) ( void *curl_handle, const char *url, const char *fieldname, const char *filename, string_t data, string_t useragent, string_t dataptr );
