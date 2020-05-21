@@ -76,7 +76,9 @@ void Module_Init(int apiver, module_info_t **info, engine_api_t *apifuncs)
 
   cmd_uptime_start = time(NULL);
 
+#if 0
   Module_Init_Dbs();
+#endif
   Module_Init_Cmds();
   Module_Init_Events();
 }
