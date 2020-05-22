@@ -25,18 +25,16 @@ void cmd_valute_curse(vkapi_message_object *message, int argc, char **argv, cons
     if(!strcasecmp("помощь", argv[1]))
     {
         string_t s = STRING_INIT();
-        string_t s2 = STRING_INIT();
 
-        STRING_FORMAT(s2, "https://www.cbr-xml-daily.ru/daily_json.js" );
-
-        if(!CURL_GET(NULL, s2, NULL, s ))
+        if(!CURL_GET(NULL, "https://www.cbr-xml-daily.ru/daily_json.js", NULL, s ))
         {
             STRING_DESTROY(s);
-            STRING_DESTROY(s2);
 
             VKAPI_SEND_MESSAGE( message->peer_id, "Oops", NULL, 0);
             return;
         }
+
+        string_t s2 = STRING_INIT();
 
         STRING_DESTROY(s2);
 
@@ -72,9 +70,7 @@ void cmd_valute_curse(vkapi_message_object *message, int argc, char **argv, cons
     string_t s = STRING_INIT();
     string_t s2 = STRING_INIT();
 
-    STRING_FORMAT(s2, "https://www.cbr-xml-daily.ru/daily_json.js" );
-
-    if(!CURL_GET(NULL, s2, NULL, s ))
+    if(!CURL_GET(NULL, "https://www.cbr-xml-daily.ru/daily_json.js", NULL, s ))
     {
         STRING_DESTROY(s);
         STRING_DESTROY(s2);
@@ -82,10 +78,6 @@ void cmd_valute_curse(vkapi_message_object *message, int argc, char **argv, cons
         VKAPI_SEND_MESSAGE( message->peer_id, "Oops", NULL, 0);
         return;
     }
-
-    STRING_DESTROY(s2);
-
-    s2 = STRING_INIT();
 
 	minijson *ptr = minijson_parse(s->ptr), *valute = NULL, *array_value = NULL;
 
@@ -145,7 +137,7 @@ void cmd_weather(vkapi_message_object *message, int argc, char **argv, const cha
 
   STRING_FORMAT(url_get, "%s/%s?q=%s&appid=%s&lang=%s&units=metric", OPEN_WEATHER_URL, OPEN_WEATHER_METHOD, argv[1], OPEN_WEATHER_TOKEN, OPEN_WEATHER_LANG );
 
-  bool error_code = CURL_GET(NULL, url_get, NULL, openweather_json );
+  bool error_code = CURL_GET(NULL, url_get->ptr, NULL, openweather_json );
 
   STRING_DESTROY(url_get);
 
@@ -247,11 +239,7 @@ void cmd_crc32(vkapi_message_object *message, int argc, char **argv, const char 
     STRING_DESTROY(file);
     goto usage;
     }
-      string_t url = STRING_INIT();
-
-      STRING_COPY(url, cJSON_GetStringValue(cJSON_GetObjectItem(doc, "url")));
-
-      CURL_GET(NULL, url, NULL, file);
+      CURL_GET(NULL, cJSON_GetStringValue(cJSON_GetObjectItem(doc, "url")), NULL, file);
 
       char *ptr = va("CRC32 хеш файла %s: 0x%X\n", cJSON_GetStringValue(cJSON_GetObjectItem(doc, "title")), CRC32((const unsigned char *)file->ptr, file->len));
 
