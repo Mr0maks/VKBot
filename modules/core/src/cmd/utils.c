@@ -22,101 +22,74 @@ void cmd_valute_curse(vkapi_message_object *message, int argc, char **argv, cons
         return;
     }
 
+    string_t s = STRING_INIT();
+
+    if(!CURL_GET(NULL, "https://www.cbr-xml-daily.ru/daily_json.js", NULL, s ))
+    {
+        VKAPI_SEND_MESSAGE( message->peer_id, "Не удалось получить курс", NULL, 0);
+        STRING_DESTROY(s);
+        return;
+    }
+
     if(!strcasecmp("помощь", argv[1]))
     {
-        string_t s = STRING_INIT();
-
-        if(!CURL_GET(NULL, "https://www.cbr-xml-daily.ru/daily_json.js", NULL, s ))
-        {
-            STRING_DESTROY(s);
-
-            VKAPI_SEND_MESSAGE( message->peer_id, "Oops", NULL, 0);
-            return;
-        }
-
         string_t s2 = STRING_INIT();
-
-        STRING_DESTROY(s2);
-
-        s2 = STRING_INIT();
 
         char *info = va( "• Код - Название валюты\n" );
 
         STRING_STRNCAT( s2, info, strlen(info) );
 
-		minijson *ptr = minijson_parse(s->ptr), *valute_element = NULL, *array_value = NULL;
+        cJSON *ptr = cJSON_ParseWithOpts(s->ptr, NULL, true), *valute_element = NULL, *array_value = NULL;
 
-		array_value = minijson_getobjectitem(ptr, "Valute");
+        array_value = cJSON_GetObjectItem(ptr, "Valute");
 
-		minijson_arrayforeach( valute_element, array_value )
+        cJSON_ArrayForEach( valute_element, array_value )
         {
+            cJSON *CharCode = cJSON_GetObjectItem(valute_element, "CharCode");
+            cJSON *Name = cJSON_GetObjectItem(valute_element, "Name");
 
-			minijson *CharCode = minijson_getobjectitem(valute_element, "CharCode");
-			minijson *Name = minijson_getobjectitem(valute_element, "Name");
-
-			info = va("• %s - %s\n", minijson_getstringvalue(CharCode), minijson_getstringvalue(Name));
+            info = va("• %s - %s\n", cJSON_GetStringValue(CharCode), cJSON_GetStringValue(Name));
 
             STRING_STRNCAT(s2, info, strlen(info));
         }
 
         VKAPI_SEND_MESSAGE( message->peer_id, s2->ptr, NULL, 0);
 
-		minijson_delete(ptr);
+        cJSON_Delete(ptr);
         STRING_DESTROY(s);
         STRING_DESTROY(s2);
         return;
     }
 
-    string_t s = STRING_INIT();
-    string_t s2 = STRING_INIT();
+    cJSON *ptr = cJSON_ParseWithOpts(s->ptr, NULL, true), *valute = NULL, *array_value = NULL;
 
-    if(!CURL_GET(NULL, "https://www.cbr-xml-daily.ru/daily_json.js", NULL, s ))
-    {
-        STRING_DESTROY(s);
-        STRING_DESTROY(s2);
+    array_value = cJSON_GetObjectItem(ptr, "Valute");
 
-        VKAPI_SEND_MESSAGE( message->peer_id, "Oops", NULL, 0);
-        return;
-    }
-
-	minijson *ptr = minijson_parse(s->ptr), *valute = NULL, *array_value = NULL;
-
-	array_value = minijson_getobjectitem(ptr, "Valute");
-
-	valute = minijson_getobjectitem(array_value, argv[1]);
+    valute = cJSON_GetObjectItem(array_value, argv[1]);
 
     if(!valute)
     {
         VKAPI_SEND_MESSAGE( message->peer_id, "Валюты с таким кодом нету!", NULL, 0);
-
-		minijson_delete(ptr);
+        cJSON_Delete(ptr);
         STRING_DESTROY(s);
-        STRING_DESTROY(s2);
         return;
     }
 
-	minijson *Value = minijson_getobjectitem(valute, "Value");
-	minijson *Previous = minijson_getobjectitem(valute, "Previous");
-	minijson *Name = minijson_getobjectitem(valute, "Name");
+    cJSON *Value = cJSON_GetObjectItem(valute, "Value");
+    cJSON *Previous = cJSON_GetObjectItem(valute, "Previous");
+    cJSON *Name = cJSON_GetObjectItem(valute, "Name");
 
     double diff = Value->valuedouble - Previous->valuedouble;
 
-    char *info = NULL;
-
-    if(diff < 0.0)
+    if(diff < 0.0f)
     {
-	info = va("Курс валют\n%s: %f ₽\n↓ %f ₽\n", minijson_getstringvalue(Name), Value->valuedouble, diff );
+        VKAPI_SEND_MESSAGE( message->peer_id, va("Курс валют\n%s: %f ₽\n↓ %f ₽\n", cJSON_GetStringValue(Name), Value->valuedouble, diff ), NULL, 0);
     } else {
-	info = va("Курс валют\n%s: %f ₽\n↑ %f ₽\n", minijson_getstringvalue(Name), Value->valuedouble, diff );
+        VKAPI_SEND_MESSAGE( message->peer_id, va("Курс валют\n%s: %f ₽\n↑ %f ₽\n", cJSON_GetStringValue(Name), Value->valuedouble, diff ), NULL, 0);
     }
 
-    STRING_STRNCAT(s2, info, strlen(info));
-
-    VKAPI_SEND_MESSAGE( message->peer_id, s2->ptr, NULL, 0);
-
-	minijson_delete(ptr);
+    cJSON_Delete(ptr);
     STRING_DESTROY(s);
-    STRING_DESTROY(s2);
 }
 
 #define OPEN_WEATHER_TOKEN "4a223e7db4e8c28265df2633448b69f3"
@@ -209,24 +182,22 @@ void cmd_weather(vkapi_message_object *message, int argc, char **argv, const cha
 
 void cmd_crc32(vkapi_message_object *message, int argc, char **argv, const char *args)
 {
-   string_t msg = STRING_INIT();
-   string_t file = STRING_INIT();
-
    if(!argc && !message->attachmens)
     {
       usage:
-      VKAPI_SEND_MESSAGE( message->peer_id, "Использование: crc32 <строка> или прикреплённый документ", NULL, 0);
-      STRING_DESTROY(msg);
-      STRING_DESTROY(file);
+      VKAPI_SEND_MESSAGE( message->peer_id, "Использование: crc32 <строка> или прикреплённые документы", NULL, 0);
       return;
     }
 
-  uint32_t crc32 = CRC32((const unsigned char *)args, strlen(args));
-
   if(argc)
+  {
+  uint32_t crc32 = CRC32((const unsigned char *)args, strlen(args));
   VKAPI_SEND_MESSAGE( message->peer_id, va("CRC32 хеш строки: 0x%X", crc32), NULL, 0);
+  }
   else
     {
+      string_t msg = STRING_INIT();
+
       cJSON *attach = NULL;
 
       cJSON_ArrayForEach(attach, (cJSON*)message->attachmens)
@@ -235,10 +206,13 @@ void cmd_crc32(vkapi_message_object *message, int argc, char **argv, const char 
       cJSON *doc = cJSON_GetObjectItem(attach, "doc");
 
       if(!doc)
-    {
-    STRING_DESTROY(file);
-    goto usage;
-    }
+      {
+          STRING_DESTROY(msg);
+          goto usage;
+      }
+
+      string_t file = STRING_INIT();
+
       CURL_GET(NULL, cJSON_GetStringValue(cJSON_GetObjectItem(doc, "url")), NULL, file);
 
       char *ptr = va("CRC32 хеш файла %s: 0x%X\n", cJSON_GetStringValue(cJSON_GetObjectItem(doc, "title")), CRC32((const unsigned char *)file->ptr, file->len));

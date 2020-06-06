@@ -116,33 +116,6 @@ void cmd_rate(vkapi_message_object *message, int argc, char **argv, const char *
     VKAPI_SEND_MESSAGE( message->peer_id, va("Я оцениваяю %s в %lli/10", args, rate), NULL, 0 );
 }
 
-int cmds_choose_tokeinize_cmd( char *str, char *tokens[], int *tokens_len );
-
-void cmd_choose(vkapi_message_object *message, int argc, char **argv, const char *args)
-{
-    if(!args || argc < 3)
-    {
-        VKAPI_SEND_MESSAGE( message->peer_id, "Недостаточно аргументов\n Импользование: <строка> или <строка> ", NULL, 0);
-        return;
-    }
-
-    char **tokens = calloc(256, sizeof(char*));
-
-    int tokens_len = 0;
-
-    string_t s = STRING_INIT();
-
-    STRING_COPY(s, args);
-
-    cmds_choose_tokeinize_cmd( s->ptr, tokens, &tokens_len );
-
-    int64_t rand = random_int64(0, tokens_len);
-
-    VKAPI_SEND_MESSAGE( message->peer_id, va("Я выбираю %s", tokens[rand]), NULL, 0);
-    STRING_DESTROY(s);
-    free(tokens);
-}
-
 void cmd_rand_docs(vkapi_message_object *message, int argc, char **argv, const char *args)
 {
     if( argc < 1 )

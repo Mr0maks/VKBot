@@ -9,7 +9,6 @@ void cmd_who(vkapi_message_object *message, int argc, char **argv, const char *a
 void cmd_flip(vkapi_message_object *message, int argc, char **argv, const char *args);
 void cmd_info(vkapi_message_object *message, int argc, char **argv, const char *args);
 void cmd_rate(vkapi_message_object *message, int argc, char **argv, const char *args);
-void cmd_choose(vkapi_message_object *message, int argc, char **argv, const char *args);
 void cmd_rand_docs(vkapi_message_object *message, int argc, char **argv, const char *args);
 
 /* utils.c */
@@ -19,7 +18,6 @@ void cmd_weather(vkapi_message_object *message, int argc, char **argv, const cha
 void cmd_crc32(vkapi_message_object *message, int argc, char **argv, const char *args);
 
 /* fun.c */
-void cmd_hlmemes(vkapi_message_object *message, int argc, char **argv, const char *args);
 void cmd_cat(vkapi_message_object *message, int argc, char **argv, const char *args);
 
 /* chat.c */

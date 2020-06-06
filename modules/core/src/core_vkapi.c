@@ -3,6 +3,7 @@
 #include <strings.h>
 #include "va_utils.h"
 
+#if 0
 bool vkapi_is_chat_admin(int peer_id, int id)
 {
     string_t format = STRING_INIT();
@@ -45,3 +46,4 @@ bool vkapi_is_chat_admin(int peer_id, int id)
     cJSON_Delete(ptr);
     return true;
 }
+#endif
