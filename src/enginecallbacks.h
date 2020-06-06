@@ -28,7 +28,7 @@ extern engine_api_t engine_api;
 #define CURL_UPLOAD_FILE (*engine_api.curl_uploadfile)
 #define CURL_CLEANUP (*engine_api.cleanup)
 
-#define DB_REGISTER (*engine_api.db_register_type)
+#define DB_REGISTER (*engine_api.db_register)
 #define DB_OPEN (*engine_api.db_open)
 #define DB_EXEC (*engine_api.db_exec)
 #define DB_CLOSE (*engine_api.db_close)

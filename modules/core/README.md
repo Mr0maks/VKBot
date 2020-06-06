@@ -1,1 +1,1 @@
-core module (all comands in here) for VKBot core
+core module (all non engine commands here)

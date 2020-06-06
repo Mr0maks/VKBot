@@ -52,7 +52,7 @@ int event_proced_hooks(const char *event_name, cJSON *obj)
 
     while (ptr) {
 
-        if(!strcrc32casecmp(event_name, ptr->event_name))
+        if(!strncrc32casecmp(event_name, ptr->event_name, strlen(event_name)))
         {
             result = ptr->handler(obj);
         }

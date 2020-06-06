@@ -3,7 +3,7 @@
 #include <time.h>
 #include "va_utils.h"
 
-#include <minijson.h>
+#include "minijson.h"
 
 int64_t random_int64(int64_t min, int64_t max)
 {

@@ -1,8 +1,5 @@
 #include <cJSON.h>
 #include <enginecallbacks.h>
-#include "db_core.h"
-#include <string.h>
-#include <strings.h>
 
 int message_new_hook(cJSON *raw)
 {

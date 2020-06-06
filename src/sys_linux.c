@@ -5,8 +5,6 @@
 #include <stdlib.h>
 #include <fcntl.h>
 
-#include "dynamic_strings.h"
-
 double get_time_s( void )
 {
   struct timespec ts;

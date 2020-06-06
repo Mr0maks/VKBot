@@ -6,7 +6,6 @@
 
 #include "cmds.h"
 #include "events.h"
-#include "db_core.h"
 
 engine_api_t engine_api;
 
@@ -35,16 +34,9 @@ const cmds_t commands[] = {
   { "погода", "показывает погоду сейчас", cmd_weather },
   { "crc32", "подсчитывает crc32 хеш строки или файла", cmd_crc32 },
   { "котик", "рандомный котик", cmd_cat },
-#if 0
-  { "reload", "перезагружает бд бота в данной беседе", cmd_reload },
-  { "профиль", "показывает информацию о пользователе", cmd_profile },
-  { "пред", "предупреждение пользователю", cmd_warn },
-  { "приветствие", "устанавливает приветствие в чате", cmd_set_greeting },
-  { "устприв", "установить привелегию пользователю", cmd_set_privilage },
-#endif
   { "Начать", NULL, cmd_start },
 #ifdef DEBUG
-  { "debug", "бот собран с отладочными функциями", cmd_debug },
+  //{ "debug", "бот собран с отладочными функциями", cmd_debug },
 #endif
   { NULL, NULL, NULL }
 };
@@ -62,11 +54,6 @@ void Module_Init_Events()
     REGISTER_EVENT_HOOK( "message_new", message_new_hook );
 }
 
-void Module_Init_Dbs(void)
-{
-    db_chat_init();
-}
-
 void Module_Init(int apiver, module_info_t **info, engine_api_t *apifuncs)
 {
   memcpy(&engine_api, apifuncs, sizeof(engine_api));
@@ -74,9 +61,6 @@ void Module_Init(int apiver, module_info_t **info, engine_api_t *apifuncs)
 
   cmd_uptime_start = time(NULL);
 
-#if 0
-  Module_Init_Dbs();
-#endif
   Module_Init_Cmds();
   Module_Init_Events();
 }

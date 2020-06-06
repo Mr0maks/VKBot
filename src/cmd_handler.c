@@ -11,7 +11,7 @@ static cmds_hashs_t *cached_cmds = NULL;
 static cmds_name_hashs_t *cached_names = NULL;
 
 const cmds_t commands[] = {
-  { "помощь", "команда для показа этого сообщения", cmd_help },
+  { "помощь", "показывает это сообщение", cmd_help },
   { "модули", "список загруженных модулей", cmd_modules },
   { "оботе", "о боте", cmd_about_bot },
   { "стат", "показывает разную статистику бота", cmd_stat },
@@ -253,7 +253,7 @@ void cmd_handler_register_module_cmd(module_info_t *info, const char *cmd_name, 
 {
   cmds_modules_pools_t *ptr = NULL;
 
-  if(cmd_name == NULL || description == NULL || callback == NULL)
+  if(cmd_name == NULL || callback == NULL)
     return;
 
   ptr = malloc(sizeof(cmds_modules_pools_t));

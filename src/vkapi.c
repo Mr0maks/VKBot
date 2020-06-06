@@ -324,7 +324,7 @@ void vkapi_send_message(int peer_id, const char *msg, vkapi_attach *attachments,
 
       if(msg)
       {
-          char *message_encoded = curl_urlencode(msg);
+          message_encoded = curl_urlencode(msg);
           curl_postfield_push(args, "message", message_encoded);
       }
 
@@ -339,7 +339,8 @@ void vkapi_send_message(int peer_id, const char *msg, vkapi_attach *attachments,
   vkapi_call_method("messages.send", args, false);
   string_destroy(formated_attachmens);
   curl_postfield_destroy(args);
-  curl_ptr_free(message_encoded);
+  if(message_encoded)
+      curl_ptr_free(message_encoded);
 }
 
 bool vkapi_get_long_poll_server(vkapi_handle *object)

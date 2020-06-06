@@ -30,54 +30,8 @@ void Sys_PrintLog( const char *pMsg )
     if( !lastchar || lastchar == '\n')
         strftime( logtime, sizeof( logtime ), "[%H:%M:%S] ", crt_tm ); //short time
 
-#ifdef XASH_COLORIZE_CONSOLE
-    {
-        char colored[4096];
-        const char *msg = pMsg;
-        int len = 0;
-        while( *msg && ( len < 4090 ) )
-        {
-            static char q3ToAnsi[ 8 ] =
-            {
-                '0', // COLOR_BLACK
-                '1', // COLOR_RED
-                '2', // COLOR_GREEN
-                '3', // COLOR_YELLOW
-                '4', // COLOR_BLUE
-                '6', // COLOR_CYAN
-                '5', // COLOR_MAGENTA
-                0 // COLOR_WHITE
-            };
-
-            if( IsColorString( msg ) )
-            {
-                int color;
-
-                msg++;
-                color = q3ToAnsi[ *msg++ % 8 ];
-                colored[len++] = '\033';
-                colored[len++] = '[';
-                if( color )
-                {
-                    colored[len++] = '3';
-                    colored[len++] = color;
-                }
-                else
-                    colored[len++] = '0';
-                colored[len++] = 'm';
-            }
-            else
-                colored[len++] = *msg++;
-        }
-        colored[len] = 0;
-        printf( "\033[34m%s\033[0m%s\033[0m", logtime, colored );
-
-    }
-#else
     printf("%s %s", logtime, pMsg);
     fflush(stdout);
-#endif
-
 
     if( !logfile )
         return;

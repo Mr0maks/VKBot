@@ -34,7 +34,7 @@ endif
 
 OPT_CFLAGS = -O2 -flto -funroll-loops -fno-omit-frame-pointer -fstack-protector-all -fPIC -Wall
 
-BASE_CFLAGS = -D__USE_GNU -std=gnu11 -DVERSION=\"$(VERSION)\" -DARCH=\"$(ARCH)\" -Wall
+BASE_CFLAGS = -D__USE_GNU -std=gnu11 -DVERSION=\"$(VERSION)\" -DARCH=\"$(ARCH)\" -Wall -fcommon
 
 ARCH=$(shell uname -m)
 

@@ -147,34 +147,35 @@ void cmd_weather(vkapi_message_object *message, int argc, char **argv, const cha
         {
       string_t msg = STRING_INIT();
 
-	  minijson *weather_array = minijson_getobjectitem(ptr, "weather");
-	  minijson *weather = minijson_getarrayitem(weather_array, 0);
-	  minijson *name = minijson_getobjectitem(ptr, "name");
-	  minijson *main_obj = minijson_getobjectitem(ptr, "main");
-	  minijson *temp = minijson_getobjectitem(main_obj, "temp");
+      minijson *weather_array = minijson_getobjectitem(ptr, "weather");
+      minijson *weather = minijson_getarrayitem(weather_array, 0);
+      minijson *name = minijson_getobjectitem(ptr, "name");
+      minijson *main_obj = minijson_getobjectitem(ptr, "main");
+      minijson *temp = minijson_getobjectitem(main_obj, "temp");
+      minijson *description = minijson_getobjectitem(weather, "description");
 
-	  STRING_FORMAT(msg, "Погода в %s\n\n• Сейчас: %i℃, %s\n", minijson_getstringvalue(name), temp->valueint, minijson_getstringvalue(minijson_getobjectitem(weather, "description")));
+      STRING_FORMAT(msg, "Погода в %s\n\n• Сейчас: %i℃, %s\n", minijson_getstringvalue(name), temp->valueint, minijson_getstringvalue(description));
 
       VKAPI_SEND_MESSAGE( message->peer_id, msg->ptr, NULL, 0);
 
       STRING_DESTROY(msg);
-	  minijson_delete(ptr);
+      minijson_delete(ptr);
       STRING_DESTROY(openweather_json);
       return;
         } else if(!strncmp(cod->valuestring, "404", 3))
     {
       VKAPI_SEND_MESSAGE( message->peer_id, "Такого города нет", NULL, 0);
-	  minijson_delete(ptr);
+      minijson_delete(ptr);
       STRING_DESTROY(openweather_json);
       return;
     } else if(!strncmp(cod->valuestring, "401", 3)) {
       VKAPI_SEND_MESSAGE( message->peer_id, "Ограничение апи openweathermap", NULL, 0);
-	  minijson_delete(ptr);
+      minijson_delete(ptr);
       STRING_DESTROY(openweather_json);
       return;
     } else {
       VKAPI_SEND_MESSAGE( message->peer_id, "Неизвестная ошибка", NULL, 0);
-	  minijson_delete(ptr);
+      minijson_delete(ptr);
       STRING_DESTROY(openweather_json);
       return;
     }

@@ -12,7 +12,7 @@
   MaxLen: 268 435 455 bytes
 */
 
-static const unsigned int crc32_table[256] = {
+static const uint32_t crc32_table[256] = {
   0x00000000L, 0x77073096L, 0xee0e612cL, 0x990951baL, 0x076dc419L,
   0x706af48fL, 0xe963a535L, 0x9e6495a3L, 0x0edb8832L, 0x79dcb8a4L,
   0xe0d5e91eL, 0x97d2d988L, 0x09b64c2bL, 0x7eb17cbdL, 0xe7b82d07L,
@@ -71,7 +71,7 @@ static const unsigned int crc32_table[256] = {
 
 unsigned int memcrc32 (const unsigned char *buf, size_t len)
 {
-  unsigned int crc32 = CRC32_INIT;
+  uint32_t crc32 = CRC32_INIT;
 
   while ((uintptr_t)buf % 4u != 0)
       crc32 = (crc32 >> 8) ^ crc32_table[(crc32 ^ *buf++) & 0xFF];
@@ -103,14 +103,14 @@ unsigned int memcrc32 (const unsigned char *buf, size_t len)
 
 int memcrc32cmp(const unsigned char *buf1 , const unsigned char *buf2, size_t len)
 {
-    unsigned int hash1 = memcrc32(buf1, len), hash2 = memcrc32(buf2, len);
+    uint32_t hash1 = memcrc32(buf1, len), hash2 = memcrc32(buf2, len);
 
     return !(hash1 == hash2);
 }
 
-unsigned int strcrc32 (const char *buf)
+uint32_t strcrc32 (const char *buf)
 {
-  unsigned int crc = CRC32_INIT;
+  uint32_t crc = CRC32_INIT;
 
   while (*buf != '\0')
       crc = (crc >> 8) ^ crc32_table[(crc ^ (unsigned char)*buf++) & 0xFF];
@@ -118,9 +118,9 @@ unsigned int strcrc32 (const char *buf)
   return (crc ^ CRC32_INIT);
 }
 
-unsigned int strcrc32case(const char *buf)
+uint32_t strcrc32case(const char *buf)
 {
-    unsigned int crc = CRC32_INIT;
+    uint32_t crc = CRC32_INIT;
 
     while (*buf != '\0')
         crc = (crc >> 8) ^ crc32_table[(crc ^ (unsigned char)tolower(*buf++)) & 0xFF];
@@ -128,9 +128,9 @@ unsigned int strcrc32case(const char *buf)
     return (crc ^ CRC32_INIT);
 }
 
-unsigned int strncrc32 (const char *buf, size_t len)
+uint32_t strncrc32 (const char *buf, size_t len)
 {
-  unsigned int crc = CRC32_INIT;
+  uint32_t crc = CRC32_INIT;
 
   while (len--)
       crc = (crc >> 8) ^ crc32_table[(crc ^ (unsigned char)*buf++) & 0xFF];
@@ -138,9 +138,9 @@ unsigned int strncrc32 (const char *buf, size_t len)
   return (crc ^ CRC32_INIT);
 }
 
-unsigned int strncrc32case(const char *buf, size_t len)
+uint32_t strncrc32case(const char *buf, size_t len)
 {
-    unsigned int crc = CRC32_INIT;
+    uint32_t crc = CRC32_INIT;
 
     while (len--)
         crc = (crc >> 8) ^ crc32_table[(crc ^ (unsigned char)tolower(*buf++)) & 0xFF];
@@ -148,30 +148,16 @@ unsigned int strncrc32case(const char *buf, size_t len)
     return (crc ^ CRC32_INIT);
 }
 
-int strcrc32cmp( const char *str1 , const char *str2 )
+int strncrc32cmp( const char *str1 ,const char *str2, size_t len )
 {
-    unsigned int hash1 = strcrc32(str1), hash2 = strcrc32(str2);
+    uint32_t hash1 = strncrc32(str1, len), hash2 = strncrc32(str2, len);
 
     return !(hash1 == hash2);
 }
 
-int strncrc32cmp( const char *str1 , const char *str2, size_t len )
+int strncrc32casecmp(const char *str1 ,const char *str2, size_t len)
 {
-    unsigned int hash1 = strncrc32(str1, len), hash2 = strncrc32(str2, len);
-
-    return !(hash1 == hash2);
-}
-
-int strcrc32casecmp(const char *str1 , const char *str2)
-{
-    unsigned int hash1 = strcrc32(str1), hash2 = strcrc32(str2);
-
-    return !(hash1 == hash2);
-}
-
-int strncrc32casecmp(const char *str1 , const char *str2, size_t len)
-{
-    unsigned int hash1 = strncrc32case(str1, len), hash2 = strncrc32case(str2, len);
+    uint32_t hash1 = strncrc32case(str1, len), hash2 = strncrc32case(str2, len);
 
     return !(hash1 == hash2);
 }

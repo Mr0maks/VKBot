@@ -1,1 +1,1 @@
-Hello World module for VKBot core
+Hello World module for VKBot
