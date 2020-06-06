@@ -1,2 +1,2 @@
-# yVKBot
+# VKBot
 VK bot
