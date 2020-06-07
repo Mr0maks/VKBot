@@ -1,8 +1,29 @@
 #include <cJSON.h>
 #include <enginecallbacks.h>
+#include <strings.h>
 
 int message_new_hook(cJSON *raw)
 {
+    cJSON *object = cJSON_GetObjectItem(raw, "object");
+    cJSON *peer_id = cJSON_GetObjectItem(object, "peer_id");
+    cJSON *from_id = cJSON_GetObjectItem(object, "from_id");
+    cJSON *text = cJSON_GetObjectItem(object, "text");
+
+    if(!from_id)
+        return false;
+
+    if(!peer_id)
+        return false;
+
+    if(!text)
+        return false;
+
+    if(0 > from_id->valueint && !strcasecmp(cJSON_GetStringValue(text), "максбот говно"))
+    {
+        VKAPI_SEND_MESSAGE(peer_id->valueint, "Привет бот >:(", NULL, 0 );
+        VKAPI_SEND_MESSAGE(peer_id->valueint, "максбот топ", NULL, 0 );
+    }
+
     return MODULE_IGNORE;
 }
 
