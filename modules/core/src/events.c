@@ -20,8 +20,8 @@ int message_new_hook(cJSON *raw)
 
     if(0 > from_id->valueint && (!strcasecmp(cJSON_GetStringValue(text), "максбот говно") || !strcasecmp(cJSON_GetStringValue(text), "максбот сосать")))
     {
-        VKAPI_SEND_MESSAGE(peer_id->valueint, "Привет бот >:(", NULL, 0 );
-        VKAPI_SEND_MESSAGE(peer_id->valueint, "максбот топ", NULL, 0 );
+        VKAPI_SEND_MESSAGE(peer_id->valueint, "Surprise бот :)", NULL, 0 );
+        VKAPI_SEND_MESSAGE(peer_id->valueint, "максбот", NULL, 0 );
     }
 
     return MODULE_IGNORE;
