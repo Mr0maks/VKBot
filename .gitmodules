@@ -1,3 +1,6 @@
 [submodule "cjson"]
 	path = cjson
 	url = https://github.com/DaveGamble/cJSON
+[submodule "modules/core_lua/luajit"]
+	path = modules/core_lua/luajit
+	url = https://github.com/LuaJIT/LuaJIT.git
