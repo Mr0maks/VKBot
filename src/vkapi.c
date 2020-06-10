@@ -243,30 +243,6 @@ string_t vkapi_get_longpoll_data(vkapi_handle *object)
       return NULL;
     }
 
-  cJSON *json = cJSON_ParseWithOpts(s->ptr, NULL, false );
-
-  if( !json )
-    {
-      Con_Printf( "Error while getting long poll data: json parser return NULL\n");
-      cJSON_Delete( json );
-      string_destroy( s );
-      return NULL;
-    }
-
-  cJSON *ts = cJSON_GetObjectItem(json, "ts");
-
-  if(ts)
-    object->longpoll_timestamp = atoll(cJSON_GetStringValue(ts));
-  else
-    {
-      Con_Printf("Error while getting long poll data: json ts == NULL\n");
-      cJSON_Delete(json);
-      string_destroy( s );
-      return NULL;
-    }
-
-  cJSON_Delete(json);
-
   return s;
 }
 

@@ -53,14 +53,32 @@ try_again:
     }
 
   while (worker_data->loop) {
-      string_t long_poll_string = NULL;
-
-      long_poll_string = vkapi_get_longpoll_data( vkapi_object );
+      string_t long_poll_string = vkapi_get_longpoll_data( vkapi_object );
 
       if( long_poll_string == NULL )
           goto try_again;
 
       cJSON *main_obj = cJSON_ParseWithOpts( long_poll_string->ptr, NULL, false );
+
+      if( !main_obj )
+      {
+          Con_Printf( "Error while getting long poll data: json parser return NULL\n");
+          cJSON_Delete( main_obj );
+          string_destroy( long_poll_string );
+          goto try_again;
+      }
+
+      cJSON *ts = cJSON_GetObjectItem(main_obj, "ts");
+
+      if(ts)
+          vkapi_object->longpoll_timestamp = atoll(cJSON_GetStringValue(ts));
+      else
+      {
+          Con_Printf("Error while getting long poll data: json ts == NULL\n");
+          cJSON_Delete(main_obj);
+          string_destroy(long_poll_string);
+          goto try_again;
+      }
 
 	  if(config.debug_workers)
           Con_Printf( "%s\n", long_poll_string->ptr );

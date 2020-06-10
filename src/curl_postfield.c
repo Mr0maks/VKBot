@@ -51,6 +51,8 @@ string_t curl_postfield_serialize(curl_postfield_t pool)
 
 void curl_postfield_destroy(curl_postfield_t pool)
 {
+    assert(pool);
+
     curl_keyvalue_t *ptr = pool->pool;
     curl_keyvalue_t *old = NULL;
 

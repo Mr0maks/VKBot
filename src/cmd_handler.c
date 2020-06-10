@@ -102,7 +102,7 @@ bool cmd_handle(vkapi_message_object *message)
 
   char **tokens = (char**)calloc(256, sizeof(char*));
 
-  int error = cmd_string_tokeinize( s->ptr, tokens, &tokens_count );
+  cmd_string_tokeinize( s->ptr, tokens, &tokens_count );
 
   string_t args_s = string_init();
 
