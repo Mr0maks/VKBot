@@ -4,3 +4,4 @@
 
 int message_new_hook(cJSON *raw);
 bool chat_invite_user_handler(cJSON *raw);
+bool chat_kick_user(cJSON *raw);
