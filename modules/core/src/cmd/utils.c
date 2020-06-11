@@ -154,7 +154,11 @@ void cmd_weather(vkapi_message_object *message, int argc, char **argv, const cha
       minijson *temp = minijson_getobjectitem(main_obj, "temp");
       minijson *description = minijson_getobjectitem(weather, "description");
 
-      STRING_FORMAT(msg, "Погода в %s\n\n• Сейчас: %i℃, %s\n", minijson_getstringvalue(name), temp->valueint, minijson_getstringvalue(description));
+      double temperature = 0;
+      if(temp->valueint != 0) temperature = temp->valueint;
+      else temperature = temp->valuedouble;
+
+      STRING_FORMAT(msg, "Погода в %s\n\n• Сейчас: %1.f℃, %s\n", minijson_getstringvalue(name), temperature, minijson_getstringvalue(description));
 
       VKAPI_SEND_MESSAGE( message->peer_id, msg->ptr, NULL, 0);
 
