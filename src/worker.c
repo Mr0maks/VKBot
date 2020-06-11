@@ -11,7 +11,7 @@ static threadpool worker_pool = NULL;
 static volatile size_t command_processed;
 static volatile size_t message_processed;
 
-static pthread_t longpool_thread = 0;
+static pthread_t longpoll_thread = 0;
 
 typedef struct
 {
@@ -39,7 +39,7 @@ void lp_event_worker( void *data )
     events_manager(json_event);
 }
 
-void *longpool_worker( void *data )
+void *longpoll_worker( void *data )
 {
     worker_data_t *worker_data = (worker_data_t*)data;
     vkapi_handle *vkapi_object = worker_data->vkapi_object;
@@ -57,6 +57,9 @@ try_again:
 
       if( long_poll_string == NULL )
           goto try_again;
+
+      if(config.debug == true)
+          Con_Printf( "%s\n", long_poll_string->ptr );
 
       cJSON *main_obj = cJSON_ParseWithOpts( long_poll_string->ptr, NULL, false );
 
@@ -79,9 +82,6 @@ try_again:
           string_destroy(long_poll_string);
           goto try_again;
       }
-
-	  if(config.debug_workers)
-          Con_Printf( "%s\n", long_poll_string->ptr );
 
       if( !vkapi_json_long_poll_have_updates( main_obj ) )
       {
@@ -157,8 +157,8 @@ void worker_init(void)
       work_data[i].vkapi_object = vkapi_init( config.token );
     }
 
-  pthread_create(&longpool_thread, NULL, longpool_worker, &work_data[num_workers + 1]);
-  pthread_detach(longpool_thread);
+  pthread_create(&longpoll_thread, NULL, longpoll_worker, &work_data[num_workers + 1]);
+  pthread_detach(longpoll_thread);
 }
 
 void worker_deinit(void)
@@ -170,7 +170,7 @@ void worker_deinit(void)
 
     thpool_destroy( worker_pool );
 
-    pthread_join(longpool_thread, NULL);
+    pthread_join(longpoll_thread, NULL);
 
     for( int i = 0; i < config.num_workers + 2; i++ )
       {

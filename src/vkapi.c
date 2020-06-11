@@ -1,7 +1,5 @@
 #include "common.h"
 
-#define VK_URL_METHOD "https://api.vk.com/method/"
-
 static string_t _vkapi_call_method(vkapi_handle *object, const char *method, curl_postfield_t args, bool result_need)
 {
   string_t s = NULL;
@@ -15,7 +13,7 @@ static string_t _vkapi_call_method(vkapi_handle *object, const char *method, cur
   if (args_null)
       args = curl_postfield_init();
 
-  curl_postfield_push(args, "v", "5.101");
+  curl_postfield_push(args, "v", VK_API_VERSION);
   curl_postfield_push(args, "access_token", object->vk_token);
   curl_postfield_push(args, "group_id", va("%i", object->group_id));
 
@@ -55,7 +53,7 @@ string_t vkapi_call_method(const char *method, curl_postfield_t args, bool resul
   if (args_null)
       args = curl_postfield_init();
 
-  curl_postfield_push(args, "v", "5.101");
+  curl_postfield_push(args, "v", VK_API_VERSION);
   curl_postfield_push(args, "access_token", object->vk_token);
   curl_postfield_push(args, "group_id", va("%i", object->group_id));
 
@@ -224,16 +222,21 @@ vkapi_attach *vkapi_upload_doc_by_url(vkapi_message_object *message, const char 
 
 string_t vkapi_get_longpoll_data(vkapi_handle *object)
 {
-  string_t s = NULL;
+  string_t s = string_init();
   string_t s2 = NULL;
 
-  s = string_init();
-  s2 = string_init();
+  curl_postfield_t args = curl_postfield_init();
+  curl_postfield_push(args, "act", "a_check");
+  curl_postfield_push(args, "key", object->longpoll_key);
+  curl_postfield_push(args, "wait", "25");
+  curl_postfield_push(args, "mode", "2");
+  curl_postfield_push(args, "ts", va("%lli", object->longpoll_timestamp));
 
-  string_format( s2, "act=a_check&key=%s&wait=25&mode=2&ts=%lli", object->longpoll_key, object->longpoll_timestamp );
+  s2 = curl_postfield_serialize(args);
 
   bool error_code = curl_post(object->curl_handle, object->longpoll_server_url, s2, NULL, s);
 
+  curl_postfield_destroy(args);
   string_destroy( s2 );
 
   if(error_code != true)

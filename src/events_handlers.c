@@ -5,14 +5,15 @@ double get_time_s( void );
 bool message_new_handler(cJSON *raw)
 {
     cJSON *object = cJSON_GetObjectItem(raw, "object");
-    cJSON *peer_id = cJSON_GetObjectItem(object, "peer_id");
-    cJSON *from_id = cJSON_GetObjectItem(object, "from_id");
+    cJSON *message = cJSON_GetObjectItem(object, "message");
+    cJSON *peer_id = cJSON_GetObjectItem(message, "peer_id");
+    cJSON *from_id = cJSON_GetObjectItem(message, "from_id");
 
     vkapi_handle *handle = worker_get_vkapi_handle();
 
     bool result = false;
   
-    if(!object || !peer_id || !from_id) {
+    if(!message || !peer_id || !from_id) {
       cJSON_Delete(raw);
       return false;
       } else if(peer_id->valueint < 0 || from_id->valueint < 0)
@@ -40,7 +41,7 @@ bool message_new_handler(cJSON *raw)
   
     x->text = string_init();
   
-    cJSON *text_string = cJSON_GetObjectItem(object, "text");
+    cJSON *text_string = cJSON_GetObjectItem(message, "text");
   
     if(text_string)
       string_copy(x->text, cJSON_GetStringValue(text_string));
@@ -53,7 +54,7 @@ bool message_new_handler(cJSON *raw)
         return false;
     }
 
-    cJSON *attachments = cJSON_GetObjectItem(object, "attachments");
+    cJSON *attachments = cJSON_GetObjectItem(message, "attachments");
   
     x->attachmens = NULL;
   

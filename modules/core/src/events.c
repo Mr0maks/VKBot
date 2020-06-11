@@ -5,17 +5,12 @@
 int message_new_hook(cJSON *raw)
 {
     cJSON *object = cJSON_GetObjectItem(raw, "object");
-    cJSON *peer_id = cJSON_GetObjectItem(object, "peer_id");
-    cJSON *from_id = cJSON_GetObjectItem(object, "from_id");
-    cJSON *text = cJSON_GetObjectItem(object, "text");
+    cJSON *message = cJSON_GetObjectItem(object, "message");
+    cJSON *peer_id = cJSON_GetObjectItem(message, "peer_id");
+    cJSON *from_id = cJSON_GetObjectItem(message, "from_id");
+    cJSON *text = cJSON_GetObjectItem(message, "text");
 
-    if(!from_id)
-        return false;
-
-    if(!peer_id)
-        return false;
-
-    if(!text)
+    if(!from_id || !peer_id || !text)
         return false;
 
     if(0 > from_id->valueint && (!strcasecmp(cJSON_GetStringValue(text), "максбот говно") || !strcasecmp(cJSON_GetStringValue(text), "максбот сосать")))
@@ -29,13 +24,12 @@ int message_new_hook(cJSON *raw)
 
 bool chat_invite_user_handler(cJSON *raw)
 {
-    cJSON *peer_id = cJSON_GetObjectItem(cJSON_GetObjectItem(raw, "object"), "peer_id");
-    cJSON *from_id = cJSON_GetObjectItem(cJSON_GetObjectItem(raw, "object"), "from_id");
+    cJSON *object = cJSON_GetObjectItem(raw, "object");
+    cJSON *message = cJSON_GetObjectItem(object, "message");
+    cJSON *peer_id = cJSON_GetObjectItem(message, "peer_id");
+    cJSON *from_id = cJSON_GetObjectItem(message, "from_id");
 
-    if(!from_id)
-        return false;
-
-    if(!peer_id)
+    if(!from_id || !peer_id)
         return false;
 
     if(from_id->valueint < 0)
@@ -49,13 +43,12 @@ bool chat_invite_user_handler(cJSON *raw)
 
 bool chat_kick_user(cJSON *raw)
 {
-    cJSON *peer_id = cJSON_GetObjectItem(cJSON_GetObjectItem(raw, "object"), "peer_id");
-    cJSON *from_id = cJSON_GetObjectItem(cJSON_GetObjectItem(raw, "object"), "from_id");
+    cJSON *object = cJSON_GetObjectItem(raw, "object");
+    cJSON *message = cJSON_GetObjectItem(object, "message");
+    cJSON *peer_id = cJSON_GetObjectItem(message, "peer_id");
+    cJSON *from_id = cJSON_GetObjectItem(message, "from_id");
 
-    if(!from_id)
-        return false;
-
-    if(!peer_id)
+    if(!from_id || !peer_id)
         return false;
 
     if(from_id->valueint < 0)

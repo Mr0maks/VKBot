@@ -9,6 +9,9 @@
 
 #include <stdbool.h>
 
+#define VK_URL_METHOD "https://api.vk.com/method/"
+#define VK_API_VERSION "5.110"
+
 typedef struct
 {
   char vk_token[128];

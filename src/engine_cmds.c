@@ -57,7 +57,7 @@ void cmd_modules(vkapi_message_object *message, int argc, char **argv, const cha
 void cmd_about_bot(vkapi_message_object *message, int argc, char **argv, const char *args)
 {
   string_t s = string_init();
-  string_format( s, "VKBot\nИспользует библиотеки libcurl и cJSON\nСобран %s %s\nВерсия %s\nАрхитектура CPU %s", __DATE__, __TIME__, VERSION, ARCH );
+  string_format( s, "VKBot\nИспользует библиотеки libcurl и cJSON\nВерсия API ВК: %s\nСобран %s %s\nВерсия %s\nАрхитектура CPU %s", VK_API_VERSION, __DATE__, __TIME__, VERSION, ARCH );
   vkapi_send_message(message->peer_id, s->ptr, NULL, 0);
   string_destroy(s);
 }

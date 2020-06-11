@@ -91,7 +91,9 @@ bool events_manager(cJSON *raw)
         return false;
     
     cJSON *type = cJSON_GetObjectItem(raw, "type");
-    cJSON *action_type = cJSON_GetObjectItem(cJSON_GetObjectItem(cJSON_GetObjectItem(raw, "object"), "action"), "type");
+    cJSON *object = cJSON_GetObjectItem(raw, "object");
+    cJSON *message = cJSON_GetObjectItem(object, "message");
+    cJSON *action_type = cJSON_GetObjectItem(cJSON_GetObjectItem(message, "action"), "type");
     
     if(!type)
     {
