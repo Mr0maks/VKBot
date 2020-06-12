@@ -40,6 +40,8 @@ string_t curl_postfield_serialize(curl_postfield_t pool)
             string_strncat(s, "&", 1);
         }
 
+        assert(ptr->key);
+        assert(ptr->value);
         string_format(s2, "%s=%s", ptr->key, ptr->value);
         string_strncat(s, s2->ptr, s2->len);
 

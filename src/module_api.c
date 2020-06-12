@@ -20,7 +20,7 @@ void module_reg_cmd(module_info_t *info, const char *cmd_name, const char *descr
 //TODO: Move from module_api
 void module_alert(const char *fmt, ...)
 {
-    char buff[1024] = { 0 };
+    char buff[4096] = { 0 };
     va_list args;
     va_start(args, fmt);
     vsnprintf(buff, sizeof(buff), fmt, args);
@@ -125,9 +125,10 @@ bool module_load(const char *name)
 
   ptr->next = modules_pool;
   modules_pool = ptr;
+  return true;
 }
 
-bool module_get_func(const char *name, const char *func)
+void *module_get_func(const char *name, const char *func)
 {
 
 }

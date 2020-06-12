@@ -1,4 +1,5 @@
 #include "common.h"
+#include <sys/resource.h>
 
 extern cmds_t commands[];
 extern cmds_modules_pools_t *modules_cmds_poll;
@@ -65,7 +66,11 @@ void cmd_about_bot(vkapi_message_object *message, int argc, char **argv, const c
 void cmd_stat(vkapi_message_object *message, int argc, char **argv, const char *args)
 {
   string_t s = string_init();
-  string_format( s, "Статистика бота\nКоличество работающих воркеров: %i\nКомманд обработано: %lu\nСообщений обработано: %lu\n", worker_get_workers_count(), worker_commands_processed(), worker_message_processed() );
+
+  struct rusage r_usage;
+  getrusage(RUSAGE_SELF,&r_usage);
+
+  string_format( s, "Статистика бота\nКоличество работающих воркеров: %i\nКомманд обработано: %lu\nПамяти использовано: %ld кб\nСообщений обработано: %lu\n", worker_get_workers_count(), worker_commands_processed(), r_usage.ru_maxrss, worker_message_processed() );
   vkapi_send_message( message->peer_id, s->ptr, NULL, 0 );
   string_destroy( s );
 }

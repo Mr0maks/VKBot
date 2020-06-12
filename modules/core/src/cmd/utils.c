@@ -14,7 +14,7 @@ void cmd_ping(vkapi_message_object *message, int argc, char **argv, const char *
   VKAPI_SEND_MESSAGE( message->peer_id, "Pong", NULL, 0 );
 }
 
-void cmd_valute_curse(vkapi_message_object *message, int argc, char **argv, const char *args )
+void cmd_valute_course(vkapi_message_object *message, int argc, char **argv, const char *args )
 {
     if(argc > 2 || argc < 1)
     {

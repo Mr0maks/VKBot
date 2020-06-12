@@ -29,14 +29,14 @@ const cmds_t commands[] = {
   { "инфа", "узнать вероятность чего-либо", cmd_info },
   { "оцени", "оценивает что-либо", cmd_rate },
   { "доки", "ищет документы в вк", cmd_rand_docs },
-  { "курс", "курс валют", cmd_valute_curse },
+  { "курс", "курс валют", cmd_valute_course },
   { "флип", "подбросить монетку", cmd_flip },
   { "погода", "показывает погоду сейчас", cmd_weather },
   { "crc32", "подсчитывает crc32 хеш строки или файла", cmd_crc32 },
   { "котик", "рандомный котик", cmd_cat },
   { "Начать", NULL, cmd_start },
 #ifdef DEBUG
-  //{ "debug", "бот собран с отладочными функциями", cmd_debug },
+  //{ "debug", NULL, cmd_debug },
 #endif
   { NULL, NULL, NULL }
 };

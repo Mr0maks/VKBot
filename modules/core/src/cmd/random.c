@@ -149,7 +149,7 @@ void cmd_rand_docs(vkapi_message_object *message, int argc, char **argv, const c
 
 	int docs_count = minijson_getarraysize(items);
 
-    vkapi_attach *attaches = (vkapi_attach*)calloc(docs_count, sizeof(vkapi_attach));
+    vkapi_attachment *attaches = (vkapi_attachment*)calloc(docs_count, sizeof(vkapi_attachment));
 
     for(int i = 0; i < docs_count; i++)
     {

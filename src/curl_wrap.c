@@ -1,5 +1,5 @@
 #include "common.h"
-#include "curl/curl.h"
+#include <curl/curl.h>
 
 static pthread_mutex_t connlock;
 static CURLSH *share = NULL;
@@ -171,7 +171,10 @@ void *curl_init()
 char *curl_urlencode(const char *data)
 {
     void *curl_handle = worker_get_vkapi_handle()->curl_handle;
-    return curl_easy_escape(curl_handle, data, 0);
+    char *encoded = curl_easy_escape(curl_handle, data, 0);
+    char *duped = strdup(encoded);
+    curl_free(encoded);
+    return duped;
 }
 
 void curl_ptr_free(void *ptr)

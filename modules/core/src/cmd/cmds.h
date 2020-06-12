@@ -13,7 +13,7 @@ void cmd_rand_docs(vkapi_message_object *message, int argc, char **argv, const c
 
 /* utils.c */
 void cmd_ping(vkapi_message_object *message, int argc, char **argv, const char *args);
-void cmd_valute_curse(vkapi_message_object *message, int argc, char **argv, const char *args );
+void cmd_valute_course(vkapi_message_object *message, int argc, char **argv, const char *args );
 void cmd_weather(vkapi_message_object *message, int argc, char **argv, const char *args);
 void cmd_crc32(vkapi_message_object *message, int argc, char **argv, const char *args);
 

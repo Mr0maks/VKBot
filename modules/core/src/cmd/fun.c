@@ -27,7 +27,7 @@ void cmd_cat(vkapi_message_object *message, int argc, char **argv, const char *a
 
   CURL_GET(NULL, cJSON_GetStringValue(file), NULL, filedata);
 
-  vkapi_attach *attach = VKAPI_UPLOAD_DOC( message, "random_cat.png", filedata, VKAPI_PHOTO);
+  vkapi_attachment *attach = VKAPI_UPLOAD_DOC( message, "random_cat.png", filedata, VKAPI_PHOTO);
 
   VKAPI_SEND_MESSAGE( message->peer_id, NULL, attach, 1);
 

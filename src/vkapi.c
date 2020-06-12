@@ -82,7 +82,7 @@ string_t vkapi_call_method(const char *method, curl_postfield_t args, bool resul
   return s;
 }
 
-vkapi_attach *vkapi_upload_doc_by_url(vkapi_message_object *message, const char *filename, string_t data, docs_type_t type)
+vkapi_attachment *vkapi_upload_doc_by_url(vkapi_message_object *message, const char *filename, string_t data, docs_type_t type)
 {
   vkapi_handle *object = worker_get_vkapi_handle();
 
@@ -141,7 +141,7 @@ vkapi_attach *vkapi_upload_doc_by_url(vkapi_message_object *message, const char 
       cJSON *owner_id = cJSON_GetObjectItem(doc, "owner_id");
       cJSON *media_id = cJSON_GetObjectItem(doc, "id");
 
-      vkapi_attach *attach = calloc(1, sizeof(vkapi_attach));
+      vkapi_attachment *attach = calloc(1, sizeof(vkapi_attachment));
 
       attach[0].type = VKAPI_DOC;
       attach[0].owner_id = owner_id->valueint;
@@ -198,12 +198,14 @@ vkapi_attach *vkapi_upload_doc_by_url(vkapi_message_object *message, const char 
 
       ptr = cJSON_ParseWithOpts(result->ptr, NULL, false);
 
+      Con_Printf("Data: %s\n", result->ptr);
+
       cJSON *resp = cJSON_GetArrayItem(cJSON_GetObjectItem(ptr, "response"), 0);
 
       cJSON *owner_id = cJSON_GetObjectItem(resp, "owner_id");
       cJSON *media_id = cJSON_GetObjectItem(resp, "id");
 
-      vkapi_attach *attach = calloc(1, sizeof(vkapi_attach));
+      vkapi_attachment *attach = calloc(1, sizeof(vkapi_attachment));
 
       attach[0].type = VKAPI_PHOTO;
       attach[0].owner_id = owner_id->valueint;
@@ -281,7 +283,7 @@ static inline const char *vkapi_attach_type(docs_type_t doc)
     }
 }
 
-void vkapi_send_message(int peer_id, const char *msg, vkapi_attach *attachments, int attachmens_len)
+void vkapi_send_message(int peer_id, const char *msg, vkapi_attachment *attachments, int attachmens_len)
 {
   curl_postfield_t args = curl_postfield_init();
   string_t formated_attachmens = string_init();
@@ -319,7 +321,7 @@ void vkapi_send_message(int peer_id, const char *msg, vkapi_attach *attachments,
   string_destroy(formated_attachmens);
   curl_postfield_destroy(args);
   if(message_encoded)
-      curl_ptr_free(message_encoded);
+      free(message_encoded);
 }
 
 bool vkapi_get_long_poll_server(vkapi_handle *object)
