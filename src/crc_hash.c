@@ -73,7 +73,7 @@ unsigned int memcrc32 (const unsigned char *buf, size_t len)
 {
   uint32_t crc32 = CRC32_INIT;
 
-  while ((uintptr_t)buf % 4u != 0)
+  while (((uintptr_t)buf % 4u != 0) && len--)
       crc32 = (crc32 >> 8) ^ crc32_table[(crc32 ^ *buf++) & 0xFF];
 
   uint32_t *ubuf = (uint32_t*)buf;
