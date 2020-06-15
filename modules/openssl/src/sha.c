@@ -101,7 +101,7 @@ void cmd_sha256(vkapi_message_object *message, int argc, char **argv, const char
             else digest = va("%s%02x", digest, sha1_buff[i]);
         }
 
-        VKAPI_SEND_MESSAGE( message->peer_id, va("SHA256 хеш строки: 0x%s", digest), NULL, 0);
+        VKAPI_SEND_MESSAGE( message->peer_id, va("SHA256 хеш строки: %s", digest), NULL, 0);
     }
     else
     {
