@@ -4,21 +4,42 @@
 #define MAX(a,b) ((a) > (b) ? (a) : (b))
 #define MIN(a,b) ((a) < (b) ? (a) : (b))
 
-#define ARRAY_LENGHT(x) (sizeof(x)/sizeof(x[0])) - 1
+#define ARRAY_LENGHT(x) (sizeof(x)/sizeof(x[0]))
 
-cmds_modules_pools_t *modules_cmds_poll = NULL;
-static cmds_hashs_t *cached_cmds = NULL;
-static cmds_name_hashs_t *cached_names = NULL;
+typedef struct cmds_modules_pools_s
+{
+    module_info_t *info;
+    const char	*string;
+    const char    *description;
+    cmd_function_callback  function;
+    uint32_t hash;
+    struct cmds_modules_pools_s *next;
+} cmd_module_pool_t;
+
+typedef struct
+{
+    uint32_t hash;
+    cmd_function_callback  function;
+} cmd_hash_t;
+
+typedef struct
+{
+    const char *name;
+} cmd_name_t;
+
+cmd_module_pool_t *module_cmd_pool = NULL;
+static cmd_hash_t *cmd_hash_table = NULL;
+static uint32_t *name_hash_table = NULL;
 
 const cmds_t commands[] = {
   { "помощь", "показывает это сообщение", cmd_help },
   { "модули", "список загруженных модулей", cmd_modules },
   { "оботе", "о боте", cmd_about_bot },
-  { "стат", "показывает разную статистику бота", cmd_stat },
+  { "стат", "показывает статистику бота", cmd_stat },
   { NULL, NULL, NULL }
 };
 
-const cmds_names_t names[] = {
+const cmd_name_t names[] = {
   { "Максбот" },
   { "максбот" },
   { "Максимбот" },
@@ -29,8 +50,8 @@ const cmds_names_t names[] = {
   { NULL }
 };
 
-static size_t static_names = ARRAY_LENGHT( names );
-static size_t static_commands = ARRAY_LENGHT( commands );
+static size_t static_names = ARRAY_LENGHT( names ) - 1;
+static size_t static_commands = ARRAY_LENGHT( commands ) - 1;
 
 static size_t max_command_len = 0;
 static size_t max_name_len = 0;
@@ -48,7 +69,7 @@ bool cmd_is_bot_name(const char *name)
   unsigned int name_hash = strncrc32case(name, name_len );
 
   for( size_t i = 0; i < static_names; i++ ) {
-      if( cached_names[i].hash == name_hash )
+      if( name_hash_table[i] == name_hash )
 	{
   	return true;
 	}
@@ -70,13 +91,13 @@ cmd_function_callback cmd_get_command(const char *command)
   unsigned int cmd_hash = strncrc32case(command, command_len );
 
   for( size_t i = 0; i < static_commands; i++ ) {
-      if( cached_cmds[i].hash == cmd_hash )
+      if( cmd_hash_table[i].hash == cmd_hash )
 	{
-	  return cached_cmds[i].function;
+      return cmd_hash_table[i].function;
     }
   }
 
-  cmds_modules_pools_t *ptr = modules_cmds_poll;
+  cmd_module_pool_t *ptr = module_cmd_pool;
 
   while (ptr) {
       if(ptr->hash == cmd_hash)
@@ -165,24 +186,10 @@ bool cmd_handle(vkapi_message_object *message)
 
 no_args:
     vkapi_send_message( message->peer_id, "Да-да?\n Для того чтобы узнать команды используйте помощь.", NULL, 0 );
-    string_destroy( s );
-    string_destroy( args_s );
-
-    if(tokens)
-        free(tokens);
-
-    return false;
+    goto end;
 
 not_found:
     vkapi_send_message( message->peer_id, "Команда не найдена\n Для того чтобы узнать команды используйте помощь.", NULL, 0 );
-    string_destroy( s );
-    string_destroy( args_s );
-
-    if(tokens)
-        free(tokens);
-
-    return false;
-
 end:
     string_destroy( s );
     string_destroy( args_s );
@@ -195,9 +202,9 @@ end:
 
 void cmd_calculate_cmd_hashes()
 {
-  cached_cmds = (cmds_hashs_t *)calloc( static_commands, sizeof(cmds_hashs_t) );
+  cmd_hash_table = (cmd_hash_t *)calloc( static_commands, sizeof(cmd_hash_t) );
 
-  if( cached_cmds == NULL )
+  if( cmd_hash_table == NULL )
     {
       Con_Printf( "Error while allocated memory for commands hashs\n" );
       exit( EXIT_FAILURE );
@@ -212,27 +219,25 @@ void cmd_calculate_cmd_hashes()
 
       size_t string_len = strlen( commands[i].string );
 
-      cached_cmds[i].hash = strncrc32case( commands[i].string, string_len );
-      cached_cmds[i].function = commands[i].function;
+      cmd_hash_table[i].hash = strncrc32case( commands[i].string, string_len );
+      cmd_hash_table[i].function = commands[i].function;
 
       max_command_len = MAX( max_command_len, string_len );
 
-      Con_Printf( "\"%s\" \"%s\" hash: %X len: %lu\n", commands[i].string, commands[i].description, cached_cmds[i].hash, string_len );
+      Con_Printf( "\"%s\" \"%s\"\n", commands[i].string, commands[i].description );
 
     }
 }
 
 void cmd_calculate_name_hashes()
 {
-  cached_names = (cmds_name_hashs_t *)calloc( static_names, sizeof(cmds_name_hashs_t) );
+  name_hash_table = (uint32_t *)calloc( static_names, sizeof(uint32_t) );
 
-  if( cached_names == NULL )
+  if( name_hash_table == NULL )
     {
-      Con_Printf( "Error while allocated memory for commands hashs\n" );
+      Con_Printf( "Error while allocated memory for name hash table\n" );
       exit( EXIT_FAILURE );
     }
-
-  Con_Printf( "Static names in bot %lu ( static cmds_names_t names[] )\n", static_names );
 
   for( size_t i = 0; i < static_names; i++ )
     {
@@ -241,22 +246,22 @@ void cmd_calculate_name_hashes()
 
       size_t string_len = strlen( names[i].name );
 
-      cached_names[i].hash = strncrc32case(names[i].name, string_len );
+      name_hash_table[i] = strncrc32case(names[i].name, string_len );
 
       max_name_len = MAX( max_name_len, string_len );
 
-      Con_Printf( "\"%s\" hash: %X\n", names[i].name, cached_names[i].hash );
+      Con_Printf( "\"%s\" hash: %X\n", names[i].name, name_hash_table[i]);
     }
 }
 
 void cmd_handler_register_module_cmd(module_info_t *info, const char *cmd_name, const char *description, cmd_function_callback callback)
 {
-  cmds_modules_pools_t *ptr = NULL;
+  cmd_module_pool_t *ptr = NULL;
 
   if(cmd_name == NULL || callback == NULL)
     return;
 
-  ptr = malloc(sizeof(cmds_modules_pools_t));
+  ptr = malloc(sizeof(cmd_module_pool_t));
 
   if(!ptr)
     {
@@ -270,20 +275,20 @@ void cmd_handler_register_module_cmd(module_info_t *info, const char *cmd_name, 
   ptr->info = info;
   ptr->function = callback;
 
-  ptr->next = modules_cmds_poll;
-  modules_cmds_poll = ptr;
+  ptr->next = module_cmd_pool;
+  module_cmd_pool = ptr;
 
-  Con_Printf("Cmd from module %s: \"%s\" - \"%s\" hash: %X \n", info->name, cmd_name, description, ptr->hash);
+  Con_Printf("Command from module %s: \"%s\" - \"%s\"\n", info->name, cmd_name, description);
 
   max_command_len = MAX(max_command_len, strlen(cmd_name));
 }
 
 void cmd_handler_unregister_module_cmd(module_info_t *info)
 {
-    cmds_modules_pools_t *ptr = modules_cmds_poll, *ptr_t1 = NULL;
+    cmd_module_pool_t *ptr = module_cmd_pool, *ptr_t1 = NULL;
     if(ptr->info == info)
       {
-	modules_cmds_poll = ptr->next;
+    module_cmd_pool = ptr->next;
 	return;
       }
 
@@ -305,8 +310,8 @@ void cmd_handler_unregister_module_cmd(module_info_t *info)
 
 void cmd_handler_deinit()
 {
-  free(cached_cmds);
-  free(cached_names);
+  free(cmd_hash_table);
+  free(name_hash_table);
 }
 
 void cmd_handler_init()

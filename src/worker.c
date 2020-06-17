@@ -1,5 +1,4 @@
 #include "common.h"
-#include "console.h"
 #include "config.h"
 #include <pthread.h>
 
@@ -8,8 +7,8 @@ static pthread_cond_t queue_cond_var;
 
 static threadpool worker_pool = NULL;
 
-static volatile size_t command_processed;
-static volatile size_t message_processed;
+static volatile size_t command_processed = 0;
+static volatile size_t message_processed = 0;
 
 static pthread_t longpoll_thread = 0;
 
@@ -66,7 +65,6 @@ try_again:
       if( !main_obj )
       {
           Con_Printf( "Error while getting long poll data: json parser return NULL\n");
-          cJSON_Delete( main_obj );
           string_destroy( long_poll_string );
           goto try_again;
       }
@@ -77,7 +75,7 @@ try_again:
           vkapi_object->longpoll_timestamp = atoll(cJSON_GetStringValue(ts));
       else
       {
-          Con_Printf("Error while getting long poll data: json ts == NULL\n");
+          Con_Printf("Error while getting long poll data: ts == NULL\n");
           cJSON_Delete(main_obj);
           string_destroy(long_poll_string);
           goto try_again;
@@ -141,9 +139,6 @@ void worker_init(void)
 
     int num_workers = config.num_workers;
 
-  command_processed = 0;
-  message_processed = 0;
-
   pthread_mutex_init( &queue_lock, NULL );
   pthread_cond_init( &queue_cond_var, NULL );
 
@@ -168,9 +163,9 @@ void worker_deinit(void)
         work_data[i].loop = false;
       }
 
-    thpool_destroy( worker_pool );
-
     pthread_join(longpoll_thread, NULL);
+
+    thpool_destroy( worker_pool );
 
     for( int i = 0; i < config.num_workers + 2; i++ )
       {

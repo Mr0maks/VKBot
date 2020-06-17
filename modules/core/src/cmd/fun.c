@@ -33,6 +33,8 @@ void cmd_cat(vkapi_message_object *message, int argc, char **argv, const char *a
 
   VKAPI_SEND_MESSAGE( message->peer_id, NULL, attach, 1);
 
+  free(attach);
+
   cJSON_Delete(ptr);
 
   STRING_DESTROY(s);

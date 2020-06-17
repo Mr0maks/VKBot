@@ -155,8 +155,7 @@ void string_copy( string_t s, const char *string )
 
 void string_destroy( string_t s )
 {
-  if( !s )
-    return;
+    assert(s);
 
   if( s->ptr )
     free( s->ptr );

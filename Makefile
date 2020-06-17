@@ -18,8 +18,6 @@ SRCDIR=src
 
 NAME=vkbot
 
-DEVSTAGE = beta
-
 CC?=gcc
 CXX?=g++
 
@@ -64,7 +62,7 @@ BUILD_TYPE_CFLAGS = -DNDEBUG
 DEBUG=0
 endif
 
-VERSION := $(COMMIT)-$(DEVSTAGE)-$(BUILD_TYPE)
+VERSION := $(COMMIT)-$(BUILD_TYPE)
 
 OBJDIR=$(BUILD_TYPE).$(OS).$(ARCH)
 

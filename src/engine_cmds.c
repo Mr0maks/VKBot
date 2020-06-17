@@ -1,8 +1,18 @@
 #include "common.h"
 #include <sys/resource.h>
 
+typedef struct cmds_modules_pools_s
+{
+    module_info_t *info;
+    const char	*string;
+    const char    *description;
+    cmd_function_callback  function;
+    uint32_t hash;
+    struct cmds_modules_pools_s *next;
+} cmd_module_pool_t;
+
 extern cmds_t commands[];
-extern cmds_modules_pools_t *modules_cmds_poll;
+extern cmd_module_pool_t *module_cmd_pool;
 extern module_t *modules_pool;
 
 void cmd_help(vkapi_message_object *message, int argc, char **argv, const char *args)
@@ -18,7 +28,7 @@ void cmd_help(vkapi_message_object *message, int argc, char **argv, const char *
       }
     }
 
-  cmds_modules_pools_t *ptr = modules_cmds_poll;
+  cmd_module_pool_t *ptr = module_cmd_pool;
 
   while (ptr != NULL) {
       if(ptr->description)
@@ -58,7 +68,7 @@ void cmd_modules(vkapi_message_object *message, int argc, char **argv, const cha
 void cmd_about_bot(vkapi_message_object *message, int argc, char **argv, const char *args)
 {
   string_t s = string_init();
-  string_format( s, "VKBot\nИспользует библиотеки libcurl и cJSON\nИсходный код: https://github.com/Mr0maks/VKBot\nВерсия API ВК: %s\nСобран %s %s\nВерсия %s\nАрхитектура CPU %s", VK_API_VERSION, __DATE__, __TIME__, VERSION, ARCH );
+  string_format( s, "VKBot\nИспользует библиотеки libcurl и cJSON\nИсходный код: https://github.com/Mr0maks/VKBot\nВерсия API ВК: %s\nВерсия API для модулей: %i\nСобран %s %s\nВерсия %s\nАрхитектура CPU %s", VK_API_VERSION, ENGINE_API_VERSION, __DATE__, __TIME__, VERSION, ARCH );
   vkapi_send_message(message->peer_id, s->ptr, NULL, 0);
   string_destroy(s);
 }

@@ -48,7 +48,6 @@ typedef enum
   VKAPI_DOC,
   VKAPI_WALL,
   VKAPI_NULL
-  // other types not needed yet
 } docs_type_t;
 
 typedef struct

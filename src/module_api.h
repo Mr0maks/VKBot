@@ -7,7 +7,18 @@
 #include "db_api.h"
 #include "worker_vk_events.h"
 
-#define ENGINE_API_VERSION 0
+#define ENGINE_API_VERSION 1
+
+typedef struct
+{
+    char *name;
+    char *version;
+    char *date;
+    char *url;
+    char *author;
+    //! interface version
+    int ifver;
+} module_info_t;
 
 #ifndef _VKBOT_MODULE
 #ifdef _WIN32
@@ -32,18 +43,20 @@ typedef struct module_s
 } module_t;
 #endif
 
-//typedef struct
-//{
-//    char *name;
-//    char *version;
-//    char *date;
-//    char *url;
-//    char *author;
-//    int ifver; // interface version
-//} module_info_t;
+//! Load module by name
+bool module_load(const char *name);
+
+//! Check module is loaded
+bool module_loaded(const char *name);
+
+//! Find module by name and get sym by GetProcAddress (dlsym)
+void *module_function(const char *name, const char *function);
 
 typedef struct
 {
+  void *(*malloc)(size_t size);
+  void (*free)(void *ptr);
+
   void (*register_command) (module_info_t *info, const char *cmd_name, const char *description, cmd_function_callback callback);
   void (*unregister_command) (module_info_t *info, const char *cmd_name);
 
@@ -61,7 +74,9 @@ typedef struct
   void *(*curl_init) (void);
   curl_postfield_t (*curl_postfield_init)(void);
   void (*curl_postfield_push)(curl_postfield_t pool, const char *key, const char *value);
+  string_t (*curl_postfield_serialize)(curl_postfield_t pool);
   void (*curl_postfield_destroy)(curl_postfield_t pool);
+
   bool (*curl_get) ( void *curl_handle, const char *url, string_t useragent, string_t dataptr );
   bool (*curl_post) (void *curl_handle, const char *url, string_t post, string_t useragent, string_t dataptr );
   bool (*curl_uploadfile) ( void *curl_handle, const char *url, const char *fieldname, const char *filename, string_t data, string_t useragent, string_t dataptr );
@@ -74,6 +89,10 @@ typedef struct
 
   void (*register_event)(const char *event_name, event_handler_t handler);
   void (*register_event_hook)(const char *event_name, event_hook_handler_t handler);
+
+  bool (*module_load)(const char *name);
+  bool (*module_loaded)(const char *name);
+  void *(*module_function)(const char *name, const char *function);
 
   unsigned int (*memcrc32) (const unsigned char *buf, size_t len);
   void (*alert) (const char *fmt, ...);

@@ -11,16 +11,6 @@ struct string {
 
 typedef struct string* string_t;
 
-struct string_lib
-{
-  string_t (*init)( void );
-  string_t (*dublicate)( string_t s );
-  void (*format)( string_t s, const char *fmt, ...);
-  void (*strncat)( string_t s, const char *string, size_t size );
-  void (*copy)( string_t s, const char *string );
-  void (*destroy)( string_t s );
-};
-
 #ifndef _VKBOT_MODULE
 string_t string_init( void );
 string_t string_dublicate( string_t s );

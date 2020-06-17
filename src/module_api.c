@@ -1,6 +1,6 @@
 #include "common.h"
 #include "cmd_handler.h"
-#include "crc_hash.h"
+#include "crc32.h"
 #include "module_api.h"
 #include "minini.h"
 
@@ -17,19 +17,12 @@ void module_reg_cmd(module_info_t *info, const char *cmd_name, const char *descr
   cmd_handler_register_module_cmd(info, cmd_name, description, callback);
 }
 
-//TODO: Move from module_api
-void module_alert(const char *fmt, ...)
-{
-    char buff[4096] = { 0 };
-    va_list args;
-    va_start(args, fmt);
-    vsnprintf(buff, sizeof(buff), fmt, args);
-    va_end(args);
-    Con_Printf(buff);
-}
-
 const engine_api_t engfuncs_t =
 {
+    // memory api
+    NULL,
+    NULL,
+
     module_reg_cmd,
     NULL, // FIXME: unregister not implemented
 
@@ -50,6 +43,7 @@ const engine_api_t engfuncs_t =
     curl_init,
     curl_postfield_init,
     curl_postfield_push,
+    curl_postfield_serialize,
     curl_postfield_destroy,
     curl_get,
     curl_post,
@@ -66,18 +60,25 @@ const engine_api_t engfuncs_t =
     module_event_register,
     module_event_hook_register,
 
-    // other shit
+    //module api
+    module_load,
+    module_loaded,
+    module_function,
+
+    // other stuff
     memcrc32,
-    module_alert,
+    Con_Printf,
 };
 
-void module_fill_funcs(engine_api_t *ptr)
+static void module_fill_funcs(engine_api_t *ptr)
 {
     memcpy(ptr, &engfuncs_t, sizeof (engfuncs_t));
 }
 
 bool module_load(const char *name)
 {
+    assert(name);
+
   if(!name)
     return false;
 
@@ -128,12 +129,50 @@ bool module_load(const char *name)
   return true;
 }
 
-void *module_get_func(const char *name, const char *func)
+bool module_loaded(const char *name)
 {
+    assert(name);
 
+    if(name != NULL)
+        return false;
+
+    module_t *ptr = modules_pool;
+
+    while(ptr != NULL)
+    {
+        if(!strcmp(name, ptr->name))
+        {
+            return true;
+        }
+        ptr = ptr->next;
+    }
+
+    return false;
 }
 
-int module_minini(const char *section, const char *key, const char *value, void* user)
+void *module_function(const char *name, const char *function)
+{
+    assert(name);
+    assert(function);
+
+    if(name != NULL || function != NULL)
+        return NULL;
+
+    module_t *ptr = modules_pool;
+
+    while(ptr != NULL)
+    {
+        if(!strcmp(name, ptr->name))
+        {
+            return GetProcAddress(ptr->handle, function);
+        }
+        ptr = ptr->next;
+    }
+
+    return NULL;
+}
+
+static int module_minini(const char *section, const char *key, const char *value, void* user)
 {
     if(value)
         return 1;

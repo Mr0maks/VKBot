@@ -44,7 +44,7 @@ void module_event_hook_register(const char *event_name, event_hook_handler_t han
     Con_Printf("[Event] Register hook for '%s'\n", event_name);
 }
 
-int event_proced_hooks(const char *event_name, cJSON *obj)
+int event_proceed_hooks(const char *event_name, cJSON *obj)
 {
     int result = MODULE_IGNORE;
 
@@ -87,31 +87,31 @@ event_handler_t event_find(const char *event_name)
 
 bool events_manager(cJSON *raw)
 {
+    assert(raw);
     if(!raw)
         return false;
     
     cJSON *type = cJSON_GetObjectItem(raw, "type");
     cJSON *object = cJSON_GetObjectItem(raw, "object");
     cJSON *message = cJSON_GetObjectItem(object, "message");
-    cJSON *action_type = cJSON_GetObjectItem(cJSON_GetObjectItem(message, "action"), "type");
-    
+    cJSON *action = cJSON_GetObjectItem(message, "action");
+    cJSON *action_type = cJSON_GetObjectItem(action, "type");
+
     if(!type)
-    {
-            type = action_type;
-            
-            if(!type)
-                return false;
-    } else if(type && action_type)
-    {
-        type = action_type;
-    } else if(!type && !action_type)
     {
         return false;
     }
+
+    if(action_type)
+    {
+        type = action_type;
+    }
+
+    // proceed actions like longpool events
     
     event_handler_t handler = event_find(cJSON_GetStringValue(type));
     
-    int override = event_proced_hooks(cJSON_GetStringValue(type), raw);
+    int override = event_proceed_hooks(cJSON_GetStringValue(type), raw);
 
     if(override == MODULE_OVERRIDE)
         return true;

@@ -12,11 +12,8 @@ void Host_Deinit()
 
 void Host_Main_Thread()
 {
-    char buff[256] = { '\0' };
-
     while (main_thread_loop) {
-        while(fgets(buff, sizeof (buff), stdin) == NULL) { }
-        console_handler(buff);
+        sleep(1000);
     }
 
     Host_Deinit();
@@ -46,4 +43,10 @@ void Host_Init()
     worker_init();
 
     Host_Main_Thread();
+}
+
+int main(void)
+{
+    Host_Init();
+    return 0;
 }

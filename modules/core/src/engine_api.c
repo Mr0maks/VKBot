@@ -9,8 +9,6 @@
 
 engine_api_t engine_api;
 
-time_t cmd_uptime_start = 0;
-
 module_info_t module_info =
 {
     "core",
@@ -25,7 +23,7 @@ const cmds_t commands[] = {
   { "ping", "команда для проверки бота на отзывчевость", cmd_ping },
   { "ранд", "рандомное число", cmd_rand },
   { "когда", "узнать дату события", cmd_rand_date },
-//  { "кто", "выберает случайного человека из беседы", cmd_who },
+//  { "кто", "выбирает случайного человека из беседы", cmd_who },
   { "инфа", "узнать вероятность чего-либо", cmd_info },
   { "оцени", "оценивает что-либо", cmd_rate },
   { "доки", "ищет документы в вк", cmd_rand_docs },
@@ -57,10 +55,11 @@ void Module_Init_Events()
 
 void Module_Init(int apiver, module_info_t **info, engine_api_t *apifuncs)
 {
+    if(apiver != ENGINE_API_VERSION)
+        return;
+
   memcpy(&engine_api, apifuncs, sizeof(engine_api));
   *info = &module_info;
-
-  cmd_uptime_start = time(NULL);
 
   Module_Init_Cmds();
   Module_Init_Events();

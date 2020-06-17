@@ -21,7 +21,9 @@ extern engine_api_t engine_api;
 
 #define CURL_POSTFIELD_INIT (*engine_api.curl_postfield_init)
 #define CURL_POSTFIELD_PUSH (*engine_api.curl_postfield_push)
+#define CURL_POSTFIELD_SERIALIZE (*engine_api.curl_postfield_push)
 #define CURL_POSTFIELD_DESTROY (*engine_api.curl_postfield_destroy)
+
 #define CURL_INIT (*engine_api.curl_init)
 #define CURL_GET (*engine_api.curl_get)
 #define CURL_POST (*engine_api.curl_post)
@@ -35,6 +37,10 @@ extern engine_api_t engine_api;
 
 #define REGISTER_EVENT (*engine_api.register_event)
 #define REGISTER_EVENT_HOOK (*engine_api.register_event_hook)
+
+#define MODULE_LOAD (*engine_api.module_load)
+#define MODULE_LOADED (*engine_api.module_loaded)
+#define MODULE_FUNCTION (*engine_api.module_function)
 
 #define CRC32 (*engine_api.memcrc32)
 #define ALERT (*engine_api.alert)
