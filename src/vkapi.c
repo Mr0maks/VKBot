@@ -166,7 +166,7 @@ vkapi_attachment *vkapi_upload_doc_by_url(vkapi_message_object *message, const c
 
       vkapi_attachment *attachment = malloc(sizeof(vkapi_attachment));
 
-      attachment[0].type = VKAPI_DOC;
+      attachment[0].type = type;
       attachment[0].owner_id = owner_id->valueint;
       attachment[0].media_id = media_id->valueint;
 
