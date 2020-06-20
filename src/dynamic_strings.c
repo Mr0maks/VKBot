@@ -1,17 +1,19 @@
 #include "common.h"
 
+#define DYN_STRING_SIZE 1024
+
 string_t string_init() {
   string_t s = (string_t)calloc( 1, sizeof(struct string) );
 
-  s->ptr = (char *)malloc( 4096 );
+  s->ptr = (char *)malloc( DYN_STRING_SIZE );
   if ( s->ptr == NULL ) {
-      Con_Printf( "сalloc() failed\n" );
+      Con_Printf( "malloc() failed\n" );
       exit( EXIT_FAILURE );
     }
   
   s->ptr[0] = '\0';
   s->len = 0;
-  s->size = 4096;
+  s->size = DYN_STRING_SIZE;
   return s;
 }
 
@@ -30,7 +32,7 @@ string_t string_dublicate(string_t s)
   return s_duble;
 }
 
-void resize_string_if_need( string_t s, size_t size_need )
+static void resize_string_if_need( string_t s, size_t size_need )
 {
   assert( s );
 
@@ -143,14 +145,11 @@ void string_copy( string_t s, const char *string )
 {
   assert( s );
 
-  size_t slen = strlen( string );
+  size_t slen = strlen( string ) + 1;
 
   resize_string_if_need( s, slen );
 
-  strncpy( s->ptr, string, slen );
-  s->ptr[slen] = '\0';
-
-  s->len = slen;
+  strncpy( s->ptr, string, slen + 1 );
 }
 
 void string_destroy( string_t s )

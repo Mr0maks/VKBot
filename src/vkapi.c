@@ -146,7 +146,6 @@ vkapi_attachment *vkapi_upload_doc_by_url(vkapi_message_object *message, const c
       cJSON *media_id = NULL;
       cJSON *owner_id = NULL;
 
-
       switch (type) {
       case VKAPI_DOC:
       {

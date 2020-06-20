@@ -56,7 +56,7 @@ void cmd_modules(vkapi_message_object *message, int argc, char **argv, const cha
     string_strncat(s, str, strlen(str) );
 
     while (ptr != NULL) {
-        str = va( "• %s - %s %s %s %s\n", ptr->name, ptr->info->author, ptr->info->version, ptr->info->date, ptr->info->url );
+        str = va( "• %s - %s %s %s %s\n", ptr->name, ptr->info.author, ptr->info.version, ptr->info.date, ptr->info.url );
         string_strncat( s, str, strlen( str ) );
         ptr = ptr->next;
       }
@@ -68,7 +68,7 @@ void cmd_modules(vkapi_message_object *message, int argc, char **argv, const cha
 void cmd_about_bot(vkapi_message_object *message, int argc, char **argv, const char *args)
 {
   string_t s = string_init();
-  string_format( s, "VKBot\nИспользует библиотеки libcurl и cJSON\nИсходный код: https://github.com/Mr0maks/VKBot\nВерсия API ВК: %s\nВерсия API для модулей: %i\nСобран %s %s\nВерсия %s\nАрхитектура CPU %s", VK_API_VERSION, ENGINE_API_VERSION, __DATE__, __TIME__, VERSION, ARCH );
+  string_format( s, "VKBot\nИспользует библиотеки libcurl и cJSON\nИсходный код: https://github.com/Mr0maks/VKBot\nВерсия API ВК: %s\nВерсия API для модулей: %i\nСобран: %s %s\nВерсия: %s\nАрхитектура CPU: %s", VK_API_VERSION, ENGINE_API_VERSION, __DATE__, __TIME__, VERSION, ARCH );
   vkapi_send_message(message->peer_id, s->ptr, NULL, 0);
   string_destroy(s);
 }

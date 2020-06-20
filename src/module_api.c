@@ -5,10 +5,11 @@
 #include "minini.h"
 
 #include <stdarg.h>
+#include <string.h>
 
 module_t *modules_pool = NULL;
 
-typedef void (*module_init)( int apiver, module_info_t **info, engine_api_t *apifuncs );
+typedef module_info_t (*module_init)( int apiver, engine_api_t *apifuncs );
 
 void cmd_handler_register_module_cmd(module_info_t *info, const char *cmd_name, const char *description, cmd_function_callback callback);
 
@@ -49,12 +50,6 @@ const engine_api_t engfuncs_t =
     curl_post,
     curl_uploadfile,
     curl_cleanup,
-
-    // db api
-    db_register,
-    db_open,
-    db_exec,
-    db_close,
 
     //events
     module_event_register,
@@ -108,13 +103,18 @@ bool module_load(const char *name)
       return false;
     }
 
-  engine_api_t local_copy;
+  module_fill_funcs(&ptr->local_copy);
 
-  module_fill_funcs(&local_copy);
+  module_info_t info = module_init_func(ENGINE_API_VERSION, &ptr->local_copy );
 
-  module_init_func(ENGINE_API_VERSION, &ptr->info, &local_copy );
+  ptr->info.name = strdup(info.name);
+  ptr->info.version = strdup(info.version);
+  ptr->info.date = strdup(info.date);
+  ptr->info.url = strdup(info.url);
+  ptr->info.author = strdup(info.author);
+  ptr->info.ifver = info.ifver;
 
-  if(ptr->info->ifver != ENGINE_API_VERSION)
+  if(ptr->info.ifver != ENGINE_API_VERSION)
   {
       Con_Printf("Module %s error: interface mismatch\n", name);
       FreeLibrary(ptr->handle);
@@ -133,7 +133,7 @@ bool module_loaded(const char *name)
 {
     assert(name);
 
-    if(name != NULL)
+    if(name == NULL)
         return false;
 
     module_t *ptr = modules_pool;
@@ -155,7 +155,7 @@ void *module_function(const char *name, const char *function)
     assert(name);
     assert(function);
 
-    if(name != NULL || function != NULL)
+    if(name == NULL || function == NULL)
         return NULL;
 
     module_t *ptr = modules_pool;

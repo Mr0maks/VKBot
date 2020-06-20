@@ -256,12 +256,10 @@ void cmd_calculate_name_hashes()
 
 void cmd_handler_register_module_cmd(module_info_t *info, const char *cmd_name, const char *description, cmd_function_callback callback)
 {
-  cmd_module_pool_t *ptr = NULL;
-
   if(cmd_name == NULL || callback == NULL)
     return;
 
-  ptr = malloc(sizeof(cmd_module_pool_t));
+  cmd_module_pool_t *ptr = malloc(sizeof(cmd_module_pool_t));
 
   if(!ptr)
     {
@@ -270,15 +268,19 @@ void cmd_handler_register_module_cmd(module_info_t *info, const char *cmd_name, 
 
   ptr->hash = strncrc32case(cmd_name, strlen(cmd_name));
 
-  ptr->string = cmd_name;
-  ptr->description = description;
+  //rust CString can't be static. Need alloc strings here
+  ptr->string = strdup(cmd_name);
+
+  if(description != NULL)
+      ptr->description = strdup(description);
+
   ptr->info = info;
   ptr->function = callback;
 
   ptr->next = module_cmd_pool;
   module_cmd_pool = ptr;
 
-  Con_Printf("Command from module %s: \"%s\" - \"%s\"\n", info->name, cmd_name, description);
+  Con_Printf("Command from module \"%s\" - \"%s\"\n", cmd_name, description);
 
   max_command_len = MAX(max_command_len, strlen(cmd_name));
 }

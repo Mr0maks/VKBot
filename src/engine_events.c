@@ -8,6 +8,7 @@ bool message_new_handler(cJSON *raw)
     cJSON *message = cJSON_GetObjectItem(object, "message");
     cJSON *peer_id = cJSON_GetObjectItem(message, "peer_id");
     cJSON *from_id = cJSON_GetObjectItem(message, "from_id");
+    cJSON *fwd_messages = cJSON_GetObjectItem(message, "fwd_messages");
 
     vkapi_handle *handle = worker_get_vkapi_handle();
 
@@ -60,7 +61,27 @@ bool message_new_handler(cJSON *raw)
   
     if(cJSON_GetArraySize(attachments) > 0)
       x->attachmens = cJSON_Duplicate(attachments, true);
-  
+
+    /*
+    if(fwd_messages)
+    {
+        int i = 0;
+        x->reply_message = calloc(cJSON_GetArraySize(fwd_messages), sizeof (vkapi_reply_message));
+        cJSON *fwd_message = NULL;
+        cJSON_ArrayForEach(fwd_message, fwd_messages)
+        {
+            cJSON *fwd_text = cJSON_GetObjectItem(fwd_message, "text");
+            cJSON *fwd_peer_id = cJSON_GetObjectItem(fwd_message, "peer_id");
+            cJSON *fwd_from_id = cJSON_GetObjectItem(fwd_message, "from_id");
+
+            x->reply_message->peer_id = fwd_peer_id->valueint;
+            x->reply_message->from_id = fwd_from_id->valueint;
+            i++;
+        }
+
+
+    }
+  */
     cJSON_Delete(raw);
     
     double start_time = get_time_s();

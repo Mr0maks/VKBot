@@ -1,4 +1,9 @@
-#include "common.h"
+#include <stdlib.h>
+#include <assert.h>
+#include <string.h>
+#include <strings.h>
+#include <stdio.h>
+
 #include "db_api.h"
 
 typedef struct db_pool_s
@@ -32,11 +37,11 @@ static inline db_pool_t *db_find(const char *name)
   return NULL;
 }
 
-void db_register( const char *type, db_open_t open, db_exec_t exec, db_close_t close, void *data )
+static void db_register( const char *type, db_open_t open, db_exec_t exec, db_close_t close, void *data )
 {
   assert(type);
 
-  Con_Printf("[DB] Registered Type DB: %s\n", type);
+  printf("[DB] Registered Type DB: %s\n", type);
 
   db_pool_t *ptr = malloc(sizeof (db_pool_t));
 
@@ -53,7 +58,7 @@ void db_register( const char *type, db_open_t open, db_exec_t exec, db_close_t c
   pool = ptr;
 }
 
-db_handle_t *db_open(const char *filename, const char *db_name, void *data)
+static db_handle_t *db_open(const char *filename, const char *db_name, void *data)
 {
     assert(filename);
     assert(db_name);
@@ -75,7 +80,7 @@ db_handle_t *db_open(const char *filename, const char *db_name, void *data)
     return handle;
 }
 
-void db_exec(db_handle_t *db, const char *cmd, db_callback_t callback, void *data)
+static void db_exec(db_handle_t *db, const char *cmd, db_callback_t callback, void *data)
 {
   assert(db);
   assert(cmd);
@@ -84,10 +89,21 @@ void db_exec(db_handle_t *db, const char *cmd, db_callback_t callback, void *dat
     db->db_exec(db, cmd, callback, data);
 }
 
-void db_close(db_handle_t *db)
+static void db_close(db_handle_t *db)
 {
   assert(db);
 
   if(db->db_close)
     db->db_close(db);
+}
+
+void db_get_api(int ifver, db_api_t *api)
+{
+    assert(ifver == DB_API_VERSION);
+    assert(api);
+
+    api->db_register = db_register;
+    api->db_open = db_open;
+    api->db_exec = db_exec;
+    api->db_close = db_close;
 }

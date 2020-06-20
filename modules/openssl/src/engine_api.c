@@ -29,10 +29,10 @@ void Module_Init_Cmds()
     REGISTER_COMMAND(&module_info, commands[i].string, commands[i].description, commands[i].function);
 }
 
-void Module_Init(int apiver, module_info_t **info, engine_api_t *apifuncs)
+module_info_t Module_Init(int apiver, engine_api_t *apifuncs)
 {
-  memcpy(&engine_api, apifuncs, sizeof(engine_api));
-  *info = &module_info;
+    memcpy(&engine_api, apifuncs, sizeof(engine_api));
 
-  Module_Init_Cmds();
+    Module_Init_Cmds();
+    return module_info;
 }

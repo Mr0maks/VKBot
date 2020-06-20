@@ -27,10 +27,9 @@ int message_new_hook(cJSON *raw)
     return MODULE_IGNORE;
 }
 
-void Module_Init(int apiver, module_info_t **info, engine_api_t *apifuncs)
+module_info_t Module_Init(int apiver, engine_api_t *apifuncs)
 {
-  memcpy(&engine_api, apifuncs, sizeof(engine_api));
-  *info = &module_info;
-
-  REGISTER_EVENT_HOOK("message_new", message_new_hook );
+    memcpy(&engine_api, apifuncs, sizeof(engine_api));
+    REGISTER_EVENT_HOOK("message_new", message_new_hook );
+    return module_info;
 }

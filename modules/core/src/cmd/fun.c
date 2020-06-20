@@ -1,5 +1,6 @@
 #include <enginecallbacks.h>
 #include <cJSON.h>
+#include "va_utils.h"
 
 void cmd_cat(vkapi_message_object *message, int argc, char **argv, const char *args)
 {
@@ -16,7 +17,7 @@ void cmd_cat(vkapi_message_object *message, int argc, char **argv, const char *a
 
   if(!ptr)
     {
-      VKAPI_SEND_MESSAGE( message->peer_id, "Увы но сервер с котиками недоступен >:(", NULL, 0);
+      VKAPI_SEND_MESSAGE_ERROR("Сервер api.thecatapi.com недоступен");
       STRING_DESTROY(s);
       return;
     }

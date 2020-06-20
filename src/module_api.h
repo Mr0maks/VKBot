@@ -4,10 +4,9 @@
 #include "vkapi.h"
 #include "cmd_handler.h"
 #include "curl_wrap.h"
-#include "db_api.h"
 #include "worker_vk_events.h"
 
-#define ENGINE_API_VERSION 1
+#define ENGINE_API_VERSION 2
 
 typedef struct
 {
@@ -33,14 +32,6 @@ typedef struct
 typedef void* HMODULE ;
 #define LIB_EXT "so"
 #endif
-
-typedef struct module_s
-{
-  HMODULE handle;
-  char	  name[256];
-  module_info_t *info;
-  struct module_s *next;
-} module_t;
 #endif
 
 //! Load module by name
@@ -82,11 +73,6 @@ typedef struct
   bool (*curl_uploadfile) ( void *curl_handle, const char *url, const char *fieldname, const char *filename, string_t data, string_t useragent, string_t dataptr );
   void (*curl_cleanup) (void *ptr);
 
-  void (*db_register) ( const char *type, db_open_t open, db_exec_t exec, db_close_t close, void *data );
-  db_handle_t *(*db_open) (const char *filename, const char *db_name, void *data);
-  void (*db_exec) (db_handle_t *db, const char *cmd, db_callback_t callback, void *data);
-  void (*db_close) (db_handle_t *db);
-
   void (*register_event)(const char *event_name, event_handler_t handler);
   void (*register_event_hook)(const char *event_name, event_hook_handler_t handler);
 
@@ -97,3 +83,14 @@ typedef struct
   unsigned int (*memcrc32) (const unsigned char *buf, size_t len);
   void (*alert) (const char *fmt, ...);
 } engine_api_t;
+
+#ifndef _VKBOT_MODULE
+typedef struct module_s
+{
+    HMODULE handle;
+    engine_api_t local_copy;
+    char	  name[256];
+    module_info_t info;
+    struct module_s *next;
+} module_t;
+#endif

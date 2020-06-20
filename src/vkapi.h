@@ -29,10 +29,24 @@ typedef struct
 
 typedef struct
 {
+    string_t text;
+    int peer_id;
+    int from_id;
+    bool private_message;
+#ifndef _VKBOT_MODULE
+    cJSON *attachmens;
+#else
+    void *attachmens;
+#endif
+} vkapi_reply_message;
+
+typedef struct
+{
   string_t text;
   int peer_id;
   int from_id;
   bool private_message;
+  vkapi_reply_message *reply_message;
   #ifndef _VKBOT_MODULE
   cJSON *attachmens;
   #else

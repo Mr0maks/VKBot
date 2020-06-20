@@ -34,7 +34,7 @@ const cmds_t commands[] = {
   { "котик", "рандомный котик", cmd_cat },
   { "Начать", NULL, cmd_start },
 #ifdef DEBUG
-  //{ "debug", NULL, cmd_debug },
+  { "debug", NULL, cmd_debug },
 #endif
   { NULL, NULL, NULL }
 };
@@ -53,14 +53,11 @@ void Module_Init_Events()
     REGISTER_EVENT_HOOK( "message_new", message_new_hook );
 }
 
-void Module_Init(int apiver, module_info_t **info, engine_api_t *apifuncs)
+module_info_t Module_Init(int apiver, engine_api_t *apifuncs)
 {
-    if(apiver != ENGINE_API_VERSION)
-        return;
+    memcpy(&engine_api, apifuncs, sizeof(engine_api));
 
-  memcpy(&engine_api, apifuncs, sizeof(engine_api));
-  *info = &module_info;
-
-  Module_Init_Cmds();
-  Module_Init_Events();
+    Module_Init_Cmds();
+    Module_Init_Events();
+    return module_info;
 }

@@ -1,6 +1,4 @@
-#include <stdio.h>
 #include <string.h>
-#include <module_api.h>
 #include <enginecallbacks.h>
 #include "sqlite3_db.h"
 
@@ -22,10 +20,10 @@ void Module_Init_Dbs()
   DB_REGISTER("sqlite", sqlite_open, sqlite_exec, sqlite_close, NULL );
 }
 
-void Module_Init(int apiver, module_info_t **info, engine_api_t *apifuncs)
+module_info_t Module_Init(int apiver, engine_api_t *apifuncs)
 {
   memcpy(&engine_api, apifuncs, sizeof(engine_api));
-  *info = &module_info;
 
   Module_Init_Dbs();
+  return module_info;
 }
