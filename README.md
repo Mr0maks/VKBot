@@ -1,7 +1,7 @@
 # VKBot
 VK bot
 
-bot.init
+bot.ini
 ```
 token = {vk api token}
 num_workers = {number of workers}
