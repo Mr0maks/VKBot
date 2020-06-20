@@ -94,7 +94,7 @@ modules_build:
 	mv modules/openssl/$(OBJDIR)/openssl_$(ARCH).so $(OBJDIR)
 
 thirdparty:
-	cd cjson CFLAGS=$(OPT_CFLAGS) && $(MAKE) static
+	cd cjson && $(MAKE) CFLAGS=-O2 static
 
 neat:
 	@mkdir -p $(OBJDIR)
