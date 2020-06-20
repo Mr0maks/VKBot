@@ -8,7 +8,7 @@
 #define YYDEBUG(s, c) printf("function: %s state: %d char: %c\n", __FUNCTION__, s, c)
 
 // re2 >= 1.2
-// re2c -8 re2c/cmd_string_tokenize.re2c --input-encoding utf8 --tags -o src/cmd_tokeinize_cmd.c
+// re2c -8 re2c/cmd_tokeinize.re2c --input-encoding utf8 --tags -o src/cmd_tokeinize.c
 
 /*!max:re2c*/
 
@@ -18,7 +18,7 @@ static void cmd_tokeinize_push(uint8_t *start, uint8_t *end, char *tokens[], int
     tokens[token_count] = (char *)start;
 }
 
-int cmd_string_tokeinize(unsigned char *str, char *tokens[], int *tokens_len )
+void cmd_tokeinize(unsigned char *str, char *tokens[], int *tokens_len )
 {
 assert(str);
 assert(tokens);
@@ -26,6 +26,7 @@ assert(tokens_len);
 
 int tokens_count = 0;
 uint8_t *YYMARKER = NULL;
+uint8_t *YYLIMIT = (str + strlen((char*)str));
 uint8_t *t1, *t2;
 /*!stags:re2c format = 'uint8_t *@@;'; */
 loop:
@@ -33,11 +34,16 @@ loop:
 re2c:define:YYCTYPE = uint8_t;
 re2c:define:YYCURSOR = str;
 re2c:yyfill:enable = 0;
+re2c:eof = 0;
+
+$ { goto end; }
 
 whitespace = [ \n\t\v\f]+;
 token = [^ \n\t\v\f]+;
 
-@t1 token @t2 whitespace { cmd_tokeinize_push(t1, t2, tokens, tokens_count++ ); goto loop; }
-@t1 token @t2 "\x00" { cmd_tokeinize_push(t1, t2, tokens, tokens_count++ ); *tokens_len = tokens_count; return tokens_count; }
+@t1 token @t2 whitespace? { cmd_tokeinize_push(t1, t2, tokens, tokens_count++ ); goto loop; }
 */
+end:
+    *tokens_len = tokens_count;
+    return;
 }

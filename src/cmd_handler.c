@@ -110,7 +110,7 @@ cmd_function_callback cmd_get_command(const char *command)
   return NULL;
 }
 
-int cmd_string_tokeinize(char *str, char *tokens[], int *tokens_len );
+void cmd_tokeinize(char *str, char *tokens[], int *tokens_len );
 
 bool cmd_handle(vkapi_message_object *message)
 {
@@ -123,7 +123,7 @@ bool cmd_handle(vkapi_message_object *message)
 
   char **tokens = (char**)calloc(256, sizeof(char*));
 
-  cmd_string_tokeinize( s->ptr, tokens, &tokens_count );
+  cmd_tokeinize( s->ptr, tokens, &tokens_count );
 
   string_t args_s = string_init();
 
