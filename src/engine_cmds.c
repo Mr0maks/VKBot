@@ -73,6 +73,8 @@ void cmd_about_bot(vkapi_message_object *message, int argc, char **argv, const c
   string_destroy(s);
 }
 
+time_t Host_Init_Time(void);
+
 void cmd_stat(vkapi_message_object *message, int argc, char **argv, const char *args)
 {
   string_t s = string_init();
@@ -80,7 +82,12 @@ void cmd_stat(vkapi_message_object *message, int argc, char **argv, const char *
   struct rusage r_usage;
   getrusage(RUSAGE_SELF,&r_usage);
 
-  string_format( s, "Статистика бота\nКоличество работающих воркеров: %i\nКомманд обработано: %lu\nПамяти использовано: %ld кб\nСообщений обработано: %lu\n", worker_get_workers_count(), worker_commands_processed(), r_usage.ru_maxrss, worker_message_processed() );
+  time_t date = Host_Init_Time();
+
+  char buffer[256];
+  strftime(buffer, sizeof (buffer), "%c", localtime( &date ));
+
+  string_format( s, "Статистика бота\nБот запущен: %s\nКоличество работающих воркеров: %i\nКомманд обработано: %lu\nПамяти использовано: %ld кб\nСообщений обработано: %lu\n", buffer, worker_get_workers_count(), worker_commands_processed(), r_usage.ru_maxrss, worker_message_processed() );
   vkapi_send_message( message->peer_id, s->ptr, NULL, 0 );
   string_destroy( s );
 }

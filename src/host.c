@@ -26,8 +26,17 @@ void Host_Exit()
 
 void load_modules(void);
 
+static time_t init_time = 0;
+
+time_t Host_Init_Time(void)
+{
+    return init_time;
+}
+
 void Host_Init()
 {
+    init_time = time(NULL);
+
     if(config_parse_file("./bot.ini"))
     {
         Con_Printf("Bot config parsing error");
