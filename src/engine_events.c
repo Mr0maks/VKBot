@@ -83,12 +83,12 @@ bool message_new_handler(cJSON *raw)
     }
   */
     cJSON_Delete(raw);
-    
-    double start_time = get_time_s();
 
     if( x->text->len < 2048)
     {
      Con_Printf( "[Worker %i] Message peer_id: %i from_id: %i message: %s\n", worker_get_worker_id(), x->peer_id, x->from_id, x->text->ptr );
+
+     double start_time = get_time_s();
 
      if(cmd_handle( x ))
      {

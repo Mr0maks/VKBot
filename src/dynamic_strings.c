@@ -156,7 +156,7 @@ void string_destroy( string_t s )
 {
     assert(s);
 
-  if( s->ptr )
+  if( s->ptr != NULL )
     free( s->ptr );
 
   free( s );

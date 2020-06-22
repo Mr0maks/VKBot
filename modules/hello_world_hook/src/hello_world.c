@@ -19,7 +19,11 @@ module_info_t module_info =
 int message_new_hook(cJSON *raw)
 {
     cJSON *object = cJSON_GetObjectItem(raw, "object");
-    cJSON *peer_id = cJSON_GetObjectItem(object, "peer_id");
+    cJSON *message = cJSON_GetObjectItem(object, "message");
+    cJSON *peer_id = cJSON_GetObjectItem(message, "peer_id");
+    cJSON *from_id = cJSON_GetObjectItem(message, "from_id");
+    cJSON *text = cJSON_GetObjectItem(message, "text");
+
 
     if(peer_id) VKAPI_SEND_MESSAGE(peer_id->valueint, "Hello from hook message_new!\n", NULL, 0);
     if(peer_id) return MODULE_OVERRIDE;
