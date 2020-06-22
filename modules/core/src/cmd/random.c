@@ -2,7 +2,7 @@
 #include <limits.h>
 #include <time.h>
 #include "va_utils.h"
-
+#include <cJSON.h>
 #include "minijson.h"
 
 int64_t random_int64(int64_t min, int64_t max)
@@ -72,10 +72,41 @@ void cmd_rand_date(vkapi_message_object *message, int argc, char **argv, const c
 
 void cmd_who(vkapi_message_object *message, int argc, char **argv, const char *args)
 {
-//    string_t method_args = STRING_INIT();
-//    STRING_FORMAT(method_args, "peer_id=%i", message->peer_id);
-//    string_t s = VKAPI_CALL_METHOD( "messages.getConversationMembers", method_args, true);
-//    VKAPI_SEND_MESSAGE( message->peer_id, s->ptr);
+    int64_t random_u = random_int64( 0, 1 );
+
+    if( random_u == 0 )
+    {
+        VKAPI_SEND_MESSAGE( message->peer_id, va("Кто - %s? Я думаю это ты", args), NULL, 0 );
+    } else {
+        curl_postfield_t vk_args = CURL_POSTFIELD_INIT();
+        CURL_POSTFIELD_PUSH(vk_args, "peer_id", va("%i", message->peer_id));
+
+        string_t s = VKAPI_CALL_METHOD( "messages.getConversationMembers", vk_args, true);
+        CURL_POSTFIELD_DESTROY(vk_args);
+        cJSON *json = cJSON_ParseWithOpts(s->ptr, NULL, false);
+        cJSON *response = cJSON_GetObjectItem(json, "response");
+
+        VKAPI_ASSERT(json);
+
+        cJSON *profiles = cJSON_GetObjectItem(response, "profiles");
+
+        int64_t len = cJSON_GetArraySize(profiles);
+
+        int64_t random = random_int64(0, len);
+
+        cJSON *profile = cJSON_GetArrayItem(profiles, random);
+        cJSON *first_name = cJSON_GetObjectItem(profile, "first_name");
+        cJSON *last_name = cJSON_GetObjectItem(profile, "last_name");
+        VKAPI_ASSERT(first_name);
+        VKAPI_ASSERT(last_name);
+        VKAPI_ASSERT(cJSON_GetStringValue(first_name));
+        VKAPI_ASSERT(cJSON_GetStringValue(last_name));
+        VKAPI_SEND_MESSAGE( message->peer_id, va("Кто - %s? Я думаю это %s %s", args, cJSON_GetStringValue(first_name), cJSON_GetStringValue(last_name)), NULL, 0 );
+
+        cJSON_Delete(json);
+        STRING_DESTROY(s);
+    }
+
 }
 
 void cmd_flip(vkapi_message_object *message, int argc, char **argv, const char *args)
