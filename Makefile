@@ -56,6 +56,10 @@ ifeq ($(DEBUG),1)
 BUILD_TYPE = debug
 BUILD_TYPE_CFLAGS = -g -DDEBUG
 #-fsanitize=undefined -fsanitize=address -fsanitize=thread
+ifeq ($(FIND_LEAK),1)
+BUILD_TYPE_CFLAGS += -DVKBOT_FIND_LEAK
+LDFLAGS += -lgc
+endif
 else
 BUILD_TYPE = release
 BUILD_TYPE_CFLAGS = -DNDEBUG
@@ -70,7 +74,7 @@ CFLAGS = $(BUILD_TYPE_CFLAGS) $(BASE_CFLAGS) $(OPT_CFLAGS) $(ARCH_CFLAGS)
 
 INCLUDE=-I. -I$(SRCDIR) -Icjson
 
-LDFLAGS=-lpthread -lcurl -lcjson -ldl -flto -Lcjson/
+LDFLAGS += -lpthread -lcurl -lcjson -ldl -flto -Lcjson/
 
 DO_CC=$(CC) $(CFLAGS) $(INCLUDE) -o $@ -c $<
 

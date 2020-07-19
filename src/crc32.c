@@ -1,5 +1,4 @@
 #include <stdlib.h>
-#include <ctype.h>
 #include <stdint.h>
 
 /*
@@ -73,8 +72,11 @@ unsigned int memcrc32 (const unsigned char *buf, size_t len)
 {
   uint32_t crc32 = CRC32_INIT;
 
-  while (((uintptr_t)buf % 4u != 0) && len--)
+  while ((((uintptr_t)(const void *)(buf)) % 4u != 0) && len)
+  {
       crc32 = (crc32 >> 8) ^ crc32_table[(crc32 ^ *buf++) & 0xFF];
+      len--;
+  }
 
   uint32_t *ubuf = (uint32_t*)buf;
 
@@ -108,56 +110,9 @@ int memcrc32cmp(const unsigned char *buf1 , const unsigned char *buf2, size_t le
     return !(hash1 == hash2);
 }
 
-uint32_t strcrc32 (const char *buf)
-{
-  uint32_t crc = CRC32_INIT;
-
-  while (*buf != '\0')
-      crc = (crc >> 8) ^ crc32_table[(crc ^ (unsigned char)*buf++) & 0xFF];
-
-  return (crc ^ CRC32_INIT);
-}
-
-uint32_t strcrc32case(const char *buf)
-{
-    uint32_t crc = CRC32_INIT;
-
-    while (*buf != '\0')
-        crc = (crc >> 8) ^ crc32_table[(crc ^ (unsigned char)tolower(*buf++)) & 0xFF];
-
-    return (crc ^ CRC32_INIT);
-}
-
-uint32_t strncrc32 (const char *buf, size_t len)
-{
-  uint32_t crc = CRC32_INIT;
-
-  while (len--)
-      crc = (crc >> 8) ^ crc32_table[(crc ^ (unsigned char)*buf++) & 0xFF];
-
-  return (crc ^ CRC32_INIT);
-}
-
-uint32_t strncrc32case(const char *buf, size_t len)
-{
-    uint32_t crc = CRC32_INIT;
-
-    while (len--)
-        crc = (crc >> 8) ^ crc32_table[(crc ^ (unsigned char)tolower(*buf++)) & 0xFF];
-
-    return (crc ^ CRC32_INIT);
-}
-
 int strncrc32cmp( const char *str1 ,const char *str2, size_t len )
 {
-    uint32_t hash1 = strncrc32(str1, len), hash2 = strncrc32(str2, len);
-
-    return !(hash1 == hash2);
-}
-
-int strncrc32casecmp(const char *str1 ,const char *str2, size_t len)
-{
-    uint32_t hash1 = strncrc32case(str1, len), hash2 = strncrc32case(str2, len);
+    uint32_t hash1 = memcrc32((void*)str1, len), hash2 = memcrc32((void*)str2, len);
 
     return !(hash1 == hash2);
 }

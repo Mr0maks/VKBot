@@ -43,4 +43,11 @@ extern engine_api_t engine_api;
 #define CRC32 (*engine_api.memcrc32)
 #define ALERT (*engine_api.alert)
 
+//#define malloc (*engine_api.malloc)
+//#define calloc(x,c) (*engine_api.malloc)(x,c)
+//#define free (*engine_api.free)
+
+
+
+
 #endif // ENGINECALLBACKS_H

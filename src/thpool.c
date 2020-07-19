@@ -1,5 +1,6 @@
 /* ********************************
  * Author:       Johan Hanssen Seferidis
+ * Modified Version
  * License:	     MIT
  * Description:  Library providing a threading pool where you can add
  *               work. For usage, check the thpool.h file or README.md
@@ -21,6 +22,10 @@
 #endif
 
 #include "thpool.h"
+
+#ifdef VKBOT_FIND_LEAK
+#include "find_leak.h"
+#endif
 
 #ifdef THPOOL_DEBUG
 #define THPOOL_DEBUG 1
@@ -248,14 +253,6 @@ void thpool_pause(thpool_* thpool_p) {
 	for (n=0; n < thpool_p->num_threads_alive; n++){
 		pthread_kill(thpool_p->threads[n]->pthread, SIGUSR1);
 	}
-}
-
-/* Kill all threads in threadpool */
-void thpool_kill(thpool_* thpool_p) {
-    int n;
-    for (n=0; n < thpool_p->num_threads_alive; n++){
-        pthread_kill(thpool_p->threads[n]->pthread, SIGKILL);
-    }
 }
 
 /* Resume all threads in threadpool */

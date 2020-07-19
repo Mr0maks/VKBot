@@ -5,6 +5,7 @@ static curl_keyvalue_t *curl_keyvalue_new(const char *key, const char *value)
     curl_keyvalue_t *ptr = calloc(1, sizeof(curl_keyvalue_t));
     ptr->key = key;
     ptr->value = value;
+    ptr->next = NULL;
     return ptr;
 }
 
@@ -56,12 +57,12 @@ void curl_postfield_destroy(curl_postfield_t pool)
     assert(pool);
 
     curl_keyvalue_t *ptr = pool->pool;
-    curl_keyvalue_t *old = NULL;
+    curl_keyvalue_t *prev = NULL;
 
-    while (ptr) {
-        old = ptr;
+    while (ptr != NULL) {
+        prev = ptr;
         ptr = ptr->next;
-        free(old);
+        free(prev);
     }
 
     free(pool);

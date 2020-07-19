@@ -3,13 +3,13 @@
 #include "vkapi.h"
 #include "module_api.h"
 
-typedef  void	(*cmd_function_callback)(vkapi_message_object *message, int argc, char *argv[], const char *args);
+typedef  void	(*cmd_callback)(vkapi_message_object *message, int argc, char *argv[], const char *args);
 
 typedef struct
 {
   const char	*string;
   const char    *description;
-  cmd_function_callback  function;
+  cmd_callback  function;
 } cmds_t;
 
 #ifndef _VKBOT_MODULE

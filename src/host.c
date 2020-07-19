@@ -35,6 +35,10 @@ time_t Host_Init_Time(void)
 
 void Host_Init()
 {
+#ifdef VKBOT_FIND_LEAK
+    GC_set_find_leak(1);
+    GC_INIT();
+#endif
     init_time = time(NULL);
 
     if(config_parse_file("./bot.ini"))

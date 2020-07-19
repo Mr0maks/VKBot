@@ -20,7 +20,7 @@ module_info_t module_info =
 };
 
 const cmds_t commands[] = {
-  { "ping", "команда для проверки бота на отзывчевость", cmd_ping },
+  { "ping", "просто ping", cmd_ping },
   { "ранд", "рандомное число", cmd_rand },
   { "когда", "узнать дату события", cmd_rand_date },
   { "кто", "выбирает случайного человека из беседы", cmd_who },

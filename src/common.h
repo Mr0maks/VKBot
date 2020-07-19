@@ -27,3 +27,7 @@
 #include "curl_wrap.h"
 #include "crc32.h"
 #include "worker_vk_events.h"
+
+#ifdef VKBOT_FIND_LEAK
+#include "find_leak.h"
+#endif

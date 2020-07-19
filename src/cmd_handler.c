@@ -1,4 +1,5 @@
 #include "common.h"
+#include "cmd_deserialize.h"
 #include "engine_cmds.h"
 
 #define MAX(a,b) ((a) > (b) ? (a) : (b))
@@ -11,7 +12,7 @@ typedef struct cmds_modules_pools_s
     module_info_t *info;
     const char	*string;
     const char    *description;
-    cmd_function_callback  function;
+    cmd_callback  function;
     uint32_t hash;
     struct cmds_modules_pools_s *next;
 } cmd_module_pool_t;
@@ -19,8 +20,8 @@ typedef struct cmds_modules_pools_s
 typedef struct
 {
     uint32_t hash;
-    cmd_function_callback  function;
-} cmd_hash_t;
+    cmd_callback  function;
+} cmd_hash_table_t;
 
 typedef struct
 {
@@ -28,7 +29,7 @@ typedef struct
 } cmd_name_t;
 
 cmd_module_pool_t *module_cmd_pool = NULL;
-static cmd_hash_t *cmd_hash_table = NULL;
+static cmd_hash_table_t *cmd_hash_table = NULL;
 static uint32_t *name_hash_table = NULL;
 
 const cmds_t commands[] = {
@@ -66,7 +67,7 @@ bool cmd_is_bot_name(const char *name)
   if( name_len > max_name_len )
     return false;
 
-  unsigned int name_hash = strncrc32case(name, name_len );
+  unsigned int name_hash = strncrc32(name, name_len );
 
   for( size_t i = 0; i < static_names; i++ ) {
       if( name_hash_table[i] == name_hash )
@@ -78,7 +79,7 @@ bool cmd_is_bot_name(const char *name)
   return false;
 }
 
-cmd_function_callback cmd_get_command(const char *command)
+cmd_callback cmd_get_command(const char *command)
 {
   if(!command)
     return NULL;
@@ -88,7 +89,7 @@ cmd_function_callback cmd_get_command(const char *command)
   if( command_len > max_command_len )
     return NULL;
 
-  unsigned int cmd_hash = strncrc32case(command, command_len );
+  unsigned int cmd_hash = strncrc32(command, command_len );
 
   for( size_t i = 0; i < static_commands; i++ ) {
       if( cmd_hash_table[i].hash == cmd_hash )
@@ -110,8 +111,6 @@ cmd_function_callback cmd_get_command(const char *command)
   return NULL;
 }
 
-void cmd_tokeinize(char *str, char *tokens[], int *tokens_len );
-
 bool cmd_handle(vkapi_message_object *message)
 {
   char *argv[256] = { NULL };
@@ -123,7 +122,7 @@ bool cmd_handle(vkapi_message_object *message)
 
   char **tokens = (char**)calloc(256, sizeof(char*));
 
-  cmd_tokeinize( s->ptr, tokens, &tokens_count );
+  tokens_count = cmd_deserialize( (unsigned char*)s->ptr, tokens );
 
   string_t args_s = string_init();
 
@@ -171,7 +170,7 @@ bool cmd_handle(vkapi_message_object *message)
 
    Con_Printf( "Try to call cmd %s\n", argv[0] );
 
-   cmd_function_callback cmd = cmd_get_command(argv[0]);
+   cmd_callback cmd = cmd_get_command(argv[0]);
 
    if(cmd)
      {
@@ -200,9 +199,9 @@ end:
     return false;
 }
 
-void cmd_calculate_cmd_hashes()
+static void cmd_build_cmd_hash_table()
 {
-  cmd_hash_table = (cmd_hash_t *)calloc( static_commands, sizeof(cmd_hash_t) );
+  cmd_hash_table = (cmd_hash_table_t *)calloc( static_commands, sizeof(cmd_hash_table_t) );
 
   if( cmd_hash_table == NULL )
     {
@@ -219,7 +218,7 @@ void cmd_calculate_cmd_hashes()
 
       size_t string_len = strlen( commands[i].string );
 
-      cmd_hash_table[i].hash = strncrc32case( commands[i].string, string_len );
+      cmd_hash_table[i].hash = strncrc32( commands[i].string, string_len );
       cmd_hash_table[i].function = commands[i].function;
 
       max_command_len = MAX( max_command_len, string_len );
@@ -229,7 +228,7 @@ void cmd_calculate_cmd_hashes()
     }
 }
 
-void cmd_calculate_name_hashes()
+static void cmd_build_name_hash_table()
 {
   name_hash_table = (uint32_t *)calloc( static_names, sizeof(uint32_t) );
 
@@ -246,7 +245,7 @@ void cmd_calculate_name_hashes()
 
       size_t string_len = strlen( names[i].name );
 
-      name_hash_table[i] = strncrc32case(names[i].name, string_len );
+      name_hash_table[i] = strncrc32(names[i].name, string_len );
 
       max_name_len = MAX( max_name_len, string_len );
 
@@ -254,7 +253,7 @@ void cmd_calculate_name_hashes()
     }
 }
 
-void cmd_handler_register_module_cmd(module_info_t *info, const char *cmd_name, const char *description, cmd_function_callback callback)
+void cmd_handler_register_module_cmd(module_info_t *info, const char *cmd_name, const char *description, cmd_callback callback)
 {
   if(cmd_name == NULL || callback == NULL)
     return;
@@ -266,7 +265,7 @@ void cmd_handler_register_module_cmd(module_info_t *info, const char *cmd_name, 
       return;
     }
 
-  ptr->hash = strncrc32case(cmd_name, strlen(cmd_name));
+  ptr->hash = strncrc32(cmd_name, strlen(cmd_name));
 
   //rust CString can't be static. Need alloc strings here
   ptr->string = strdup(cmd_name);
@@ -310,14 +309,14 @@ void cmd_handler_unregister_module_cmd(module_info_t *info)
       }
 }
 
-void cmd_handler_deinit()
-{
-  free(cmd_hash_table);
-  free(name_hash_table);
-}
-
 void cmd_handler_init()
 {
-    cmd_calculate_cmd_hashes();
-    cmd_calculate_name_hashes();
+    cmd_build_cmd_hash_table();
+    cmd_build_name_hash_table();
+}
+
+void cmd_handler_deinit()
+{
+    free(cmd_hash_table);
+    free(name_hash_table);
 }

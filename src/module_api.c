@@ -11,9 +11,9 @@ module_t *modules_pool = NULL;
 
 typedef module_info_t (*module_init)( int apiver, engine_api_t *apifuncs );
 
-void cmd_handler_register_module_cmd(module_info_t *info, const char *cmd_name, const char *description, cmd_function_callback callback);
+void cmd_handler_register_module_cmd(module_info_t *info, const char *cmd_name, const char *description, cmd_callback callback);
 
-void module_reg_cmd(module_info_t *info, const char *cmd_name, const char *description, cmd_function_callback callback)
+void module_reg_cmd(module_info_t *info, const char *cmd_name, const char *description, cmd_callback callback)
 {
   cmd_handler_register_module_cmd(info, cmd_name, description, callback);
 }
@@ -21,8 +21,8 @@ void module_reg_cmd(module_info_t *info, const char *cmd_name, const char *descr
 const engine_api_t engfuncs_t =
 {
     // memory api
-    NULL,
-    NULL,
+    malloc,
+    free,
 
     module_reg_cmd,
     NULL, // FIXME: unregister not implemented
@@ -167,6 +167,28 @@ void *module_function(const char *name, const char *function)
             return GetProcAddress(ptr->handle, function);
         }
         ptr = ptr->next;
+    }
+
+    return NULL;
+}
+
+void *module_unload(const char *name)
+{
+    assert(name);
+
+    if(name == NULL)
+        return NULL;
+
+    module_t *ptr = modules_pool, *prev = NULL;
+
+    while(ptr != NULL)
+    {
+        if(!strcmp(name, ptr->name))
+        {
+            prev->next = ptr->next;
+        }
+        ptr = ptr->next;
+        prev = ptr;
     }
 
     return NULL;

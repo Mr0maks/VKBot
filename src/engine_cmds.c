@@ -6,7 +6,7 @@ typedef struct cmds_modules_pools_s
     module_info_t *info;
     const char	*string;
     const char    *description;
-    cmd_function_callback  function;
+    cmd_callback  function;
     uint32_t hash;
     struct cmds_modules_pools_s *next;
 } cmd_module_pool_t;
@@ -86,6 +86,11 @@ void cmd_stat(vkapi_message_object *message, int argc, char **argv, const char *
 
   char buffer[256];
   strftime(buffer, sizeof (buffer), "%c", localtime( &date ));
+
+#ifdef VKBOT_FIND_LEAK
+    size_t memory_use = GC_get_heap_size() / 1000;
+    vkapi_send_message( message->peer_id, va("-DVKBOT_FIND_LEAK\nGC_get_heap_size: %zu kb\n", memory_use), NULL, 0 );
+#endif
 
   string_format( s, "Статистика бота\nБот запущен: %s\nКоличество работающих воркеров: %i\nКомманд обработано: %lu\nПамяти использовано: %ld кб\nСообщений обработано: %lu\n", buffer, worker_get_workers_count(), worker_commands_processed(), r_usage.ru_maxrss, worker_message_processed() );
   vkapi_send_message( message->peer_id, s->ptr, NULL, 0 );

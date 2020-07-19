@@ -48,7 +48,7 @@ typedef struct
   void *(*malloc)(size_t size);
   void (*free)(void *ptr);
 
-  void (*register_command) (module_info_t *info, const char *cmd_name, const char *description, cmd_function_callback callback);
+  void (*register_command) (module_info_t *info, const char *cmd_name, const char *description, cmd_callback callback);
   void (*unregister_command) (module_info_t *info, const char *cmd_name);
 
   string_t (*vkapi_call_method) (const char *method, curl_postfield_t args, bool result_need);

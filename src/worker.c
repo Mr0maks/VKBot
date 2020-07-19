@@ -36,6 +36,9 @@ void lp_event_worker( void *data )
     cJSON *json_event = (cJSON*)data;
     assert(json_event);
     events_manager(json_event);
+#ifdef VKBOT_FIND_LEAK
+    CHECK_LEAKS();
+#endif
 }
 
 void *longpoll_worker( void *data )
