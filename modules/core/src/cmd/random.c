@@ -144,7 +144,7 @@ void cmd_rate(vkapi_message_object *message, int argc, char **argv, const char *
 
     int64_t rate = random_int64( 0, 11 );
 
-    VKAPI_SEND_MESSAGE( message->peer_id, va("Я оцениваяю %s в %lli/10", args, rate), NULL, 0 );
+    VKAPI_SEND_MESSAGE( message->peer_id, va("Я оцениваю %s в %lli/10", args, rate), NULL, 0 );
 }
 
 void cmd_rand_docs(vkapi_message_object *message, int argc, char **argv, const char *args)
