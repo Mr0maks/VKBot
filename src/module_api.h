@@ -2,37 +2,13 @@
 
 #include "dynamic_strings.h"
 #include "vkapi.h"
-#include "cmd_handler.h"
 #include "curl_wrap.h"
-#include "worker_vk_events.h"
 
-#define ENGINE_API_VERSION 2
+#include "module.h"
+#include "module_events.h"
+#include "module_cmds.h"
 
-typedef struct
-{
-    char *name;
-    char *version;
-    char *date;
-    char *url;
-    char *author;
-    //! interface version
-    int ifver;
-} module_info_t;
-
-#ifndef _VKBOT_MODULE
-#ifdef _WIN32
-#include <Windows.h>
-#define LIB_EXT "dll"
-#else
-#include <dlfcn.h>
-#define LoadLibrary( x ) dlopen( x, RTLD_NOW )
-#define GetProcAddress( x, functionname ) dlsym( x , functionname )
-#define FreeLibrary( x ) dlclose( x )
-#define GetLastError( ) dlerror( )
-typedef void* HMODULE ;
-#define LIB_EXT "so"
-#endif
-#endif
+#define ENGINE_API_VERSION 3
 
 //! Load module by name
 bool module_load(const char *name);
@@ -48,8 +24,9 @@ typedef struct
   void *(*malloc)(size_t size);
   void (*free)(void *ptr);
 
-  void (*register_command) (module_info_t *info, const char *cmd_name, const char *description, cmd_callback callback);
-  void (*unregister_command) (module_info_t *info, const char *cmd_name);
+  void (*register_command) (const char *cmd_name, const char *description, cmd_callback callback);
+  void (*register_event)(const char *event_name, event_handler_t handler);
+  void (*register_event_hook)(const char *event_name, event_handler_t handler);
 
   string_t (*vkapi_call_method) (const char *method, curl_postfield_t args, bool result_need);
   void (*vkapi_send_message) (int peer_id, const char *msg, vkapi_attachment *attaches, int attaches_len);
@@ -73,9 +50,6 @@ typedef struct
   bool (*curl_uploadfile) ( void *curl_handle, const char *url, const char *fieldname, const char *filename, string_t data, string_t useragent, string_t dataptr );
   void (*curl_cleanup) (void *ptr);
 
-  void (*register_event)(const char *event_name, event_handler_t handler);
-  void (*register_event_hook)(const char *event_name, event_hook_handler_t handler);
-
   bool (*module_load)(const char *name);
   bool (*module_loaded)(const char *name);
   void *(*module_function)(const char *name, const char *function);
@@ -83,14 +57,3 @@ typedef struct
   unsigned int (*memcrc32) (const unsigned char *buf, size_t len);
   void (*alert) (const char *fmt, ...);
 } engine_api_t;
-
-#ifndef _VKBOT_MODULE
-typedef struct module_s
-{
-    HMODULE handle;
-    engine_api_t local_copy;
-    char	  name[256];
-    module_info_t info;
-    struct module_s *next;
-} module_t;
-#endif

@@ -26,7 +26,7 @@ const cmds_t commands[] = {
 void Module_Init_Cmds()
 {
     for(int i = 0; commands[i].string != NULL; i++)
-    REGISTER_COMMAND(&module_info, commands[i].string, commands[i].description, commands[i].function);
+    REGISTER_COMMAND(commands[i].string, commands[i].description, commands[i].function);
 }
 
 module_info_t Module_Init(int apiver, engine_api_t *apifuncs)

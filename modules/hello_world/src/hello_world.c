@@ -23,6 +23,6 @@ module_info_t module_info =
 module_info_t Module_Init(int apiver, engine_api_t *apifuncs)
 {
     memcpy(&engine_api, apifuncs, sizeof(engine_api));
-    REGISTER_COMMAND(&module_info, "helloworld", "hello world модуль для демонстрации", cmd_hello_world);
+    REGISTER_COMMAND("helloworld", "hello world модуль для демонстрации", cmd_hello_world);
     return module_info;
 }

@@ -47,7 +47,4 @@ extern engine_api_t engine_api;
 //#define calloc(x,c) (*engine_api.malloc)(x,c)
 //#define free (*engine_api.free)
 
-
-
-
 #endif // ENGINECALLBACKS_H

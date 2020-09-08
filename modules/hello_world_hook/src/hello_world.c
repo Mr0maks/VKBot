@@ -24,9 +24,11 @@ int message_new_hook(cJSON *raw)
     cJSON *from_id = cJSON_GetObjectItem(message, "from_id");
     cJSON *text = cJSON_GetObjectItem(message, "text");
 
-
-    if(peer_id) VKAPI_SEND_MESSAGE(peer_id->valueint, "Hello from hook message_new!\n", NULL, 0);
-    if(peer_id) return MODULE_OVERRIDE;
+    if(peer_id)
+    {
+	VKAPI_SEND_MESSAGE(peer_id->valueint, "Hello from hook message_new!\n", NULL, 0);
+	return MODULE_OVERWRITE;
+    }
 
     return MODULE_IGNORE;
 }

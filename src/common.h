@@ -17,11 +17,11 @@
 #include "sys_con.h"
 #include "va_utils.h"
 
+#include "module_api.h"
 #include "thpool.h"
 #include "vkapi.h"
 #include "vkapi_json_wrap.h"
 #include "worker.h"
-#include "module_api.h"
 #include "cmd_handler.h"
 #include "dynamic_strings.h"
 #include "curl_wrap.h"

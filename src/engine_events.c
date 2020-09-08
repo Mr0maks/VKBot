@@ -2,7 +2,7 @@
 
 double get_time_s( void );
 
-bool message_new_handler(cJSON *raw)
+int message_new_handler(cJSON *raw)
 {
     cJSON *object = cJSON_GetObjectItem(raw, "object");
     cJSON *message = cJSON_GetObjectItem(object, "message");

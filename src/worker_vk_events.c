@@ -1,10 +1,25 @@
 #include "common.h"
 #include "worker_vk_events.h"
+#include "module_events.h"
+
+typedef struct event_s
+{
+    const char *event_name;
+    event_handler_t handler;
+    struct event_s *next;
+} event_t;
+
+typedef struct event_hook_s
+{
+    const char *event_name;
+    event_handler_t handler;
+    struct event_hook_s *next;
+} event_hook_t;
 
 static event_t *module_pool = NULL;
 static event_hook_t *module_hooks_pool = NULL;
 
-bool message_new_handler(cJSON *raw);
+int message_new_handler(cJSON *raw);
 
 static event_t default_events[] = 
 {
@@ -12,10 +27,10 @@ static event_t default_events[] =
 	{ NULL, NULL, NULL }
 };
 
-void module_event_register(const char *event_name, event_handler_t handler)
+void module_event(module_t *module, const char *event_name, event_handler_t handler)
 {
-    if(!event_name || !handler)
-        return;
+    assert(event_name);
+    assert(handler);
 
     event_t *ptr = malloc(sizeof (event_t));
 
@@ -28,10 +43,10 @@ void module_event_register(const char *event_name, event_handler_t handler)
     Con_Printf("[Event] Register '%s'\n", event_name);
 }
 
-void module_event_hook_register(const char *event_name, event_hook_handler_t handler)
+void module_event_hook(module_t *module, const char *event_name, event_handler_t handler)
 {
-    if(!event_name || !handler)
-        return;
+    assert(event_name);
+    assert(handler);
 
     event_hook_t *ptr = malloc(sizeof (event_hook_t));
 
@@ -88,8 +103,6 @@ event_handler_t event_find(const char *event_name)
 bool events_manager(cJSON *raw)
 {
     assert(raw);
-    if(!raw)
-        return false;
     
     cJSON *type = cJSON_GetObjectItem(raw, "type");
     cJSON *object = cJSON_GetObjectItem(raw, "object");
@@ -111,9 +124,9 @@ bool events_manager(cJSON *raw)
     
     event_handler_t handler = event_find(cJSON_GetStringValue(type));
     
-    int override = event_proceed_hooks(cJSON_GetStringValue(type), raw);
+    int overwrite = event_proceed_hooks(cJSON_GetStringValue(type), raw);
 
-    if(override == MODULE_OVERRIDE)
+    if(overwrite == MODULE_OVERWRITE)
         return true;
 
     if(!handler)

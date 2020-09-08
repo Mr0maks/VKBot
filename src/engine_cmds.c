@@ -1,18 +1,7 @@
 #include "common.h"
 #include <sys/resource.h>
 
-typedef struct cmds_modules_pools_s
-{
-    module_info_t *info;
-    const char	*string;
-    const char    *description;
-    cmd_callback  function;
-    uint32_t hash;
-    struct cmds_modules_pools_s *next;
-} cmd_module_pool_t;
-
 extern cmds_t commands[];
-extern cmd_module_pool_t *module_cmd_pool;
 extern module_t *modules_pool;
 
 void cmd_help(vkapi_message_object *message, int argc, char **argv, const char *args)
@@ -28,15 +17,20 @@ void cmd_help(vkapi_message_object *message, int argc, char **argv, const char *
       }
     }
 
-  cmd_module_pool_t *ptr = module_cmd_pool;
+    module_t *ptr = modules_pool;
+    while(ptr != NULL) {
 
-  while (ptr != NULL) {
-      if(ptr->description)
-      {
-      char *str = va( "• %s - %s\n", ptr->string, ptr->description );
-      string_strncat( s, str, strlen( str ) );
-      }
-      ptr = ptr->next;
+        cmd_module_pool_t *ptr2 = ptr->cmd_pool;
+        while (ptr2 != NULL) {
+            if(ptr2->description)
+            {
+                char *str = va( "• %s - %s\n", ptr2->string, ptr2->description );
+                string_strncat( s, str, strlen( str ) );
+            }
+            ptr2 = ptr2->next;
+        }
+        ptr = ptr->next;
+
     }
 
   vkapi_send_message( message->peer_id, s->ptr, NULL, 0 );

@@ -74,6 +74,18 @@ void cmd_who(vkapi_message_object *message, int argc, char **argv, const char *a
 {
     int64_t random_u = random_int64( 0, 1 );
 
+    if( message->private_message )
+    {
+     	VKAPI_SEND_MESSAGE( message->peer_id, "Команда не работает в личных сообщениях", NULL, 0 );
+	return;
+    }
+
+    if( argc < 1 )
+    {
+        VKAPI_SEND_MESSAGE( message->peer_id, "Недостаточно аргументов для команды", NULL, 0 );
+	return;
+    }
+
     if( random_u == 0 )
     {
         VKAPI_SEND_MESSAGE( message->peer_id, va("Кто - %s? Я думаю это ты", args), NULL, 0 );

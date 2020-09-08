@@ -98,7 +98,7 @@ unsigned int memcrc32 (const unsigned char *buf, size_t len)
   buf = (uint8_t*)ubuf;
 
   while (len--)
-      crc32 = (crc32 >> 8) ^ crc32_table[(crc32 ^ *buf++) & 0xFF];
+      crc32 = crc32_table[(uint8_t)(crc32 ^ *buf++)] ^ (crc32 >> 8);
 
   return (crc32 ^ CRC32_INIT);
 }

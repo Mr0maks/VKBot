@@ -22,7 +22,7 @@ int message_new_hook(cJSON *raw)
     return MODULE_IGNORE;
 }
 
-bool chat_invite_user_handler(cJSON *raw)
+int chat_invite_user_handler(cJSON *raw)
 {
     cJSON *object = cJSON_GetObjectItem(raw, "object");
     cJSON *message = cJSON_GetObjectItem(object, "message");
@@ -41,7 +41,7 @@ bool chat_invite_user_handler(cJSON *raw)
     return true;
 }
 
-bool chat_kick_user(cJSON *raw)
+int chat_kick_user(cJSON *raw)
 {
     cJSON *object = cJSON_GetObjectItem(raw, "object");
     cJSON *message = cJSON_GetObjectItem(object, "message");

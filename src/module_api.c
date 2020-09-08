@@ -3,29 +3,43 @@
 #include "crc32.h"
 #include "module_api.h"
 #include "minini.h"
+#include "module.h"
 
 #include <stdarg.h>
 #include <string.h>
 
 module_t *modules_pool = NULL;
+module_t *module_loading = NULL;
 
 typedef module_info_t (*module_init)( int apiver, engine_api_t *apifuncs );
 
-void cmd_handler_register_module_cmd(module_info_t *info, const char *cmd_name, const char *description, cmd_callback callback);
-
-void module_reg_cmd(module_info_t *info, const char *cmd_name, const char *description, cmd_callback callback)
+void module_register_cmd(const char *cmd_name, const char *description, cmd_callback callback)
 {
-  cmd_handler_register_module_cmd(info, cmd_name, description, callback);
+    assert(module_loading);
+    module_cmd(module_loading, cmd_name, description, callback);
 }
 
-const engine_api_t engfuncs_t =
+void module_register_event(const char *event_name, event_handler_t handler)
+{
+    assert(module_loading);
+    module_event(module_loading, event_name, handler);
+}
+
+void module_register_event_hook(const char *event_name, event_handler_t handler)
+{
+    assert(module_loading);
+    module_event_hook(module_loading, event_name, handler);
+}
+
+engine_api_t engine_functions =
 {
     // memory api
     malloc,
     free,
 
-    module_reg_cmd,
-    NULL, // FIXME: unregister not implemented
+    module_register_cmd,
+    module_register_event,
+    module_register_event_hook,
 
     // vkapi
     vkapi_call_method,
@@ -51,10 +65,6 @@ const engine_api_t engfuncs_t =
     curl_uploadfile,
     curl_cleanup,
 
-    //events
-    module_event_register,
-    module_event_hook_register,
-
     //module api
     module_load,
     module_loaded,
@@ -65,19 +75,13 @@ const engine_api_t engfuncs_t =
     Con_Printf,
 };
 
-static void module_fill_funcs(engine_api_t *ptr)
-{
-    memcpy(ptr, &engfuncs_t, sizeof (engfuncs_t));
-}
-
 bool module_load(const char *name)
 {
     assert(name);
-
-  if(!name)
-    return false;
+    assert(module_loading == NULL);
 
   module_t *ptr = (module_t*)calloc(1, sizeof(module_t));
+  module_loading = ptr;
 
   if(!ptr)
     {
@@ -103,29 +107,27 @@ bool module_load(const char *name)
       return false;
     }
 
-  module_fill_funcs(&ptr->local_copy);
+  strncpy(ptr->name, name, sizeof(ptr->name));
+  module_info_t info = module_init_func(ENGINE_API_VERSION, &engine_functions);
 
-  module_info_t info = module_init_func(ENGINE_API_VERSION, &ptr->local_copy );
-
-  ptr->info.name = strdup(info.name);
-  ptr->info.version = strdup(info.version);
-  ptr->info.date = strdup(info.date);
-  ptr->info.url = strdup(info.url);
-  ptr->info.author = strdup(info.author);
+  ptr->info.name = info.name;
+  ptr->info.version = info.version;
+  ptr->info.date = info.date;
+  ptr->info.url = info.url;
+  ptr->info.author = info.author;
   ptr->info.ifver = info.ifver;
 
   if(ptr->info.ifver != ENGINE_API_VERSION)
   {
-      Con_Printf("Module %s error: interface mismatch\n", name);
+      Con_Printf("Module %s error: interface version mismatch\nEngine: %d\nModule: %d\n", name, ENGINE_API_VERSION, ptr->info.ifver);
       FreeLibrary(ptr->handle);
       free(ptr);
       return false;
   }
 
-  strncpy(ptr->name, name, sizeof(ptr->name));
-
   ptr->next = modules_pool;
   modules_pool = ptr;
+  module_loading = NULL;
   return true;
 }
 

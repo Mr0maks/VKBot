@@ -1,5 +1,6 @@
 #include "common.h"
-#include "cmd_deserialize.h"
+#include "cmd_handler.h"
+#include "module.h"
 #include "engine_cmds.h"
 
 #define MAX(a,b) ((a) > (b) ? (a) : (b))
@@ -7,29 +8,26 @@
 
 #define ARRAY_LENGHT(x) (sizeof(x)/sizeof(x[0]))
 
-typedef struct cmds_modules_pools_s
-{
-    module_info_t *info;
-    const char	*string;
-    const char    *description;
-    cmd_callback  function;
-    uint32_t hash;
-    struct cmds_modules_pools_s *next;
-} cmd_module_pool_t;
-
 typedef struct
 {
     uint32_t hash;
     cmd_callback  function;
 } cmd_hash_table_t;
 
+typedef struct cmd_module_hash_table_s
+{
+    uint32_t hash;
+    cmd_callback  function;
+    struct cmd_module_hash_table_s *next;
+} cmd_module_hash_table_t;
+
 typedef struct
 {
     const char *name;
 } cmd_name_t;
 
-cmd_module_pool_t *module_cmd_pool = NULL;
 static cmd_hash_table_t *cmd_hash_table = NULL;
+static cmd_module_hash_table_t *cmd_modules_hash_table = NULL;
 static uint32_t *name_hash_table = NULL;
 
 const cmds_t commands[] = {
@@ -89,7 +87,7 @@ cmd_callback cmd_get_command(const char *command)
   if( command_len > max_command_len )
     return NULL;
 
-  unsigned int cmd_hash = strncrc32(command, command_len );
+  uint32_t cmd_hash = strncrc32(command, command_len );
 
   for( size_t i = 0; i < static_commands; i++ ) {
       if( cmd_hash_table[i].hash == cmd_hash )
@@ -98,7 +96,7 @@ cmd_callback cmd_get_command(const char *command)
     }
   }
 
-  cmd_module_pool_t *ptr = module_cmd_pool;
+  cmd_module_hash_table_t *ptr = cmd_modules_hash_table;
 
   while (ptr) {
       if(ptr->hash == cmd_hash)
@@ -253,60 +251,55 @@ static void cmd_build_name_hash_table()
     }
 }
 
-void cmd_handler_register_module_cmd(module_info_t *info, const char *cmd_name, const char *description, cmd_callback callback)
+void module_cmd(module_t *module, const char *cmd_name, const char *description, cmd_callback callback)
 {
+    assert(module);
+
   if(cmd_name == NULL || callback == NULL)
     return;
 
   cmd_module_pool_t *ptr = malloc(sizeof(cmd_module_pool_t));
+  cmd_module_hash_table_t *ptr2 = malloc(sizeof (cmd_module_hash_table_t));
 
-  if(!ptr)
+  if(!ptr || !ptr2)
     {
+      if(ptr) free(ptr);
+      if(ptr2) free(ptr2);
       return;
     }
 
-  ptr->hash = strncrc32(cmd_name, strlen(cmd_name));
+  uint32_t hash = strncrc32(cmd_name, strlen(cmd_name));
 
+  ptr->hash = hash;
+  ptr2->hash = hash;
+
+#ifdef VKBOT_HACKS
   //rust CString can't be static. Need alloc strings here
   ptr->string = strdup(cmd_name);
 
   if(description != NULL)
       ptr->description = strdup(description);
+#else
+  ptr->string = cmd_name;
+  ptr->description = description;
+#endif
 
-  ptr->info = info;
   ptr->function = callback;
+  ptr2->function = callback;
 
-  ptr->next = module_cmd_pool;
-  module_cmd_pool = ptr;
+  ptr->next = module->cmd_pool;
+  module->cmd_pool = ptr;
 
-  Con_Printf("Command from module \"%s\" - \"%s\"\n", cmd_name, description);
+  ptr2->next = cmd_modules_hash_table;
+  cmd_modules_hash_table = ptr2;
+
+  Con_Printf("Command from module %s: \"%s\" - \"%s\"\n", module->name, cmd_name, description);
 
   max_command_len = MAX(max_command_len, strlen(cmd_name));
 }
 
-void cmd_handler_unregister_module_cmd(module_info_t *info)
+void cmd_handler_unregister_module_cmds(module_t *module)
 {
-    cmd_module_pool_t *ptr = module_cmd_pool, *ptr_t1 = NULL;
-    if(ptr->info == info)
-      {
-    module_cmd_pool = ptr->next;
-	return;
-      }
-
-    ptr_t1 = ptr->next;
-
-    while(ptr_t1)
-      {
-
-    if( ptr_t1->info == info )
-	  {
-	    ptr->next = ptr_t1->next;
-	    return;
-	  }
-
-	ptr = ptr_t1;
-	ptr_t1 = ptr_t1->next;
-      }
 }
 
 void cmd_handler_init()

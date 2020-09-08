@@ -7,7 +7,7 @@
 
 /*!max:re2c*/
 
-void cmd_deserialize_push(uint8_t *start, uint8_t *end, char *tokens[], int position )
+static void cmd_deserialize_push(uint8_t *start, uint8_t *end, char *tokens[], int position )
 {
     *end = '\0';
     tokens[position] = (char *)start;

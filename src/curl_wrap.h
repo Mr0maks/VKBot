@@ -1,6 +1,7 @@
 #pragma once
 
 #include <stddef.h>
+#include <stdbool.h>
 #include "dynamic_strings.h"
 #include "vkapi.h"
 
