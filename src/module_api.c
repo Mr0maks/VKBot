@@ -1,17 +1,33 @@
+/*
+module_api.c - modules for bot
+Copyright (C) 2020  Mr0maks <mr.maks0443@gmail.com>
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see <https://www.gnu.org/licenses/>.
+*/
+
 #include "common.h"
-#include "cmd_handler.h"
-#include "crc32.h"
 #include "module_api.h"
 #include "minini.h"
 #include "module.h"
-
-#include <stdarg.h>
 #include <string.h>
 
 module_t *modules_pool = NULL;
 module_t *module_loading = NULL;
 
 typedef module_info_t (*module_init)( int apiver, engine_api_t *apifuncs );
+
+void module_cmd(module_t *module, const char *cmd_name, const char *description, cmd_callback callback);
 
 void module_register_cmd(const char *cmd_name, const char *description, cmd_callback callback)
 {
@@ -44,7 +60,7 @@ engine_api_t engine_functions =
     // vkapi
     vkapi_call_method,
     vkapi_send_message,
-    vkapi_upload_doc_by_url,
+    vkapi_upload_attachment,
 
     // string api
     string_init,
@@ -210,7 +226,7 @@ static int module_minini(const char *section, const char *key, const char *value
 }
 
 void load_modules() {
-    if(mini_json_parse("./modules.ini", module_minini, NULL ))
+    if(mini_ini_parse("./modules.ini", module_minini, NULL ))
     {
         Con_Printf("[Module] Cant load modules: parse error\n");
         return;

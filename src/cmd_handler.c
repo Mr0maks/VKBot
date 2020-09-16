@@ -1,4 +1,23 @@
+/*
+cmd_handler.c - Bot commands handler
+Copyright (C) 2020  Mr0maks <mr.maks0443@gmail.com>
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see <https://www.gnu.org/licenses/>.
+*/
+
 #include "common.h"
+#include "cmd_split.h"
 #include "cmd_handler.h"
 #include "module.h"
 #include "engine_cmds.h"
@@ -118,9 +137,9 @@ bool cmd_handle(vkapi_message_object *message)
 
   int tokens_count = 0;
 
-  char **tokens = (char**)calloc(256, sizeof(char*));
+  char **tokens = (char**)calloc(512, sizeof(char*));
 
-  tokens_count = cmd_deserialize( (unsigned char*)s->ptr, tokens );
+  tokens_count = cmd_split( (unsigned char*)s->ptr, tokens );
 
   string_t args_s = string_init();
 

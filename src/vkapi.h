@@ -75,7 +75,7 @@ typedef struct
 string_t vkapi_get_longpoll_data(vkapi_handle *object);
 string_t vkapi_call_method(const char *method, curl_postfield_t args, bool result_need);
 void vkapi_send_message(int peer_id, const char *msg, vkapi_attachment *attachments, int attachmens_len);
-vkapi_attachment *vkapi_upload_doc_by_url(vkapi_message_object *message, const char *filename, string_t data, docs_type_t type);
+vkapi_attachment *vkapi_upload_attachment(vkapi_message_object *message, const char *filename, string_t data, docs_type_t type);
 bool vkapi_get_long_poll_server(vkapi_handle *object);
 vkapi_handle *vkapi_init(const char *token);
 void vkapi_destroy(vkapi_handle *ptr);

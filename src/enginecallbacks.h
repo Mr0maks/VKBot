@@ -6,11 +6,12 @@
 extern engine_api_t engine_api;
 
 #define REGISTER_COMMAND (*engine_api.register_command)
-#define UNREGISTER_COMMAND (*engine_api.unregister_command)
+#define REGISTER_EVENT (*engine_api.register_event)
+#define REGISTER_EVENT_HOOK (*engine_api.register_event_hook)
 
 #define VKAPI_CALL_METHOD (*engine_api.vkapi_call_method)
 #define VKAPI_SEND_MESSAGE (*engine_api.vkapi_send_message)
-#define VKAPI_UPLOAD_DOC (*engine_api.vkapi_upload_doc_by_url)
+#define VKAPI_UPLOAD_ATTACHMENT (*engine_api.vkapi_upload_attachment)
 
 #define VKAPI_SEND_MESSAGE_ERROR(x) VKAPI_SEND_MESSAGE(message->peer_id, va("VKBot\nСообщите о ошибке разработчику\n%s:%i: %s: Ошибка `%s'", __FILE__, __LINE__, __func__, x), NULL, 0)
 #define VKAPI_ASSERT(e) ((e) ? (void)0 : VKAPI_SEND_MESSAGE(message->peer_id, va("VKBot\nСообщите о ошибке разработчику\n%s:%i: %s: Ошибка `Assertation `%s` failed'", __FILE__, __LINE__, __func__, #e), NULL, 0))
@@ -32,9 +33,6 @@ extern engine_api_t engine_api;
 #define CURL_POST (*engine_api.curl_post)
 #define CURL_UPLOAD_FILE (*engine_api.curl_uploadfile)
 #define CURL_CLEANUP (*engine_api.cleanup)
-
-#define REGISTER_EVENT (*engine_api.register_event)
-#define REGISTER_EVENT_HOOK (*engine_api.register_event_hook)
 
 #define MODULE_LOAD (*engine_api.module_load)
 #define MODULE_LOADED (*engine_api.module_loaded)

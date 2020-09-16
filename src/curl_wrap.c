@@ -1,7 +1,25 @@
+/*
+curl_wrap.c - CURL wrapper
+Copyright (C) 2020  Mr0maks <mr.maks0443@gmail.com>
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see <https://www.gnu.org/licenses/>.
+*/
+
 #include "common.h"
 #include <curl/curl.h>
 
-static pthread_mutex_t connlock;
+static pthread_mutex_t share_datalock[CURL_LOCK_DATA_LAST];
 static CURLSH *share = NULL;
 
 static void lock_cb(CURL *handle, curl_lock_data data, curl_lock_access access, void *userptr)
@@ -9,45 +27,38 @@ static void lock_cb(CURL *handle, curl_lock_data data, curl_lock_access access, 
   (void)access; /* unused */
   (void)userptr; /* unused */
   (void)handle; /* unused */
-  (void)data; /* unused */
-  pthread_mutex_lock(&connlock);
+  pthread_mutex_lock(&share_datalock[data]);
 }
 
 static void unlock_cb(CURL *handle, curl_lock_data data, void *userptr)
 {
   (void)userptr; /* unused */
   (void)handle;  /* unused */
-  (void)data;    /* unused */
-  pthread_mutex_unlock(&connlock);
+  pthread_mutex_unlock(&share_datalock[data]);
 }
 
 void curl_worker_share_init(void)
 {
-    pthread_mutex_init(&connlock, NULL);
+    for(int i = 0; i < CURL_LOCK_DATA_LAST; i++)
+        pthread_mutex_init(&share_datalock[i], NULL);
+
     share = curl_share_init();
     curl_share_setopt(share, CURLSHOPT_LOCKFUNC, lock_cb);
     curl_share_setopt(share, CURLSHOPT_UNLOCKFUNC, unlock_cb);
+
+    curl_share_setopt(share, CURLSHOPT_UNSHARE, CURL_LOCK_DATA_COOKIE);
+    curl_share_setopt(share, CURLSHOPT_SHARE, CURL_LOCK_DATA_DNS);
     curl_share_setopt(share, CURLSHOPT_SHARE, CURL_LOCK_DATA_CONNECT);
+    curl_share_setopt(share, CURLSHOPT_SHARE, CURL_LOCK_DATA_SSL_SESSION);
 }
 
 void curl_worker_share_deinit(void)
 {
-    pthread_mutex_destroy(&connlock);
+    for(int i = 0; i < CURL_LOCK_DATA_LAST; i++)
+        pthread_mutex_destroy(&share_datalock[i]);
+
     curl_share_cleanup(share);
 }
-
-size_t curl_dynamic_string_writefunc( void *ptr, size_t size, size_t nmemb, void *data )
-{
-  string_t s = (string_t)data;
-
-  if(ptr == NULL)
-    return 0;
-
-  string_strncat(s, (const char*)ptr, size*nmemb);
-
-  return size*nmemb;
-}
-
 void string_memcpy( string_t s, const void *data, size_t size );
 
 size_t curl_dynamic_string_writefunc_binary( void *ptr, size_t size, size_t nmemb, void *data )
@@ -70,7 +81,7 @@ bool curl_get( void *curl_handle, const char *url, string_t useragent, string_t 
   curl_easy_reset(curl_handle);
 
   curl_easy_setopt(curl_handle, CURLOPT_URL, url);
-  curl_easy_setopt(curl_handle, CURLOPT_SHARE, share);
+  //curl_easy_setopt(object->curl_handle, CURLOPT_VERBOSE, 1L);
   curl_easy_setopt(curl_handle, CURLOPT_FOLLOWLOCATION, 1L);
 
   if(useragent)
@@ -81,6 +92,8 @@ bool curl_get( void *curl_handle, const char *url, string_t useragent, string_t 
       curl_easy_setopt(curl_handle, CURLOPT_WRITEFUNCTION, curl_dynamic_string_writefunc_binary);
       curl_easy_setopt(curl_handle, CURLOPT_WRITEDATA, dataptr);
     }
+
+  curl_easy_setopt(curl_handle, CURLOPT_SHARE, share);
 
   CURLcode error_code = curl_easy_perform(curl_handle);
 
@@ -99,8 +112,8 @@ bool curl_post( void *curl_handle, const char *url, string_t post, string_t user
         curl_handle = worker_get_vkapi_handle()->curl_handle;
 
   curl_easy_reset(curl_handle);
+
   curl_easy_setopt(curl_handle, CURLOPT_URL, url);
-  curl_easy_setopt(curl_handle, CURLOPT_SHARE, share);
   curl_easy_setopt(curl_handle, CURLOPT_POST, 1L);
   //curl_easy_setopt(object->curl_handle, CURLOPT_VERBOSE, 1L);
 
@@ -115,6 +128,8 @@ bool curl_post( void *curl_handle, const char *url, string_t post, string_t user
       curl_easy_setopt(curl_handle, CURLOPT_WRITEFUNCTION, curl_dynamic_string_writefunc_binary);
       curl_easy_setopt(curl_handle, CURLOPT_WRITEDATA, dataptr);
     }
+
+  curl_easy_setopt(curl_handle, CURLOPT_SHARE, share);
 
   CURLcode error_code = curl_easy_perform(curl_handle);
 
@@ -139,15 +154,18 @@ bool curl_uploadfile( void *curl_handle, const char *url, const char *fieldname,
   curl_mime_data(field, data->ptr, data->len);
 
   curl_easy_reset(curl_handle);
-  curl_easy_setopt(curl_handle, CURLOPT_MIMEPOST, form);
+
   curl_easy_setopt(curl_handle, CURLOPT_URL, url);
+  curl_easy_setopt(curl_handle, CURLOPT_MIMEPOST, form);
   //curl_easy_setopt(curl_handle, CURLOPT_VERBOSE, 1L);
 
   if(useragent)
     curl_easy_setopt(curl_handle, CURLOPT_USERAGENT, useragent->ptr);
 
-  curl_easy_setopt(curl_handle, CURLOPT_WRITEFUNCTION, curl_dynamic_string_writefunc);
+  curl_easy_setopt(curl_handle, CURLOPT_WRITEFUNCTION, curl_dynamic_string_writefunc_binary);
   curl_easy_setopt(curl_handle, CURLOPT_WRITEDATA, dataptr);
+
+  curl_easy_setopt(curl_handle, CURLOPT_SHARE, share);
 
   CURLcode error_code = curl_easy_perform(curl_handle);
 
@@ -168,16 +186,16 @@ void *curl_init()
   return curl_easy_init();
 }
 
-char *curl_urlencode(const char *data)
+const char *curl_urlencode(const char *str)
 {
     void *curl_handle = worker_get_vkapi_handle()->curl_handle;
-    char *encoded = curl_easy_escape(curl_handle, data, 0);
+    char *encoded = curl_easy_escape(curl_handle, str, 0);
     char *duped = strdup(encoded);
     curl_free(encoded);
     return duped;
 }
 
-void curl_ptr_free(void *ptr)
+void curl_wrap_free(void *ptr)
 {
 	assert(ptr);
 	curl_free(ptr);

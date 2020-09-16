@@ -6177,7 +6177,7 @@ return 1;
 
 }
 
-int mini_json_parse(const char *filename, mini_ini_handler_t handler, void *userdata )
+int mini_ini_parse(const char *filename, mini_ini_handler_t handler, void *userdata )
 {
     if(!filename || !handler)
         return 1;
@@ -6205,5 +6205,6 @@ int mini_json_parse(const char *filename, mini_ini_handler_t handler, void *user
     int result = mini_json_tokeinize((uint8_t*)buff, handler, userdata);
 
     fclose(f);
+    free(buff);
     return result;
 }

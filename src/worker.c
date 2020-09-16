@@ -1,20 +1,38 @@
+/*
+worker.c - VK longpoll workers
+Copyright (C) 2020  Mr0maks <mr.maks0443@gmail.com>
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see <https://www.gnu.org/licenses/>.
+*/
+
+
 #include "common.h"
 #include "config.h"
 #include <pthread.h>
 
-static pthread_mutex_t queue_lock;
-static pthread_cond_t queue_cond_var;
+//static pthread_mutex_t queue_lock;
+//static pthread_cond_t queue_cond_var;
 
 static threadpool worker_pool = NULL;
 
 static volatile size_t command_processed = 0;
 static volatile size_t message_processed = 0;
 
-static pthread_t longpoll_thread = 0;
+//static pthread_t longpoll_thread = 0;
 
 typedef struct
 {
-  bool loop;
   vkapi_handle *vkapi_object;
 } worker_data_t;
 
@@ -39,26 +57,16 @@ void lp_event_worker( void *data )
 #ifdef VKBOT_FIND_LEAK
     CHECK_LEAKS();
 #endif
+    cJSON_Delete(json_event);
 }
 
-void *longpoll_worker( void *data )
+static vkapi_handle *longpoll_vkapi_object = NULL;
+
+void longpoll_worker( void )
 {
-    worker_data_t *worker_data = (worker_data_t*)data;
-    vkapi_handle *vkapi_object = worker_data->vkapi_object;
+      string_t long_poll_string = vkapi_get_longpoll_data( longpoll_vkapi_object );
 
-try_again:
-    if(!vkapi_get_long_poll_server(vkapi_object))
-    {
-      Con_Printf("Error while getting long poll server. I try again later.\n");
-      sleep(10);
-      goto try_again;
-    }
-
-  while (worker_data->loop) {
-      string_t long_poll_string = vkapi_get_longpoll_data( vkapi_object );
-
-      if( long_poll_string == NULL )
-          goto try_again;
+      assert( long_poll_string );
 
       if(config.debug == true)
           Con_Printf( "%s\n", long_poll_string->ptr );
@@ -69,26 +77,46 @@ try_again:
       {
           Con_Printf( "Error while getting long poll data: json parser return NULL\n");
           string_destroy( long_poll_string );
-          goto try_again;
+          return;
       }
 
-      cJSON *ts = cJSON_GetObjectItem(main_obj, "ts");
+      cJSON *failed = cJSON_GetObjectItem(main_obj, "failed");
 
-      if(ts)
-          vkapi_object->longpoll_timestamp = atoll(cJSON_GetStringValue(ts));
-      else
+      if(failed != NULL)
       {
-          Con_Printf("Error while getting long poll data: ts == NULL\n");
-          cJSON_Delete(main_obj);
-          string_destroy(long_poll_string);
-          goto try_again;
+          switch (failed->valueint) {
+          // lost events history or events history outdate
+          case 1:
+          {
+              cJSON *ts = cJSON_GetObjectItem(main_obj, "ts");
+              assert(ts);
+              // VK FUCK YOU
+              longpoll_vkapi_object->longpoll_timestamp = ts->valueint;
+              cJSON_Delete(main_obj);
+              string_destroy(long_poll_string);
+              return;
+          }
+          // longpoll key outdate
+          case 2:
+          // lost key and ts
+          case 3:
+          default:
+          {
+              cJSON_Delete( main_obj );
+              string_destroy( long_poll_string );
+              vkapi_get_long_poll_server(longpoll_vkapi_object);
+          }
+          }
+      } else {
+          cJSON *ts = cJSON_GetObjectItem(main_obj, "ts");
+          longpoll_vkapi_object->longpoll_timestamp = atoll(cJSON_GetStringValue(ts));
       }
 
       if( !vkapi_json_long_poll_have_updates( main_obj ) )
       {
           cJSON_Delete( main_obj );
           string_destroy( long_poll_string );
-          continue;
+          return;
       }
 
       cJSON *updates = cJSON_GetObjectItem( main_obj, "updates" );
@@ -106,8 +134,6 @@ try_again:
 
       cJSON_Delete( main_obj );
       string_destroy( long_poll_string );
-    }
-  return NULL;
 }
 
 int worker_get_workers_count()
@@ -142,39 +168,36 @@ void worker_init(void)
 
     int num_workers = config.num_workers;
 
-  pthread_mutex_init( &queue_lock, NULL );
-  pthread_cond_init( &queue_cond_var, NULL );
+  //pthread_mutex_init( &queue_lock, NULL );
+  //pthread_cond_init( &queue_cond_var, NULL );
 
-  work_data = calloc(num_workers + 2, sizeof(worker_data_t));
+  work_data = calloc(num_workers + 1, sizeof(worker_data_t));
 
   worker_pool = thpool_init( num_workers + 1 );
 
-  for( int i = 0; i < num_workers + 2; i++ )
+  for( int i = 0; i < num_workers + 1; i++ )
     {
-      work_data[i].loop = true;
       work_data[i].vkapi_object = vkapi_init( config.token );
     }
 
-  pthread_create(&longpoll_thread, NULL, longpoll_worker, &work_data[num_workers + 1]);
-  pthread_detach(longpoll_thread);
+    longpoll_vkapi_object = vkapi_init( config.token );
+
+try_again:
+    if(!vkapi_get_long_poll_server(longpoll_vkapi_object))
+    {
+        Con_Printf("Error while getting long poll server. I try again later.\n");
+        sleep(10);
+        goto try_again;
+    }
 }
 
 void worker_deinit(void)
 {
-    for( int i = 0; i < config.num_workers + 2; i++ )
-      {
-        work_data[i].loop = false;
-      }
-
-    pthread_join(longpoll_thread, NULL);
-
     thpool_destroy( worker_pool );
-
-    for( int i = 0; i < config.num_workers + 2; i++ )
-      {
-        work_data[i].loop = false;
+    for( int i = 0; i < config.num_workers + 1; i++ )
+    {
         vkapi_destroy(work_data[i].vkapi_object);
-      }
-
+    }
+    vkapi_destroy(longpoll_vkapi_object);
     free(work_data);
 }

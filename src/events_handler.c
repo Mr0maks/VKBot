@@ -1,5 +1,24 @@
+/*
+events_handler.c - Bot VK events handler
+Copyright (C) 2020  Mr0maks <mr.maks0443@gmail.com>
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see <https://www.gnu.org/licenses/>.
+*/
+
 #include "common.h"
-#include "worker_vk_events.h"
+#include "events_handler.h"
+#include "engine_events.h"
 #include "module_events.h"
 
 typedef struct event_s
@@ -18,8 +37,6 @@ typedef struct event_hook_s
 
 static event_t *module_pool = NULL;
 static event_hook_t *module_hooks_pool = NULL;
-
-int message_new_handler(cJSON *raw);
 
 static event_t default_events[] = 
 {

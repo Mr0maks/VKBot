@@ -1,3 +1,21 @@
+/*
+engine_events.c - Internal bot events
+Copyright (C) 2020  Mr0maks <mr.maks0443@gmail.com>
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see <https://www.gnu.org/licenses/>.
+*/
+
 #include "common.h"
 
 double get_time_s( void );
@@ -12,14 +30,16 @@ int message_new_handler(cJSON *raw)
 
     vkapi_handle *handle = worker_get_vkapi_handle();
 
-    bool result = false;
+    if( handle->group_id == -from_id->valueint )
+    {
+        return false;
+    }
   
     if(!message || !peer_id || !from_id) {
       cJSON_Delete(raw);
       return false;
       } else if(peer_id->valueint < 0 || from_id->valueint < 0)
       {
-        cJSON_Delete(raw);
         return false;
       }
   
@@ -32,13 +52,6 @@ int message_new_handler(cJSON *raw)
   
     if(x->peer_id == x->from_id)
       x->private_message = true;
-
-    if( handle->group_id == (x->from_id * -1) )
-      {
-        cJSON_Delete( raw );
-        free(x);
-        return false;
-      }
   
     x->text = string_init();
   
@@ -49,7 +62,6 @@ int message_new_handler(cJSON *raw)
   
     if(x->text->len == 0)
     {
-        cJSON_Delete( raw );
         string_destroy(x->text);
         free(x);
         return false;
@@ -78,11 +90,10 @@ int message_new_handler(cJSON *raw)
             x->reply_message->from_id = fwd_from_id->valueint;
             i++;
         }
-
-
     }
   */
-    cJSON_Delete(raw);
+
+    bool result = false;
 
     if( x->text->len < 2048)
     {
@@ -98,7 +109,7 @@ int message_new_handler(cJSON *raw)
     }
 
     if(x->attachmens)
-    cJSON_Delete(x->attachmens);
+        cJSON_Delete(x->attachmens);
     
     string_destroy(x->text);
     free(x);

@@ -1,3 +1,22 @@
+/*
+dynamic_string.c - Dynamic strings
+Copyright (C) 2020  Mr0maks <mr.maks0443@gmail.com>
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see <https://www.gnu.org/licenses/>.
+*/
+
+
 #include "common.h"
 
 #define DYN_STRING_SIZE 1024
@@ -59,14 +78,16 @@ void string_format( string_t s, const char *fmt, ...)
   assert( s );
 
   char *ptr = NULL;
-  int size = 0;
+  size_t size = 0;
   va_list ap;
 
   va_start( ap, fmt );
-  size = vsnprintf( ptr, size, fmt, ap );
+  size = (size_t)vsnprintf( ptr, size, fmt, ap );
   va_end( ap );
 
-  if( size < 0 || size == 0 )
+  assert(size != (size_t)-1);
+
+  if( size == 0 )
     return;
 
   if(s->size < size)
@@ -92,6 +113,8 @@ void string_format( string_t s, const char *fmt, ...)
 void _string_strncat_char( string_t s, const char *string, size_t size )
 {
   assert( s );
+  assert( string );
+  assert( size != 0 );
 
   if(!string || size == 0)
     return;
@@ -122,6 +145,8 @@ void _string_strncat_string( string_t s, string_t s2)
 void string_memcpy( string_t s, const void *data, size_t size )
 {
   assert( s );
+  assert( data );
+  assert( size != 0 );
 
   if(!data || size == 0)
     return;

@@ -35,7 +35,7 @@ void curl_worker_share_init(void);
 void curl_worker_share_deinit(void);
 
 void *curl_init(void);
-char *curl_urlencode(const char *data);
-void curl_ptr_free(void *ptr);
+const char *curl_urlencode(const char *str);
+void curl_wrap_free(void *ptr);
 void curl_cleanup(void *ptr);
 #endif

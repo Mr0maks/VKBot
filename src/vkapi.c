@@ -1,3 +1,22 @@
+/*
+vkapi.c - VK API
+Copyright (C) 2020  Mr0maks <mr.maks0443@gmail.com>
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see <https://www.gnu.org/licenses/>.
+*/
+
+
 #include "common.h"
 
 static string_t _vkapi_call_method(vkapi_handle *object, const char *method, curl_postfield_t args, bool result_need)
@@ -49,18 +68,18 @@ string_t vkapi_call_method(const char *method, curl_postfield_t args, bool resul
   return _vkapi_call_method(object, method, args, result_need);
 }
 
-vkapi_attachment *vkapi_upload_doc_by_url(vkapi_message_object *message, const char *filename, string_t data, docs_type_t type)
+vkapi_attachment *vkapi_upload_attachment(vkapi_message_object *message, const char *filename, string_t data, docs_type_t type)
 {
   vkapi_handle *object = worker_get_vkapi_handle();
   string_t result = NULL;
 
   curl_postfield_t args = curl_postfield_init();
-  curl_postfield_push(args, "type", "doc");
   curl_postfield_push(args, "peer_id", va("%i", message->peer_id));
 
   switch (type) {
   case VKAPI_DOC:
   {
+      curl_postfield_push(args, "type", "doc");
       result = vkapi_call_method("docs.getMessagesUploadServer", args, true );
       break;
   }
@@ -68,6 +87,14 @@ vkapi_attachment *vkapi_upload_doc_by_url(vkapi_message_object *message, const c
   {
       result = vkapi_call_method("photos.getMessagesUploadServer", args, true );
       break;
+  }
+  case VKAPI_AUDIO:
+  case VKAPI_VIDEO:
+  case VKAPI_WALL:
+  case VKAPI_NULL:
+  default:
+  {
+      assert(0);
   }
   }
 
@@ -103,6 +130,14 @@ vkapi_attachment *vkapi_upload_doc_by_url(vkapi_message_object *message, const c
           curl_uploadfile(object->curl_handle, cJSON_GetStringValue(upload_url), "file", filename, data, NULL, dataptr);
           break;
       }
+      case VKAPI_AUDIO:
+      case VKAPI_VIDEO:
+      case VKAPI_WALL:
+      case VKAPI_NULL:
+      default:
+      {
+          assert(0);
+      }
       }
 
 	  cJSON_Delete(ptr);
@@ -116,23 +151,31 @@ vkapi_attachment *vkapi_upload_doc_by_url(vkapi_message_object *message, const c
           return NULL;
       }
 
+      args = curl_postfield_init();
+
       switch (type) {
       case VKAPI_DOC:
       {
-      args = curl_postfield_init();
       curl_postfield_push(args, "file", cJSON_GetStringValue(cJSON_GetObjectItem(ptr, "file")));
       result = vkapi_call_method("docs.save", args, true );
       break;
       }
       case VKAPI_PHOTO:
       {
-      args = curl_postfield_init();
       curl_postfield_push(args, "photo", cJSON_GetStringValue(cJSON_GetObjectItem(ptr, "photo")));
       curl_postfield_push(args, "server", va("%i", cJSON_GetObjectItem(ptr, "server")->valueint));
       curl_postfield_push(args, "hash", cJSON_GetStringValue(cJSON_GetObjectItem(ptr, "hash")));
 
       result = vkapi_call_method("photos.saveMessagesPhoto", args, true );
       break;
+      }
+      case VKAPI_AUDIO:
+      case VKAPI_VIDEO:
+      case VKAPI_WALL:
+      case VKAPI_NULL:
+      default:
+      {
+          assert(0);
       }
       }
 
@@ -160,6 +203,14 @@ vkapi_attachment *vkapi_upload_doc_by_url(vkapi_message_object *message, const c
           owner_id = cJSON_GetObjectItem(photo, "owner_id");
           media_id = cJSON_GetObjectItem(photo, "id");
           break;
+      }
+      case VKAPI_AUDIO:
+      case VKAPI_VIDEO:
+      case VKAPI_WALL:
+      case VKAPI_NULL:
+      default:
+      {
+          assert(0);
       }
       }
 
@@ -239,7 +290,7 @@ void vkapi_send_message(int peer_id, const char *msg, vkapi_attachment *attachme
 {
   curl_postfield_t args = curl_postfield_init();
   string_t formated_attachmens = string_init();
-  char *message_encoded = NULL;
+  const char *message_encoded = NULL;
 
   if (attachments)
   {
@@ -286,14 +337,11 @@ bool vkapi_get_long_poll_server(vkapi_handle *object)
       return false;
     }
 
-  const char *json_return;
-
-  cJSON *json = cJSON_ParseWithOpts(method_result->ptr, &json_return, false );
+  cJSON *json = cJSON_ParseWithOpts(method_result->ptr, NULL, false );
 
   if(!json)
     {
       Con_Printf("Error while getting long poll data: json parser return NULL\n");
-      Con_Printf("Error before: %s\n", json_return);
       cJSON_Delete(json);
       string_destroy(method_result);
       return false;

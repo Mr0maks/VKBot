@@ -30,7 +30,7 @@ typedef struct
 
   string_t (*vkapi_call_method) (const char *method, curl_postfield_t args, bool result_need);
   void (*vkapi_send_message) (int peer_id, const char *msg, vkapi_attachment *attaches, int attaches_len);
-  vkapi_attachment *(*vkapi_upload_doc_by_url) (vkapi_message_object *message, const char *filename, string_t data, docs_type_t type);
+  vkapi_attachment *(*vkapi_upload_attachment) (vkapi_message_object *message, const char *filename, string_t data, docs_type_t type);
 
   string_t (*string_init) ( void );
   string_t (*string_dublicate) ( string_t s );

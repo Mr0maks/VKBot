@@ -1,3 +1,21 @@
+/*
+engine_cmds.c - Internal bot commands
+Copyright (C) 2020  Mr0maks <mr.maks0443@gmail.com>
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see <https://www.gnu.org/licenses/>.
+*/
+
 #include "common.h"
 #include <sys/resource.h>
 
@@ -67,7 +85,7 @@ void cmd_about_bot(vkapi_message_object *message, int argc, char **argv, const c
   string_destroy(s);
 }
 
-time_t Host_Init_Time(void);
+time_t Bot_Init_Time(void);
 
 void cmd_stat(vkapi_message_object *message, int argc, char **argv, const char *args)
 {
@@ -76,7 +94,7 @@ void cmd_stat(vkapi_message_object *message, int argc, char **argv, const char *
   struct rusage r_usage;
   getrusage(RUSAGE_SELF,&r_usage);
 
-  time_t date = Host_Init_Time();
+  time_t date = Bot_Init_Time();
 
   char buffer[256];
   strftime(buffer, sizeof (buffer), "%c", localtime( &date ));
