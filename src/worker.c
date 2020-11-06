@@ -104,7 +104,8 @@ void longpoll_worker( void )
           {
               cJSON_Delete( main_obj );
               string_destroy( long_poll_string );
-              vkapi_get_long_poll_server(longpoll_vkapi_object);
+              vkapi_get_long_poll_server( longpoll_vkapi_object );
+              return;
           }
           }
       } else {
