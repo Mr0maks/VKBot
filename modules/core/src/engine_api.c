@@ -50,7 +50,7 @@ void Module_Init_Events()
     REGISTER_EVENT( "chat_invite_user", chat_invite_user_handler );
     REGISTER_EVENT( "chat_invite_user_by_link", chat_invite_user_handler );
     REGISTER_EVENT( "chat_kick_user", chat_kick_user );
-    REGISTER_EVENT_HOOK( "message_new", message_new_hook );
+//    REGISTER_EVENT_HOOK( "message_new", message_new_hook );
 }
 
 module_info_t Module_Init(int apiver, engine_api_t *apifuncs)
