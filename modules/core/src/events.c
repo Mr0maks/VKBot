@@ -22,7 +22,7 @@ int chat_invite_user_handler(cJSON *raw)
 {
     cJSON *object = cJSON_GetObjectItem(raw, "object");
     cJSON *message = cJSON_GetObjectItem(object, "message");
-    cJSON *action = cJSON_GetObjectItem(object, "action");
+    cJSON *action = cJSON_GetObjectItem(message, "action");
     cJSON *peer_id = cJSON_GetObjectItem(message, "peer_id");
     cJSON *member_id = cJSON_GetObjectItem(action, "member_id");
 
@@ -42,7 +42,7 @@ int chat_kick_user(cJSON *raw)
 {
     cJSON *object = cJSON_GetObjectItem(raw, "object");
     cJSON *message = cJSON_GetObjectItem(object, "message");
-    cJSON *action = cJSON_GetObjectItem(object, "action");
+    cJSON *action = cJSON_GetObjectItem(message, "action");
     cJSON *peer_id = cJSON_GetObjectItem(message, "peer_id");
     cJSON *member_id = cJSON_GetObjectItem(action, "member_id");
 
