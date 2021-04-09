@@ -16,9 +16,9 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-#include <signal.h>
 #include "common.h"
 #include "config.h"
+#include <signal.h>
 
 static volatile bool main_thread_loop = false;
 
@@ -30,7 +30,7 @@ void Bot_Deinit()
     config_deinit();
 }
 
-void longpoll_worker( void );
+void longpoll_worker(void);
 
 void Bot_Main_Thread_Exit(int i)
 {
@@ -58,8 +58,7 @@ void Bot_Init()
 #endif
     init_time = time(NULL);
 
-    if(config_parse_file("./bot.ini"))
-    {
+    if (config_parse_file("./bot.ini")) {
         Con_Printf("Error while parsing bot configuration");
         return;
     }

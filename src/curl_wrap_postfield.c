@@ -18,22 +18,22 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 #include "common.h"
 
-static curl_keyvalue_t *curl_keyvalue_new(const char *key, const char *value)
+static curl_keyvalue_t* curl_keyvalue_new(const char* key, const char* value)
 {
-    curl_keyvalue_t *ptr = calloc(1, sizeof(curl_keyvalue_t));
+    curl_keyvalue_t* ptr = calloc(1, sizeof(curl_keyvalue_t));
     ptr->key = key;
     ptr->value = value;
     ptr->next = NULL;
     return ptr;
 }
 
-void curl_postfield_push(curl_postfield_t pool, const char *key, const char *value)
+void curl_postfield_push(curl_postfield_t pool, const char* key, const char* value)
 {
     assert(pool);
     assert(key);
     assert(value);
 
-    curl_keyvalue_t *ptr = curl_keyvalue_new(key, value);
+    curl_keyvalue_t* ptr = curl_keyvalue_new(key, value);
 
     ptr->next = pool->pool;
     pool->pool = ptr;
@@ -41,7 +41,7 @@ void curl_postfield_push(curl_postfield_t pool, const char *key, const char *val
 
 curl_postfield_t curl_postfield_init(void)
 {
-    return (curl_postfield_t)calloc(1, sizeof (_curl_postfield_t));
+    return (curl_postfield_t)calloc(1, sizeof(_curl_postfield_t));
 }
 
 string_t curl_postfield_serialize(curl_postfield_t pool)
@@ -51,11 +51,9 @@ string_t curl_postfield_serialize(curl_postfield_t pool)
     string_t s = string_init();
     string_t s2 = string_init();
 
-    curl_keyvalue_t *ptr = pool->pool;
-    for (int i = 0; ptr != NULL; i++)
-    {
-        if(i > 0)
-        {
+    curl_keyvalue_t* ptr = pool->pool;
+    for (int i = 0; ptr != NULL; i++) {
+        if (i > 0) {
             string_strncat(s, "&", 1);
         }
 
@@ -74,8 +72,8 @@ void curl_postfield_destroy(curl_postfield_t pool)
 {
     assert(pool);
 
-    curl_keyvalue_t *ptr = pool->pool;
-    curl_keyvalue_t *prev = NULL;
+    curl_keyvalue_t* ptr = pool->pool;
+    curl_keyvalue_t* prev = NULL;
 
     while (ptr != NULL) {
         prev = ptr;

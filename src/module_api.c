@@ -16,39 +16,38 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-#include "common.h"
 #include "module_api.h"
+#include "common.h"
 #include "minini.h"
 #include "module.h"
 #include <string.h>
 
-module_t *modules_pool = NULL;
-module_t *module_loading = NULL;
+module_t* modules_pool = NULL;
+module_t* module_loading = NULL;
 
-typedef module_info_t (*module_init)( int apiver, engine_api_t *apifuncs );
+typedef module_info_t (*module_init)(int apiver, engine_api_t* apifuncs);
 
-void module_cmd(module_t *module, const char *cmd_name, const char *description, cmd_callback callback);
+void module_cmd(module_t* module, const char* cmd_name, const char* description, cmd_callback callback);
 
-void module_register_cmd(const char *cmd_name, const char *description, cmd_callback callback)
+void module_register_cmd(const char* cmd_name, const char* description, cmd_callback callback)
 {
     assert(module_loading);
     module_cmd(module_loading, cmd_name, description, callback);
 }
 
-void module_register_event(const char *event_name, event_handler_t handler)
+void module_register_event(const char* event_name, event_handler_t handler)
 {
     assert(module_loading);
     module_event(module_loading, event_name, handler);
 }
 
-void module_register_event_hook(const char *event_name, event_handler_t handler)
+void module_register_event_hook(const char* event_name, event_handler_t handler)
 {
     assert(module_loading);
     module_event_hook(module_loading, event_name, handler);
 }
 
-engine_api_t engine_functions =
-{
+engine_api_t engine_functions = {
     // memory api
     malloc,
     free,
@@ -91,75 +90,69 @@ engine_api_t engine_functions =
     Con_Printf,
 };
 
-bool module_load(const char *name)
+bool module_load(const char* name)
 {
     assert(name);
     assert(module_loading == NULL);
 
-  module_t *ptr = (module_t*)calloc(1, sizeof(module_t));
-  module_loading = ptr;
+    module_t* ptr = (module_t*)calloc(1, sizeof(module_t));
+    module_loading = ptr;
 
-  if(!ptr)
-    {
-      Con_Printf("Module %s error: calloc return NULL\n", name);
-      return false;
+    if (!ptr) {
+        Con_Printf("Module %s error: calloc return NULL\n", name);
+        return false;
     }
 
-  ptr->handle = LoadLibrary(va("./%s_%s.%s", name, ARCH, LIB_EXT));
+    ptr->handle = LoadLibrary(va("./%s_%s.%s", name, ARCH, LIB_EXT));
 
-  if(ptr->handle == NULL)
-    {
-      Con_Printf("Module %s error: %s\n", name, GetLastError());
-      free(ptr);
-      return false;
+    if (ptr->handle == NULL) {
+        Con_Printf("Module %s error: %s\n", name, GetLastError());
+        free(ptr);
+        return false;
     }
 
-  module_init module_init_func = (module_init)dlsym(ptr->handle, "Module_Init");
+    module_init module_init_func = (module_init)dlsym(ptr->handle, "Module_Init");
 
-  if(!module_init_func)
-    {
-      Con_Printf("Module %s error: %s\n", name, GetLastError());
-      free(ptr);
-      return false;
+    if (!module_init_func) {
+        Con_Printf("Module %s error: %s\n", name, GetLastError());
+        free(ptr);
+        return false;
     }
 
-  strncpy(ptr->name, name, sizeof(ptr->name));
-  module_info_t info = module_init_func(ENGINE_API_VERSION, &engine_functions);
+    strncpy(ptr->name, name, sizeof(ptr->name));
+    module_info_t info = module_init_func(ENGINE_API_VERSION, &engine_functions);
 
-  ptr->info.name = info.name;
-  ptr->info.version = info.version;
-  ptr->info.date = info.date;
-  ptr->info.url = info.url;
-  ptr->info.author = info.author;
-  ptr->info.ifver = info.ifver;
+    ptr->info.name = info.name;
+    ptr->info.version = info.version;
+    ptr->info.date = info.date;
+    ptr->info.url = info.url;
+    ptr->info.author = info.author;
+    ptr->info.ifver = info.ifver;
 
-  if(ptr->info.ifver != ENGINE_API_VERSION)
-  {
-      Con_Printf("Module %s error: interface version mismatch\nEngine: %d\nModule: %d\n", name, ENGINE_API_VERSION, ptr->info.ifver);
-      FreeLibrary(ptr->handle);
-      free(ptr);
-      return false;
-  }
+    if (ptr->info.ifver != ENGINE_API_VERSION) {
+        Con_Printf("Module %s error: interface version mismatch\nEngine: %d\nModule: %d\n", name, ENGINE_API_VERSION, ptr->info.ifver);
+        FreeLibrary(ptr->handle);
+        free(ptr);
+        return false;
+    }
 
-  ptr->next = modules_pool;
-  modules_pool = ptr;
-  module_loading = NULL;
-  return true;
+    ptr->next = modules_pool;
+    modules_pool = ptr;
+    module_loading = NULL;
+    return true;
 }
 
-bool module_loaded(const char *name)
+bool module_loaded(const char* name)
 {
     assert(name);
 
-    if(name == NULL)
+    if (name == NULL)
         return false;
 
-    module_t *ptr = modules_pool;
+    module_t* ptr = modules_pool;
 
-    while(ptr != NULL)
-    {
-        if(!strcmp(name, ptr->name))
-        {
+    while (ptr != NULL) {
+        if (!strcmp(name, ptr->name)) {
             return true;
         }
         ptr = ptr->next;
@@ -168,20 +161,18 @@ bool module_loaded(const char *name)
     return false;
 }
 
-void *module_function(const char *name, const char *function)
+void* module_function(const char* name, const char* function)
 {
     assert(name);
     assert(function);
 
-    if(name == NULL || function == NULL)
+    if (name == NULL || function == NULL)
         return NULL;
 
-    module_t *ptr = modules_pool;
+    module_t* ptr = modules_pool;
 
-    while(ptr != NULL)
-    {
-        if(!strcmp(name, ptr->name))
-        {
+    while (ptr != NULL) {
+        if (!strcmp(name, ptr->name)) {
             return GetProcAddress(ptr->handle, function);
         }
         ptr = ptr->next;
@@ -190,19 +181,17 @@ void *module_function(const char *name, const char *function)
     return NULL;
 }
 
-void *module_unload(const char *name)
+void* module_unload(const char* name)
 {
     assert(name);
 
-    if(name == NULL)
+    if (name == NULL)
         return NULL;
 
     module_t *ptr = modules_pool, *prev = NULL;
 
-    while(ptr != NULL)
-    {
-        if(!strcmp(name, ptr->name))
-        {
+    while (ptr != NULL) {
+        if (!strcmp(name, ptr->name)) {
             prev->next = ptr->next;
         }
         ptr = ptr->next;
@@ -212,12 +201,12 @@ void *module_unload(const char *name)
     return NULL;
 }
 
-static int module_minini(const char *section, const char *key, const char *value, void* user)
+static int module_minini(const char* section, const char* key, const char* value, void* user)
 {
-    if(value)
+    if (value)
         return 1;
 
-    if(section)
+    if (section)
         return 1;
 
     module_load(key);
@@ -225,9 +214,9 @@ static int module_minini(const char *section, const char *key, const char *value
     return 0;
 }
 
-void load_modules() {
-    if(mini_ini_parse("./modules.ini", module_minini, NULL ))
-    {
+void load_modules()
+{
+    if (mini_ini_parse("./modules.ini", module_minini, NULL)) {
         Con_Printf("[Module] Cant load modules: parse error\n");
         return;
     }

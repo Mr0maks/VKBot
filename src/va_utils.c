@@ -16,22 +16,21 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-
 #include <stdarg.h>
 #include <stdio.h>
 
-char *va( const char *format, ... )
+char* va(const char* format, ...)
 {
-  va_list         argptr;
-  static char     string[256][1024];
-  static int      stringindex = 0;
-  char *s = NULL;
+    va_list argptr;
+    static char string[256][1024];
+    static int stringindex = 0;
+    char* s = NULL;
 
-  s = string[stringindex];
-  stringindex = (stringindex + 1) & 255;
-  va_start( argptr, format );
-  vsnprintf( s, sizeof( string[0] ), format, argptr );
-  va_end( argptr );
+    s = string[stringindex];
+    stringindex = (stringindex + 1) & 255;
+    va_start(argptr, format);
+    vsnprintf(s, sizeof(string[0]), format, argptr);
+    va_end(argptr);
 
-  return s;
+    return s;
 }

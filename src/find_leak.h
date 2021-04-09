@@ -32,5 +32,5 @@
 #include <gc/leak_detector.h>
 
 #ifdef GC_PTHREADS
-# include <pthread.h>
+#include <pthread.h>
 #endif

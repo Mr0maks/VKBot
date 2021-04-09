@@ -16,24 +16,21 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
+#include "config.h"
 #include "common.h"
 #include "minini.h"
-#include "config.h"
 
 bot_config_t config = { 0 };
 
-static int config_handler(const char *section, const char *key, const char *value, void* user)
+static int config_handler(const char* section, const char* key, const char* value, void* user)
 {
-    if(!strncasecmp("token", key, 5))
-    {
+    if (!strncasecmp("token", key, 5)) {
         config.token = strdup(value);
         return 0;
-    } else if (!strncasecmp("num_workers", key, 7))
-    {
+    } else if (!strncasecmp("num_workers", key, 7)) {
         config.num_workers = atoi(value);
         return 0;
-    } else if(!strncasecmp("debug", key, 5))
-    {
+    } else if (!strncasecmp("debug", key, 5)) {
         config.debug = true;
         Sys_Reg_LogFile();
         return 0;
@@ -42,9 +39,9 @@ static int config_handler(const char *section, const char *key, const char *valu
     return 1;
 }
 
-int config_parse_file(const char *filename)
+int config_parse_file(const char* filename)
 {
-    if(!filename)
+    if (!filename)
         return 1;
 
     if (mini_ini_parse(filename, config_handler, NULL)) {
@@ -58,6 +55,6 @@ int config_parse_file(const char *filename)
 
 void config_deinit()
 {
-    if(config.token)
-    free(config.token);
+    if (config.token)
+        free(config.token);
 }
