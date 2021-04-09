@@ -2,4 +2,4 @@
 
 #include "vkapi.h"
 
-int message_new_handler(cJSON *raw);
+int message_new_handler(cJSON* raw);

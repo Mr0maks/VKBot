@@ -1,3 +1,3 @@
 #pragma once
 
-int cmd_split(unsigned char *str, char *tokens[]);
+int cmd_split(unsigned char* str, char* tokens[]);
