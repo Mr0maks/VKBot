@@ -10,7 +10,7 @@
 #include <stdbool.h>
 
 #define VK_URL_METHOD "https://api.vk.com/method/"
-#define VK_API_VERSION "5.130"
+#define VK_API_VERSION "5.131"
 
 #define VK_MESSAGE_LEN_MAX 4096
 #define VK_MESSAGE_ATTACHMENS_MAX 10
